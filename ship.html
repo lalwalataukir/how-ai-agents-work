@@ -1,0 +1,1062 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>Shipping an Agent</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module 7 of the field guides, the launch module. Same stage rail and tokens as module 1;
+   a rollout console up top, then the product work around launch, each part ending with a quick check. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E8ECF1; --ink:#131C27; --muted:#55616F; --line:#D5DCE4;
+  --accent:#2445C4; --accent-ink:#FFFFFF; --accent-soft:#E2E8FB;
+  --think:#6A44C0; --think-soft:#EEE9FA;
+  --act:#9C5800; --act-soft:#FBEEDA;
+  --observe:#08716D; --observe-soft:#DCF1EF;
+  --final:#2A7639; --final-soft:#E0F0E3;
+  --bad:#B42318; --bad-soft:#FCE7E4;
+  --code-bg:#ECEFF4;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+    --accent:#8BA3FF; --accent-ink:#0D131A; --accent-soft:#1D2A4F;
+    --think:#BBA2FF; --think-soft:#2A2245;
+    --act:#F1B45E; --act-soft:#3A2B15;
+    --observe:#62D3C8; --observe-soft:#123533;
+    --final:#82D893; --final-soft:#163520;
+    --bad:#FF8F84; --bad-soft:#3E1D1A;
+    --code-bg:#101821;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+  --accent:#8BA3FF; --accent-ink:#0D131A; --accent-soft:#1D2A4F;
+  --think:#BBA2FF; --think-soft:#2A2245;
+  --act:#F1B45E; --act-soft:#3A2B15;
+  --observe:#62D3C8; --observe-soft:#123533;
+  --final:#82D893; --final-soft:#163520;
+  --bad:#FF8F84; --bad-soft:#3E1D1A;
+  --code-bg:#101821;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Module 7 additions ---------- */
+.metric.good .v{color:var(--final)}
+.metric .bar{color:var(--muted);font-size:.75rem}
+.ro-track{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.ro-track li{font-family:var(--font-mono);font-size:.78rem;padding:4px 10px;border-radius:999px;border:1.5px solid var(--line);color:var(--muted);background:var(--bg)}
+.ro-track li.past{color:var(--final);border-color:var(--final)}
+.ro-track li.now{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+.ro-track li.now.off{background:var(--bad);border-color:var(--bad)}
+.ro-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;font-family:var(--font-mono);font-size:.85rem}
+.ro-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
+.ro-kill{border-color:var(--bad);color:var(--bad)}
+.ro-totals{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted)}
+.ro-log{padding:12px 16px;display:grid;gap:8px;max-height:280px;overflow-y:auto;border-top:1px solid var(--line);font-size:.92rem}
+.ro-log p{border-left:3px solid var(--line);padding-left:10px}
+.ro-log p.r-ok{border-color:var(--final)}
+.ro-log p.r-warn{border-color:var(--act)}
+.ro-log p.r-bad{border-color:var(--bad)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.mock{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;max-width:640px;margin-inline:auto;text-align:left}
+.mock h4{font-size:1.1rem}
+.mock sup{color:var(--accent);font-weight:700}
+.mock-steps{display:flex;flex-wrap:wrap;gap:6px 12px;font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+.mock-steps .done{color:var(--final)}
+.mock-steps .t{margin-left:auto}
+.mock-note{font-size:.88rem;background:var(--accent-soft);border-radius:8px;padding:8px 10px}
+.mock-src{margin:0;padding-left:1.4em;font-size:.85rem;color:var(--muted);display:grid;gap:2px}
+.mock-actions{display:flex;flex-wrap:wrap;gap:6px}
+.mbtn{font-size:.8rem;border:1.5px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="./" data-site-link>← All modules</a>
+    <a class="brand" href="#top">Shipping an agent</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#rollout" data-nav="rollout"><span class="n">1</span>Rollout</a>
+      <a href="#experience" data-nav="experience"><span class="n">2</span>Experience</a>
+      <a href="#economics" data-nav="economics"><span class="n">3</span>Economics</a>
+      <a href="#buy" data-nav="buy"><span class="n">4</span>Build or buy</a>
+      <a href="#casestudy" data-nav="casestudy"><span class="n">5</span>Case study</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module 7 · Agent Field Guides · about 25 minutes</p>
+  <h1>Shipping an agent: rollout, experience and economics</h1>
+  <p class="lede">The <strong>research assistant</strong> from modules 1 to 5 passes its evals. Now it has to reach real users without surprises, feel trustworthy when they use it, and pay for itself. This module covers the product work around launch: staged rollout, designing the experience, unit economics, build or buy, and what the first six weeks really looked like.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="kill_switch" aria-expanded="false">kill switch</button>, are technical terms. Tap one for a plain-English definition.</p>
+</div>
+
+<!-- ============ DEMO ============ -->
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">Run a staged rollout</h2>
+    <p>Each click is one week. Look at the numbers, then decide: move to the next stage, hold, roll back, or hit the kill switch. Pick a scenario to see what can go wrong between stages.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>Users, metrics and events are scripted to show typical rollout decisions. Nothing is deployed.</span></div>
+    <div class="demo-top">
+      <div class="opts">
+        <label for="roScen">Scenario
+          <select id="roScen">
+            <option value="smooth">Smooth launch</option>
+            <option value="model">The provider updates the model</option>
+            <option value="cost">A new team brings huge PDFs</option>
+          </select>
+        </label>
+        <label for="roPin"><input type="checkbox" id="roPin"> Model version pinned</label>
+        <button type="button" class="btn btn-sm" id="roReset">↺ Start over</button>
+      </div>
+      <ol class="ro-track" id="roTrack" aria-label="Rollout stages"></ol>
+      <div class="ro-head" aria-live="polite"><span id="roWeek">Week 1</span><span id="roUsers"></span></div>
+      <div class="ro-metrics" id="roMetrics"></div>
+      <div class="controls">
+        <button type="button" class="btn btn-primary" id="roNext">Move to next stage →</button>
+        <button type="button" class="btn" id="roHold">Hold a week</button>
+        <button type="button" class="btn" id="roBack">Roll back a stage</button>
+        <button type="button" class="btn ro-kill" id="roKill">Kill switch</button>
+      </div>
+      <div class="ro-totals" aria-live="polite"><span id="roBad">0 reports with made-up citations seen</span><span id="roSpend">₹0 over budget</span></div>
+    </div>
+    <div class="ro-log" id="roLog" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ============ 1. ROLLOUT ============ -->
+<section class="stage" id="rollout" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · Rollout</p>
+    <h2 id="s1">A rollout playbook</h2>
+    <p>Agents fail in ways your test cases didn't imagine. A staged rollout limits how many people see each new failure, and gives you a moment to fix it.</p>
+  </div>
+
+  <div class="concept">
+    <h3>The stages, and the bar for each</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Stage</th><th>Who sees it</th><th>Typical length</th><th>Move on when</th></tr></thead>
+        <tbody>
+          <tr><td>Shadow</td><td>Nobody. The agent runs on real questions, and its output is logged but not shown.</td><td>1 to 2 weeks</td><td>Hard rules pass on real traffic, and cost and wait are within budget</td></tr>
+          <tr><td>Internal</td><td>Your own team</td><td>1 to 2 weeks</td><td>No open serious bugs, and the team uses it without being asked</td></tr>
+          <tr><td>Beta</td><td>About 5% of users, who know it's new and how to give feedback</td><td>2 weeks</td><td>Task success, ratings and complaints at or better than target</td></tr>
+          <tr><td>General</td><td>Everyone, in steps: 25%, 50%, 100%</td><td>About a week per step</td><td>The numbers hold at each step, and on-call is quiet</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Write the bar down before the stage starts. Deciding afterwards whether 82% is "good enough" is how teams talk themselves into bad launches.</p>
+  </div>
+
+  <div class="concept">
+    <h3>The tools that make it safe</h3>
+    <div class="grid g2">
+      <div class="box"><span class="tag accent">Feature flags</span><p class="small">A <button type="button" class="term" data-term="feature_flag" aria-expanded="false">feature flag</button> decides who gets the agent: a percentage, a team, a customer tier. Moving between stages becomes a setting, not a release.</p></div>
+      <div class="box"><span class="tag accent">Kill switch and fallback</span><p class="small">One switch turns the agent off for everyone. Decide in advance what users see instead: the plain workflow, a "temporarily unavailable" note, or a human channel.</p></div>
+      <div class="box"><span class="tag accent">Pinned model versions</span><p class="small">Use a dated model version, not "latest". A provider's update can change behaviour overnight. Treat a model upgrade like a release: evals, then shadow, then stages.</p></div>
+      <div class="box"><span class="tag accent">Decision rights</span><p class="small">Name who may move a stage forward, who may roll back, and who may hit the kill switch. Rolling back should need one person, not a meeting.</p></div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>Upgrading the model safely</h3>
+    <ol class="steps-list">
+      <li><b>Run the eval set</b> on the new version, several times per case, next to the current one.</li>
+      <li><b>Compare cost and wait</b>, not just quality. A "better" model that costs twice as much may not be.</li>
+      <li><b>Shadow it</b> on real traffic for a few days, scoring both versions.</li>
+      <li><b>Roll it out in stages</b>, with the old version one setting away.</li>
+    </ol>
+  </div>
+
+  <div class="quiz" data-quiz="q7a">
+    <p class="quiz-label">Check your understanding · Rollout</p>
+    <p class="quiz-q">At 25%, made-up citations jump from 0 to 3.5 per 1,000 overnight. Nothing in your code changed. What do you do first?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. More users would see the problem, and you already know something is wrong."><span class="l">A</span><span>Move to 50% to get more data</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Limit exposure first. A jump with no code change often means a provider update behind an unpinned model name."><span class="l">B</span><span>Roll back a stage, and check whether the model behind your version name changed</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Holding stops it growing, but thousands of users keep seeing made-up citations while you wait."><span class="l">C</span><span>Hold at 25% and wait for it to settle</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 2. EXPERIENCE ============ -->
+<section class="stage" id="experience" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · Experience</p>
+    <h2 id="s2">Designing an experience people can trust</h2>
+    <p>An agent is slower and less predictable than a normal feature. Good design makes that visible and manageable, instead of hiding it.</p>
+  </div>
+
+  <div class="concept">
+    <div class="grid g2">
+      <div class="box"><span class="tag accent">1 · Set expectations</span><p class="small">Say what it does and doesn't do, before the first question: "Researches public web sources and writes a short cited summary. Doesn't use company data or give investment advice."</p></div>
+      <div class="box"><span class="tag accent">2 · Show progress</span><p class="small">A 40-second wait feels broken behind a spinner. Stream steps as they happen: "Searching… Reading 3 sources… Writing…"</p></div>
+      <div class="box"><span class="tag accent">3 · Show the sources</span><p class="small">Put citations next to each claim, with links. People trust what they can check, and checking catches mistakes.</p></div>
+      <div class="box"><span class="tag accent">4 · Say when it's unsure</span><p class="small">"I could only verify 2 sources" or "Sources disagree on this" beats a confident paragraph that hides the gap.</p></div>
+      <div class="box"><span class="tag accent">5 · Make failure useful</span><p class="small">When it can't finish, say why and offer the next step: try a narrower question, see the sources it did find, or ask a person.</p></div>
+      <div class="box"><span class="tag accent">6 · Let people correct it</span><p class="small">Edit the draft, remove a source, or ask for a shorter version. Corrections are also your best feedback data.</p></div>
+      <div class="box"><span class="tag accent">7 · Ask for feedback in context</span><p class="small">Thumbs up or down on each report, with quick reasons: "wrong source", "too long", "missed the point". Save it on the run's trace.</p></div>
+      <div class="box"><span class="tag accent">8 · Design approvals worth reading</span><p class="small">Show the reviewer exactly what will happen and what changed, with approve, edit and reject. Ten approvals a day get read; two hundred get rubber-stamped.</p></div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>What a good report card looks like</h3>
+    <figure>
+      <div class="mock" aria-label="Example report screen">
+        <div class="mock-steps"><span class="done">✓ Searched</span><span class="done">✓ Read 3 sources</span><span class="done">✓ Wrote report</span><span class="t">38 s</span></div>
+        <h4>Is remote work better for productivity?</h4>
+        <p>For focused, individual tasks, remote work can raise output<sup>[1]</sup>. Hybrid work looked like a safe middle ground in a two-year trial<sup>[2]</sup>. The main cost is cross-team collaboration<sup>[3]</sup>.</p>
+        <p class="mock-note">Sources mostly agree. One study covered a single company, so treat it with care.</p>
+        <ol class="mock-src"><li>Does working from home work? · econ-journal.example</li><li>Hybrid working improves retention · science-weekly.example</li><li>Remote work and collaboration · behaviour-research.example</li></ol>
+        <div class="mock-actions"><span class="mbtn">👍</span><span class="mbtn">👎 Wrong source · Too long · Missed the point</span><span class="mbtn">Edit</span><span class="mbtn">Shorter</span></div>
+      </div>
+      <figcaption>Progress, citations next to claims, an honest note about the evidence, sources you can open, and feedback with reasons. Every element maps to one of the eight principles above.</figcaption>
+    </figure>
+  </div>
+
+  <div class="quiz" data-quiz="q7b">
+    <p class="quiz-label">Check your understanding · Experience</p>
+    <p class="quiz-q">Users say reports “feel unreliable”, though evals score them well. Which change is most likely to help?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Length doesn&#x27;t build trust, and this module&#x27;s case study found users wanted shorter reports."><span class="l">A</span><span>A longer, more detailed report</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. People trust what they can check. Honest notes about the evidence make the good answers believable."><span class="l">B</span><span>Show sources next to each claim, and say plainly when evidence is thin or sources disagree</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Without progress, a long wait feels broken. Showing the work helps trust."><span class="l">C</span><span>Hide the step-by-step progress, so it looks simpler</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 3. ECONOMICS ============ -->
+<section class="stage" id="economics" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · Economics</p>
+    <h2 id="s3">Unit economics: what one report really costs</h2>
+    <p>Model tokens are the cost everyone tracks, and often not the biggest one. Add the platform, the human review, and the work redone when the agent fails.</p>
+  </div>
+
+  <div class="concept">
+    <div class="box calc">
+      <div class="calc-in">
+        <label for="eRuns">Reports per month<input id="eRuns" type="number" min="1" step="500" value="9000"></label>
+        <label for="eModel">Model cost per report (₹)<input id="eModel" type="number" min="0" step="0.5" value="4"></label>
+        <label for="eTools">Search and tool APIs per report (₹)<input id="eTools" type="number" min="0" step="0.5" value="1.5"></label>
+        <label for="ePlat">Platform per month: hosting, tracing (₹)<input id="ePlat" type="number" min="0" step="5000" value="60000"></label>
+        <label for="eRev">Reports a person reviews (%)<input id="eRev" type="number" min="0" max="100" step="5" value="10"></label>
+        <label for="eRevMin">Minutes per review<input id="eRevMin" type="number" min="0" step="1" value="5"></label>
+        <label for="eSucc">Task success rate (%)<input id="eSucc" type="number" min="1" max="100" step="1" value="88"></label>
+        <label for="eHumMin">Analyst minutes for the same task<input id="eHumMin" type="number" min="0" step="5" value="40"></label>
+        <label for="eRate">Analyst or reviewer cost per hour (₹)<input id="eRate" type="number" min="0" step="100" value="1500"></label>
+      </div>
+      <div class="calc-out" aria-live="polite">
+        <div class="metric"><span class="v" id="oAll">₹0</span><span class="k">all-in cost per report</span></div>
+        <div class="metric"><span class="v" id="oTask">₹0</span><span class="k">per task, counting failures an analyst redoes</span></div>
+        <div class="metric"><span class="v" id="oHum">₹0</span><span class="k">same task done by an analyst</span></div>
+        <div class="metric"><span class="v" id="oMonthE">₹0</span><span class="k">agent cost per month</span></div>
+        <div class="metric"><span class="v" id="oShare">0%</span><span class="k">of the all-in cost is model tokens</span></div>
+        <div class="metric"><span class="v" id="oSave">₹0</span><span class="k">saved per month vs analysts alone</span></div>
+      </div>
+    </div>
+    <p class="small muted" id="eNote"></p>
+  </div>
+
+  <div class="concept">
+    <h3>Levers that move the numbers</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Lever</th><th>What it changes</th><th>Watch out for</th></tr></thead>
+        <tbody>
+          <tr><td>Raise the success rate</td><td>Every failure costs an analyst's time. Going from 88% to 94% often saves more than halving token costs.</td><td>Measure success on real tasks, not just eval cases</td></tr>
+          <tr><td>Route simple steps to a small model</td><td>Grading and note-taking rarely need the large model. Often cuts token cost by a third or more.</td><td>Check the small model on your eval set first</td></tr>
+          <tr><td>Cache the fixed part of the prompt</td><td>Instructions and tool descriptions repeat every turn. Providers charge less for cached input.</td><td>Only helps when the start of the prompt stays the same</td></tr>
+          <tr><td>Trim what goes into memory</td><td>Main text only, not whole web pages. Fewer tokens on every later turn.</td><td>Don't cut the evidence the report needs</td></tr>
+          <tr><td>Review smarter</td><td>Review only flagged or low-score reports, plus a small random sample.</td><td>Keep the random sample, or you can't measure what the flags miss</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>Pricing an agent feature</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Model</th><th>How it works</th><th>Good for</th><th>Risk</th></tr></thead>
+        <tbody>
+          <tr><td>Included in the plan</td><td>No extra charge</td><td>Driving adoption of a core feature</td><td>Heavy users eat your margin. Add a fair-use limit.</td></tr>
+          <tr><td>Usage-based</td><td>Per report, or credits</td><td>Costs that vary a lot between users</td><td>Users ration it and never build the habit</td></tr>
+          <tr><td>Outcome-based</td><td>Per successful task</td><td>Clear, checkable outcomes</td><td>You must agree on what "success" means, and you carry the cost of failures</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><b>Price on the heavy users, not the average.</b> Agent costs are lopsided: one user researching long PDFs all day can cost twenty times the median. Look at the 90th percentile of cost per user before you set a price or a limit.</div>
+  </div>
+
+  <div class="quiz" data-quiz="q7c">
+    <p class="quiz-label">Check your understanding · Economics</p>
+    <p class="quiz-q">Token cost is ₹4 per report. Success is 88%, and an analyst redoes each failure at ₹1,000. Where's the bigger saving?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. That saves ₹2 per report."><span class="l">A</span><span>Halve the token cost to ₹2</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Six fewer failures per 100 reports saves about ₹60 per report, thirty times more than halving tokens."><span class="l">B</span><span>Raise the success rate from 88% to 94%</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Failures redone by people usually dwarf token costs. Run the numbers in the calculator."><span class="l">C</span><span>They save about the same</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 4. BUILD OR BUY ============ -->
+<section class="stage" id="buy" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Build or buy</p>
+    <h2 id="s4">Should you build it at all?</h2>
+    <p>Before the team spends a quarter building an agent, check whether someone sells one that's good enough.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th></th><th>Build on frameworks</th><th>Build on a provider's agent platform</th><th>Buy a product</th></tr></thead>
+      <tbody>
+        <tr><td>Example</td><td>LangGraph, LangChain and Langfuse, as in modules 2 to 5</td><td>A model provider's agent SDK or hosted agent service</td><td>An off-the-shelf research or support assistant</td></tr>
+        <tr><td>Best when</td><td>The agent is core to your product, or needs your data and rules</td><td>You want speed and are happy with one provider</td><td>The job is common, and not where you compete</td></tr>
+        <tr><td>Control</td><td class="yes">Full</td><td>High, within the platform's limits</td><td>Low: settings and prompts at most</td></tr>
+        <tr><td>Time to first version</td><td>Weeks to months</td><td>Days to weeks</td><td>Days</td></tr>
+        <tr><td>Ongoing work</td><td>Your team owns everything: evals, upgrades, on-call</td><td>Shared with the provider</td><td>Mostly the vendor's</td></tr>
+        <tr><td>Ask about</td><td>Who maintains it in a year?</td><td>How hard is it to switch provider?</td><td>Where does our data go? Can we see traces and run our own evals?</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout"><b>A useful test.</b> If a competitor bought the same product tomorrow, would you lose anything that matters? If not, buying is probably fine. If yes, that's the part worth building.</div>
+</section>
+
+<!-- ============ 5. CASE STUDY ============ -->
+<section class="stage" id="casestudy" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Case study</p>
+    <h2 id="s5">The research assistant's first six weeks</h2>
+    <p>An illustrative story, built from problems teams commonly hit. Each week shows what happened, how it was spotted, and what changed.</p>
+  </div>
+  <ol class="timeline">
+    <li><span class="wk">Week 0 · Shadow</span><div><h4>Paywalled sources</h4><p class="small">One in five "read" pages was a login wall. The agent cited them anyway, from the snippet. <strong>Spotted by</strong> the citation check: the cited text wasn't in the page. <strong>Change:</strong> <code>fetch_page</code> now reports "page needs a login", and the agent picks another source.</p></div></li>
+    <li><span class="wk">Week 1 · Internal</span><div><h4>Reports nobody finished reading</h4><p class="small">The team skimmed the first line and stopped. <strong>Spotted by</strong> feedback reasons: "too long" on a third of reports. <strong>Change:</strong> a one-line answer first, then the detail. Thumbs-down fell by half.</p></div></li>
+    <li><span class="wk">Week 2 · Beta 5%</span><div><h4>Questions it wasn't built for</h4><p class="small">Users asked about their own company's numbers, which it can't see. It searched the web and guessed. <strong>Spotted by</strong> reviewing low-score traces. <strong>Change:</strong> an input check that says what it can't do, and 12 new test cases.</p></div></li>
+    <li><span class="wk">Week 3 · 25%</span><div><h4>A quiet model update</h4><p class="small">The provider updated the model behind an unpinned name. Made-up citations reappeared. <strong>Spotted by</strong> the citation-accuracy alert within an hour. <strong>Change:</strong> rolled back to 5%, pinned a dated version, and added "upgrade the model" to the release checklist.</p></div></li>
+    <li><span class="wk">Week 4 · 50%</span><div><h4>The cost spike</h4><p class="small">The legal team started researching 200-page PDFs. Cost per report tripled for them. <strong>Spotted by</strong> cost per user in the dashboard. <strong>Change:</strong> pages trimmed to the relevant sections, notes moved to a small model, and a fair-use limit.</p></div></li>
+    <li><span class="wk">Week 6 · 100%</span><div><h4>Steady state</h4><p class="small">89% task success, 0 made-up citations in automated checks, p95 wait of 44 seconds and ₹3.90 per report. Weekly review of 50 bad traces keeps feeding the eval set, now at 140 cases.</p></div></li>
+  </ol>
+  <div class="grid g3">
+    <div class="box tint"><h4>What changed in v2</h4><ul class="clean small"><li>Answer first, detail after</li><li>Login-wall detection</li><li>Scope check on input</li><li>Pinned model, with an upgrade process</li><li>Small model for notes</li><li>Fair-use limit</li></ul></div>
+    <div class="box tint"><h4>What caught the problems</h4><ul class="clean small"><li>Citation check (twice)</li><li>Feedback reasons</li><li>Weekly trace review</li><li>Cost per user dashboard</li><li>Not a single one came from the original eval set</li></ul></div>
+    <div class="box tint"><h4>The lesson</h4><p class="small">Evals get you to launch. Monitoring, feedback and a staged rollout find the problems your evals didn't imagine, while only a few users can see them.</p></div>
+  </div>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s6">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula">Ship in <em>stages</em>, design for <em>trust</em>, price on <em>all-in cost</em>, and keep a <em>kill switch</em> within reach.</p>
+    <div class="sheet-grid">
+      <div class="blk">
+        <h3>Rollout checklist</h3>
+        <ul>
+          <li>Stages and their bars written down in advance</li>
+          <li>Feature flag controls who gets it</li>
+          <li>Kill switch and fallback tested</li>
+          <li>Model version pinned, with an upgrade process</li>
+          <li>Named owners for move on, roll back and switch off</li>
+        </ul>
+      </div>
+      <div class="blk">
+        <h3>Experience checklist</h3>
+        <ul>
+          <li>Says what it does and doesn't do</li>
+          <li>Shows progress during long runs</li>
+          <li>Citations next to claims</li>
+          <li>Says when it's unsure or stuck</li>
+          <li>Users can correct it and give reasons</li>
+          <li>Approvals that are rare enough to be read</li>
+        </ul>
+      </div>
+      <div class="blk">
+        <h3>Numbers to know</h3>
+        <ul>
+          <li>All-in cost per report, not just tokens</li>
+          <li>Cost per task, counting failures</li>
+          <li>90th-percentile cost per user</li>
+          <li>Task success rate on real traffic</li>
+          <li>Users exposed at each stage</li>
+        </ul>
+      </div>
+      <div class="blk">
+        <h3>Questions to ask</h3>
+        <ul>
+          <li>What's the bar for moving to the next stage?</li>
+          <li>Who can switch it off, and has anyone practised?</li>
+          <li>What do users see when it's off?</li>
+          <li>What does a heavy user cost us?</li>
+          <li>Could we buy this instead?</li>
+        </ul>
+      </div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s7">3 common mistakes at launch</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake">
+      <span class="num">1</span>
+      <h3>The big-bang launch</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>Evals pass, so it goes to everyone on day one. The first unexpected failure reaches every user before anyone notices.</dd>
+        <dt>Fix</dt><dd>Shadow, internal, beta, then 25%, 50%, 100%, each with a written bar. A feature flag and a kill switch from the start.</dd>
+      </dl>
+    </article>
+    <article class="mistake">
+      <span class="num">2</span>
+      <h3>Hiding the machinery</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>A spinner for 40 seconds, then a confident paragraph with no sources. Users can't tell good answers from bad, so they trust none of them.</dd>
+        <dt>Fix</dt><dd>Show progress, cite sources next to claims, say when it's unsure, and ask for feedback with reasons.</dd>
+      </dl>
+    </article>
+    <article class="mistake">
+      <span class="num">3</span>
+      <h3>Pricing on averages and tokens</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>The business case uses average token cost. Then review time, platform costs, redone failures and a few heavy users turn the margin negative.</dd>
+        <dt>Fix</dt><dd>Model the all-in cost per successful task, check the 90th-percentile user, and set fair-use limits before launch.</dd>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="metrics.html" data-site-link>← Module 6 · Metrics for a compliant wealth AI bot</a>
+  <a href="reference.html" data-site-link>Glossary and further reading →</a>
+</div>
+
+<footer>
+  <p>The demo is a scripted simulation, and the case study is an illustrative composite, not a real company's history. Prices, timings and percentages are illustrative.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+  kill_switch:{t:"Kill switch",d:"One setting that turns a feature off for everyone at once, without a code release, and shows a fallback instead."},
+  feature_flag:{t:"Feature flag",d:"A setting that decides who sees a feature: a percentage of users, a team or a customer tier. Changing it needs no release."},
+  shadow:{t:"Shadow mode",d:"Running a new system on real requests without showing its output to anyone, so you can measure it safely."},
+  fallback:{t:"Fallback",d:"What users get when the agent is off or fails: a simpler workflow, a message, or a person."},
+  pinned:{t:"Pinned model version",d:"A dated, fixed model version, so the provider's updates can't change your agent's behaviour without you choosing to upgrade."},
+  p95:{t:"p95",d:"The 95th percentile: the time within which 95% of runs finish. It shows the slow cases that an average hides."},
+  unit_economics:{t:"Unit economics",d:"The cost and value of one unit of work, such as one report, including every cost that grows with use."},
+  fair_use:{t:"Fair-use limit",d:"A cap on how much one user can use a feature in a period, to stop a few heavy users driving up costs."},
+  task_success:{t:"Task success rate",d:"The share of real tasks the agent completes well enough that nobody has to redo them."}
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme);
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", sync);
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+
+/* ---------- Rollout simulator (scripted) ---------- */
+const STAGES = [
+  {n:"Shadow", users:0}, {n:"Internal", users:40}, {n:"Beta 5%", users:600},
+  {n:"25%", users:3000}, {n:"50%", users:6000}, {n:"100%", users:12000}
+];
+const REPORTS_PER_USER = 3, BUDGET = 5;   // reports per user per week; ₹ per report
+const BAR = {success:85, madeup:0, thumbs:8, p95:60, cost:5};
+let ro;
+function roReset(){
+  ro = {stage:0, week:1, killed:false, resumeTo:0, weeksAtFull:0, modelFixed:false, costFixed:false,
+        modelEvent:false, costEvent:false, bad:0, over:0, done:false};
+  $("roLog").innerHTML = "";
+  roLogAdd("Week 1: the agent starts in shadow mode. It runs on real questions, but nobody sees its reports yet.", "");
+  roRender();
+}
+function metrics(){
+  const scen = $("roScen").value, pinned = $("roPin").checked;
+  const w = ro.week, s = ro.stage;
+  // a little week-to-week movement so the numbers feel live
+  const wob = [0, .6, -.4, .3, -.7, .5, -.2, .4, -.5, .2, .1, -.3][w % 12];
+  const m = {success: 89 + wob, madeup: 0, thumbs: 6.4 + wob/3, p95: 44 + wob*3, cost: 3.9 + wob/10, notes:[]};
+  if(s === 1) m.thumbs += 1;               // internal users are picky
+  if(ro.killed){ m.off = true; return m; }
+  if(scen === "model" && w >= 4 && !ro.modelFixed && !pinned){
+    m.success = 78.5; m.madeup = 3.5; m.thumbs = 11.2;
+    m.notes.push("model");
+  }
+  if(scen === "cost" && s >= 4 && !ro.costFixed){
+    m.cost = 9.8; m.p95 = 88; m.thumbs = 9.1;
+    m.notes.push("cost");
+  }
+  if(s === 0) m.thumbs = null;             // nobody sees shadow output, so no feedback
+  return m;
+}
+function reds(m){
+  if(m.off) return [];
+  const r = [];
+  if(m.success < BAR.success) r.push("task success");
+  if(m.madeup > BAR.madeup) r.push("made-up citations");
+  if(m.thumbs !== null && m.thumbs > BAR.thumbs) r.push("thumbs-down rate");
+  if(m.p95 > BAR.p95) r.push("p95 wait");
+  if(m.cost > BAR.cost) r.push("cost per report");
+  return r;
+}
+function tile(label, val, ok, bar){
+  return '<div class="metric'+(ok===false?" warn":ok?" good":"")+'"><span class="v">'+val+'</span><span class="k">'+label+' <span class="bar">· bar '+bar+'</span></span></div>';
+}
+function roRender(){
+  const m = metrics();
+  $("roTrack").innerHTML = STAGES.map((st, i) =>
+    '<li class="'+(i < ro.stage ? "past" : i === ro.stage ? (ro.killed ? "now off" : "now") : "")+'">'+st.n+'</li>').join("");
+  const users = ro.killed ? 0 : STAGES[ro.stage].users;
+  $("roWeek").textContent = "Week " + ro.week + (ro.killed ? " · switched off, fallback shown" : " · " + STAGES[ro.stage].n);
+  $("roUsers").textContent = users.toLocaleString("en-IN") + " users see the agent";
+  if(m.off){
+    $("roMetrics").innerHTML = '<p class="small muted">The agent is off. Users get the plain workflow. The team is working on the problem.</p>';
+  } else {
+    $("roMetrics").innerHTML =
+      tile("task success", m.success.toFixed(1)+"%", m.success >= BAR.success, "≥ 85%") +
+      tile("made-up citations", m.madeup ? m.madeup+" per 1,000" : "0", m.madeup <= BAR.madeup, "0") +
+      tile("thumbs-down", m.thumbs === null ? "–" : m.thumbs.toFixed(1)+"%", m.thumbs === null ? null : m.thumbs <= BAR.thumbs, "≤ 8%") +
+      tile("p95 wait", Math.round(m.p95)+" s", m.p95 <= BAR.p95, "≤ 60 s") +
+      tile("cost per report", "₹"+m.cost.toFixed(2), m.cost <= BAR.cost, "≤ ₹5");
+  }
+  $("roBad").textContent = Math.round(ro.bad).toLocaleString("en-IN") + " reports with made-up citations seen by users";
+  $("roSpend").textContent = "₹" + Math.round(ro.over).toLocaleString("en-IN") + " over budget";
+  $("roNext").textContent = ro.killed ? "Turn back on →" : ro.stage === STAGES.length - 1 ? "Confirm full launch →" : "Move to " + STAGES[ro.stage + 1].n + " →";
+  ["roNext","roHold","roBack","roKill"].forEach(id => $(id).disabled = ro.done);
+  $("roBack").disabled = ro.done || ro.killed || ro.stage === 0;
+  $("roKill").disabled = ro.done || ro.killed;
+}
+function roLogAdd(text, cls){
+  const d = document.createElement("p");
+  d.className = cls ? "r-" + cls : "";
+  d.innerHTML = text;
+  $("roLog").prepend(d);
+}
+function settle(m){
+  // what users experienced this week
+  if(m.off) return;
+  const reports = STAGES[ro.stage].users * REPORTS_PER_USER;
+  ro.bad += reports * m.madeup / 1000;
+  if(m.cost > BUDGET) ro.over += reports * (m.cost - BUDGET);
+}
+function act(kind){
+  if(ro.done) return;
+  const m = metrics(), r = reds(m), redTxt = r.join(", ");
+  settle(m);
+  let msg = "", cls = "";
+  const scen = $("roScen").value, pinned = $("roPin").checked;
+  if(kind === "next"){
+    if(ro.killed){
+      ro.killed = false; ro.stage = ro.resumeTo;
+      msg = "Turned back on at " + STAGES[ro.stage].n + ". Watch the numbers closely this week."; cls = "ok";
+    } else if(ro.stage === STAGES.length - 1){
+      if(r.length){ msg = "Not yet: " + redTxt + " still over the bar. A full launch means the numbers hold at 100%."; cls = "bad"; }
+      else { ro.done = true; msg = "<strong>Rollout complete in " + ro.week + " weeks.</strong> " + summary(); cls = "ok"; }
+    } else if(r.length){
+      ro.stage++;
+      msg = "Risky: you moved to " + STAGES[ro.stage].n + " with " + redTxt + " over the bar. Now " + STAGES[ro.stage].users.toLocaleString("en-IN") + " users get it, and the problem isn't fixed."; cls = "bad";
+    } else {
+      ro.stage++;
+      msg = "Good call. The numbers met the bar, so you moved to " + STAGES[ro.stage].n + "."; cls = "ok";
+    }
+  } else if(kind === "hold"){
+    if(r.length){
+      if(m.notes.includes("cost")){ ro.costFixed = true; msg = "Holding at " + STAGES[ro.stage].n + " while the team trims long PDFs and moves notes to a small model. Cost should recover next week."; cls = "ok"; }
+      else { msg = "Holding limits how many more users are exposed, but it doesn't fix " + redTxt + ". Something changed underneath you: roll back or switch off while the team investigates."; cls = "warn"; }
+    } else { msg = "Holding is safe, but the bar was met. Each extra week slows learning from real users."; cls = ""; }
+  } else if(kind === "back"){
+    if(r.length){
+      if(m.notes.includes("model")){ ro.modelFixed = true; msg = "Right call. Rolled back to " + STAGES[ro.stage - 1].n + ". The traces show the provider updated the model behind an unpinned name, so the team pins the previous dated version."; }
+      else if(m.notes.includes("cost")){ ro.costFixed = true; msg = "Rolled back to " + STAGES[ro.stage - 1].n + " while the team trims long PDFs and moves notes to a small model."; }
+      else msg = "Rolled back to " + STAGES[ro.stage - 1].n + ".";
+      cls = "ok";
+    } else { msg = "Rolled back, though the numbers met the bar. Rolling back is cheap, but do it for a reason."; cls = "warn"; }
+    ro.stage--;
+  } else if(kind === "kill"){
+    ro.killed = true; ro.resumeTo = Math.max(0, ro.stage - 1);
+    if(m.notes.includes("model")){ ro.modelFixed = true; msg = "Switched off. Everyone gets the plain workflow while the team pins the previous model version. With made-up citations, switching off was reasonable. You'll restart one stage lower."; cls = "ok"; }
+    else if(m.notes.includes("cost")){ ro.costFixed = true; msg = "Switched off. That stops the overspend, but a cost problem rarely needs the kill switch: rolling back or holding would have kept users served."; cls = "warn"; }
+    else { msg = "Switched off with nothing over the bar. The kill switch is for serious harm. Every user just lost the feature."; cls = "bad"; }
+  }
+  ro.week++;
+  roLogAdd("Week " + (ro.week - 1) + ": " + msg, cls);
+  // scripted events the team notices this week
+  if(scen === "model" && ro.week === 4 && !ro.modelEvent){
+    ro.modelEvent = true;
+    roLogAdd("Week 4: the model provider released an update." + (pinned ? " You're pinned to a dated version, so nothing changes. The team schedules an eval of the new version." : " Your app uses an unpinned model name, so it switched automatically."), pinned ? "ok" : "warn");
+  }
+  if(scen === "cost" && ro.stage >= 4 && !ro.costEvent && !ro.killed){
+    ro.costEvent = true;
+    roLogAdd("Week " + ro.week + ": at 50%, the legal team gets access and starts researching 200-page PDFs.", "warn");
+  }
+  roRender();
+}
+function summary(){
+  const bad = Math.round(ro.bad), over = Math.round(ro.over);
+  if(!bad && !over) return "No user saw a made-up citation, and spend stayed within budget.";
+  return (bad ? bad.toLocaleString("en-IN") + " reports with made-up citations reached users" : "No made-up citations reached users") + (over ? ", and spend ran ₹" + over.toLocaleString("en-IN") + " over budget." : ".") + " Some cost is unavoidable in the week a problem first shows up. What matters is how many weeks it stayed red, and at which stage.";
+}
+$("roNext").addEventListener("click", () => act("next"));
+$("roHold").addEventListener("click", () => act("hold"));
+$("roBack").addEventListener("click", () => act("back"));
+$("roKill").addEventListener("click", () => act("kill"));
+$("roReset").addEventListener("click", roReset);
+$("roScen").addEventListener("change", roReset);
+$("roPin").addEventListener("change", roReset);
+roReset();
+
+/* ---------- Unit economics ---------- */
+const ids = ["eRuns","eModel","eTools","ePlat","eRev","eRevMin","eSucc","eHumMin","eRate"];
+const num = id => { const v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v : 0; };
+const rupee = v => "₹" + (v < 100 ? v.toFixed(2) : Math.round(v).toLocaleString("en-IN"));
+function econ(){
+  const runs = Math.max(1, num("eRuns")), model = num("eModel"), tools = num("eTools"), plat = num("ePlat");
+  const rev = Math.min(100, num("eRev")) / 100, revMin = num("eRevMin"), succ = Math.min(100, Math.max(1, num("eSucc"))) / 100;
+  const humMin = num("eHumMin"), rate = num("eRate");
+  const review = rev * revMin / 60 * rate;
+  const all = model + tools + plat / runs + review;
+  const human = humMin / 60 * rate;
+  const task = all + (1 - succ) * human;          // failures get redone by an analyst
+  $("oAll").textContent = rupee(all);
+  $("oTask").textContent = rupee(task);
+  $("oHum").textContent = rupee(human);
+  $("oMonthE").textContent = rupee(all * runs);
+  $("oShare").textContent = (all > 0 ? Math.round(model / all * 100) : 0) + "%";
+  const save = (human - task) * runs;
+  $("oSave").textContent = (save < 0 ? "−" : "") + rupee(Math.abs(save));
+  $("oSave").parentElement.classList.toggle("warn", save < 0);
+  const fail = (1 - succ) * human;
+  $("eNote").textContent = "Failures redone by an analyst add " + rupee(fail) + " per task, " + (fail > model ? "more than the model's tokens. Raising the success rate is the biggest lever here." : "less than the model's tokens. Token cost is worth working on.");
+}
+ids.forEach(id => $(id).addEventListener("input", econ));
+econ();
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.m7";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+
+</body>
+</html>

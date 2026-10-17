@@ -379,6 +379,21 @@ ol.hist .w{font-family:var(--font-mono);font-size:.74rem;color:var(--muted)}
 .mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .mistake dd{margin:0}
 footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px;display:grid;gap:8px}
+
+/* Quizzes (same look as module 1) */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+@media print{.quiz{display:none!important}}
 </style>
 
 <div id="termPop" role="tooltip" hidden></div>
@@ -570,7 +585,7 @@ footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1p
             <span class="spacer"></span>
             <button type="button" class="btn btn-primary" id="btnRunExp">Run experiment: v3 vs v4</button>
           </div>
-          <p class="small muted">Each item is a saved question with notes on what a good answer cites. Item 1 was added from Priya's ticket. Both versions answer every item, then evaluators score the answers: a code check for citation accuracy, an LLM judge for clarity, and the cost.</p>
+          <p class="small muted">Each item is a saved question with notes on what a good answer cites. Item 1 was added from Priya's ticket. Both versions answer every item, then evaluators score the answers: a code check for citation accuracy, an LLM judge for clarity, and the cost. Ten items is enough to confirm this fix, not to prove v4 is better overall (see Section 7).</p>
           <div class="progressline" aria-hidden="true"><i id="expBar"></i></div>
           <div class="metrics" id="expMetrics"></div>
           <div class="tablewrap" id="expTableWrap" hidden>
@@ -631,6 +646,24 @@ footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1p
       </table>
     </div>
     <p class="small muted">Both products change fast. Check current features, plans and pricing on each vendor's site before deciding.</p>
+  </div>
+
+  <div class="concept">
+    <h3>Other tools your engineers may suggest</h3>
+    <p>LangSmith isn't the only alternative. These cover the same ground with different trade-offs.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Tool</th><th>In short</th><th>Often picked when…</th></tr></thead>
+        <tbody>
+          <tr><td>Arize Phoenix</td><td>Open-source tracing and evals, built on OpenTelemetry. Arize also sells a hosted platform.</td><td>The team wants open source with a strong evaluation focus</td></tr>
+          <tr><td>Braintrust</td><td>A commercial platform centred on evals, datasets and prompt experiments</td><td>Evaluation is the main need, and a hosted product is fine</td></tr>
+          <tr><td>Helicone</td><td>Open source. Sits between your app and the model provider as a proxy, logging every call.</td><td>You want logging and cost tracking with almost no code changes</td></tr>
+          <tr><td>W&amp;B Weave</td><td>Tracing and evals from Weights &amp; Biases</td><td>The company already uses W&amp;B for machine-learning work</td></tr>
+          <tr><td>Datadog LLM Observability, and similar</td><td>LLM tracing inside a general monitoring platform</td><td>The company wants one place for all monitoring, and needs less prompt management</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Because Langfuse and most of these accept OpenTelemetry, switching later is easier than it used to be. Try two on a week of your own traces before choosing.</p>
   </div>
 
   <div class="takeaway"><span class="k">PM takeaway</span><p>Langfuse is the open, framework-neutral choice for tracing, prompts and evals. LangSmith is the in-house option if you're fully on LangChain.</p></div>
@@ -710,6 +743,16 @@ footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1p
     </div>
   </div>
 
+<div class="quiz" data-quiz="q5a">
+    <p class="quiz-label">Check your understanding · Data model</p>
+    <p class="quiz-q">Priya complains about Tuesday's report. Tracing is on, but nobody can find her run among 40,000 traces. What was missing?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The traces are all there. The problem is that nothing links them to Priya."><span class="l">A</span><span>A bigger Langfuse plan</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. With a user ID you filter to her runs in seconds, and tags narrow it to the feature she used."><span class="l">B</span><span>A user ID (and ideally a session ID and tags) on every trace</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Scores help you find bad runs in general, not one customer&#x27;s run."><span class="l">C</span><span>An LLM judge score on every trace</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
   <div class="takeaway"><span class="k">PM takeaway</span><p>Ask for user IDs, session IDs and tags from day one. Without them you can't find a customer's run when they complain.</p></div>
 </section>
 
@@ -797,7 +840,7 @@ get_client().flush()  <span class="c"># short scripts: send before exit</span></
         </tbody>
       </table>
     </div>
-    <p class="small muted">Illustrative prices. Output tokens cost more than input tokens, so the long write step is about two thirds of the bill. At 10,000 reports a month that's about $158.</p>
+    <p class="small muted">Illustrative prices. The write step is about two thirds of the bill because it uses the large model, which costs 12 times more per token than the small one, on a long input. Its 1,900 input tokens ($0.0057) cost more than its 300 output tokens ($0.0045). At 10,000 reports a month that's about $158, or roughly ₹13,400 at ₹85 to the dollar.</p>
   </div>
 
   <div class="takeaway"><span class="k">PM takeaway</span><p>Ask for cost per run and per feature, not just the monthly bill. Tags on every trace are what make that breakdown possible.</p></div>
@@ -861,7 +904,28 @@ text = prompt.compile(question=q, notes=notes)   <span class="c"># fills {{quest
     <p class="code-note">The SDK keeps a <button type="button" class="term" data-term="cache" aria-expanded="false">cache</button> of prompts in memory, so fetching adds almost no delay, and the app keeps working with the cached copy if Langfuse is briefly unreachable.</p>
   </div>
 
-  <div class="takeaway"><span class="k">PM takeaway</span><p>Prompt management lets you ship and undo wording changes in minutes. Pair it with an eval so "ship" isn't a guess.</p></div>
+  <div class="concept">
+    <h3>Who may move the production label?</h3>
+    <p>Moving a label changes what every user sees, without a code release or a code review. Treat it like a release.</p>
+    <div class="grid g3">
+      <div class="box"><span class="tag fuse">Limit who can do it</span><p class="small">Use project roles so most people can draft and test prompts, but only a few can move <code>production</code>. Langfuse can protect chosen labels so only certain roles may change them; check which plan includes this.</p></div>
+      <div class="box"><span class="tag fuse">Require evidence</span><p class="small">No label move without an experiment on the dataset, with the scores written down. In regulated products, add a recorded sign-off (module 6 calls this release sign-off coverage).</p></div>
+      <div class="box"><span class="tag fuse">Announce and watch</span><p class="small">Send a webhook to the team channel on every change, and watch live scores for a day after. Know who rolls back, and how fast.</p></div>
+    </div>
+  </div>
+
+  <div class="quiz" data-quiz="q5b">
+    <p class="quiz-label">Check your understanding · Prompts</p>
+    <p class="quiz-q">A colleague improved the report prompt and tried it on two questions. They want to move the production label now. What do you ask for?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Every user gets the new version until someone notices a problem, and quality drops on cases nobody checked."><span class="l">A</span><span>Nothing: rollback takes a click, so just try it</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Two examples prove little. The dataset tests the change against every past failure, and the scores give the team a record."><span class="l">B</span><span>An experiment on the full dataset, compared with the current version, before the label moves</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Prompt management exists so wording changes don&#x27;t need a release. What&#x27;s missing is the evidence, not the release."><span class="l">C</span><span>A code release instead</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Prompt management lets you ship and undo wording changes in minutes. Pair it with an eval so "ship" isn't a guess, and limit who can move the production label.</p></div>
 </section>
 
 <!-- ============ 7. EVALUATION ============ -->
@@ -901,6 +965,22 @@ result = dataset.run_experiment(
     <p class="code-note">Experiments can also be run from the Langfuse screen, and a GitHub Action can fail a code change if scores drop below a threshold.</p>
   </div>
 
+  <div class="concept">
+    <h3>How big should the dataset be?</h3>
+    <p>Small datasets are good for catching a specific bug, and bad at proving one version is better overall. A rough rule: on a dataset of <em>n</em> items, a pass rate can be off by about 1 ÷ √<em>n</em> just by chance.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Dataset size</th><th>Pass rate could be off by about</th><th>Good enough to…</th></tr></thead>
+        <tbody>
+          <tr><td>10 items</td><td>± 30 points</td><td>Confirm a specific fix, such as Priya's case, and catch obvious breakage</td></tr>
+          <tr><td>100 items</td><td>± 10 points</td><td>Spot a big improvement or a big drop</td></tr>
+          <tr><td>400 items</td><td>± 5 points</td><td>Compare two good versions with some confidence</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Two things help a lot. Compare versions on the <em>same</em> items, item by item, and count where they differ. And run each item more than once, because the model's answer varies between runs. The demo's 10-item experiment shows the workflow; a real decision needs a bigger dataset.</p>
+  </div>
+
   <div class="takeaway"><span class="k">PM takeaway</span><p>Every complaint should end up as a dataset item. Then each fix is tested against every past failure, not just the latest one.</p></div>
 </section>
 
@@ -932,6 +1012,19 @@ result = dataset.run_experiment(
       </table>
     </div>
     <p class="small muted">Alert limits depend on the Langfuse Cloud plan. Thresholds here are examples to tune.</p>
+  </div>
+
+  <div class="callout"><b>Which numbers?</b> <a href="metrics.html" data-site-link>Module 6</a> lists the metrics for a regulated assistant by priority, and shows which Langfuse scores, tags and alerts each one comes from.</div>
+
+  <div class="quiz" data-quiz="q5c">
+    <p class="quiz-label">Check your understanding · Latency</p>
+    <p class="quiz-q">The average report takes 11 seconds, but customers still complain it's slow. Which number should you look at?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The average hides the slow runs, and those are the ones people complain about."><span class="l">A</span><span>The average, because it's under the 15-second target</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. p95 shows the wait the unluckiest 1 in 20 users get, and the timeline shows which step to fix."><span class="l">B</span><span>p95 latency, then the timeline of the slowest traces</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Tokens drive cost. Waiting time is mostly about slow steps and steps that run one after another."><span class="l">C</span><span>Total tokens per day</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
   </div>
 
   <div class="takeaway"><span class="k">PM takeaway</span><p>Pick three or four numbers you care about and put alerts on them. A dashboard nobody opens doesn't protect users.</p></div>
@@ -993,6 +1086,7 @@ langfuse = Langfuse(mask=hide_emails)
   <div class="stage-head">
     <p class="eyebrow">Keep this</p>
     <h2 id="hcs">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
   </div>
   <div class="sheet">
     <div class="one-liners">
@@ -1101,7 +1195,7 @@ langfuse = Langfuse(mask=hide_emails)
 </div>
 
 <footer>
-  <p>The demo is a scripted simulation, not the real Langfuse app. No AI model, search engine or Langfuse service is contacted. Users, traces, web addresses, prices and timings are made up for illustration.</p>
+  <p>The demo is a scripted simulation, not the real Langfuse app. No AI model, search engine or Langfuse service is contacted. Users, traces, web addresses, prices and timings are made up for illustration. Prices are in US dollars, as model providers bill.</p>
   <p>The code snippets are simplified to show the idea, based on the Langfuse documentation in October 2026. Real code varies by SDK version. Langfuse, LangChain, LangGraph and LangSmith are the names of their respective projects. This page is an independent explainer and isn't affiliated with them.</p>
 </footer>
 </main>
@@ -1732,5 +1826,37 @@ renderVersions(); renderExp();
 })();
 </script>
 
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.m5";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
 </body>
 </html>

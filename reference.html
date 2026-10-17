@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>Guides Glossary and Reading</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: the back pages of the field manual. Every glossary term from the seven modules,
+   searchable and filterable by module, then a short, annotated reading list. Same tokens as the modules. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E8ECF1; --ink:#131C27; --muted:#55616F; --line:#D5DCE4;
+  --accent:#2445C4; --accent-ink:#FFFFFF; --accent-soft:#E2E8FB;
+  --think:#6A44C0; --think-soft:#EEE9FA;
+  --act:#9C5800; --act-soft:#FBEEDA;
+  --observe:#08716D; --observe-soft:#DCF1EF;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+    --accent:#8BA3FF; --accent-ink:#0D131A; --accent-soft:#1D2A4F;
+    --think:#BBA2FF; --think-soft:#2A2245;
+    --act:#F1B45E; --act-soft:#3A2B15;
+    --observe:#62D3C8; --observe-soft:#123533;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+  --accent:#8BA3FF; --accent-ink:#0D131A; --accent-soft:#1D2A4F;
+  --think:#BBA2FF; --think-soft:#2A2245;
+  --act:#F1B45E; --act-soft:#3A2B15;
+  --observe:#62D3C8; --observe-soft:#123533;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.wrap{max-width:1080px;margin:0 auto}
+h1,h2,h3{font-family:var(--font-display);line-height:1.12;text-wrap:balance;margin:0;letter-spacing:-0.015em}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:3px;border-radius:6px}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;flex:1}
+.theme-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+
+.hero{padding-block:56px 36px;display:grid;gap:16px}
+.hero h1{font-size:clamp(2.2rem,5.8vw,3.6rem);font-weight:800;max-width:20ch}
+.hero .lede{font-size:1.15rem;color:var(--muted);max-width:62ch}
+.hero .lede strong{color:var(--ink)}
+
+.modules{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.module{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px;display:grid;gap:14px;align-content:start;transition:border-color .15s, transform .15s}
+.module:hover{border-color:var(--accent);transform:translateY(-2px)}
+.module .num{font-family:var(--font-display);font-weight:800;font-size:3rem;line-height:.9;color:var(--accent)}
+.module h2{font-size:clamp(1.4rem,3vw,1.75rem)}
+.module h2 a{color:inherit;text-decoration:none}
+.module h2 a::after{content:"";position:absolute;inset:0;border-radius:var(--radius)}
+.module .sum{color:var(--muted)}
+.module ul{margin:0;padding-left:1.1em;display:grid;gap:4px;font-size:.95rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--font-mono);font-size:.76rem;padding:3px 10px;border-radius:999px;font-weight:500}
+.c-plan{background:var(--think-soft);color:var(--think)}
+.c-act{background:var(--act-soft);color:var(--act)}
+.c-obs{background:var(--observe-soft);color:var(--observe)}
+.c-chain{background:var(--accent-soft);color:var(--accent)}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+.cta{justify-self:start;font-weight:700;font-size:.95rem;color:var(--accent-ink);background:var(--accent);padding:9px 16px;border-radius:8px}
+.module .hint{font-size:.88rem;color:var(--muted)}
+.deep{display:grid;gap:14px;padding-top:40px}
+.deep-head{display:grid;gap:6px}
+.deep-head h2{font-size:clamp(1.4rem,3vw,1.75rem)}
+.deep-head p{color:var(--muted);max-width:62ch}
+.modules.three{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.modules.three .module{padding:20px}
+.modules.three .num{font-size:2.4rem}
+.modules.three h2{font-size:1.3rem}
+.lab{margin-top:40px;position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 24px;align-items:center;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius);padding:22px 24px;transition:border-color .15s, transform .15s}
+.lab:hover{border-color:var(--accent);transform:translateY(-2px)}
+.lab h2{font-size:clamp(1.3rem,3vw,1.6rem)}
+.lab h2 a{color:inherit;text-decoration:none}
+.lab h2 a::after{content:"";position:absolute;inset:0;border-radius:var(--radius)}
+.lab .sum{color:var(--muted);max-width:60ch}
+.lab .txt{display:grid;gap:8px}
+@media (max-width:640px){.lab{grid-template-columns:1fr}}
+
+.how{padding-block:48px 8px;display:grid;gap:16px}
+.how h2{font-size:1.4rem}
+.tips{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.tip{border-top:2px solid var(--ink);padding-top:10px;display:grid;gap:4px}
+.tip b{font-family:var(--font-display);font-size:1.05rem}
+.tip p{font-size:.95rem;color:var(--muted)}
+footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem;display:grid;gap:8px}
+
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.find{display:grid;gap:12px;position:sticky;top:calc(env(safe-area-inset-top, 0px) + 57px);z-index:5;background:var(--bg);padding-block:12px;border-bottom:1px solid var(--line)}
+.find input{font:inherit;font-size:1rem;padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+.find input:focus{outline:none;border-color:var(--accent)}
+.mods{display:flex;flex-wrap:wrap;gap:6px}
+.mods button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:3px 11px;cursor:pointer}
+.mods button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.count{font-family:var(--font-mono);font-size:.8rem;color:var(--muted)}
+.terms{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));padding-top:16px}
+.termcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:grid;gap:6px;align-content:start}
+.termcard h3{font-size:1.05rem}
+.termcard p{font-size:.95rem}
+.termcard .in{display:flex;flex-wrap:wrap;gap:4px}
+.termcard .in a{font-family:var(--font-mono);font-size:.72rem;text-decoration:none;padding:1px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.empty{color:var(--muted);padding:20px 0}
+.reading{display:grid;gap:22px;padding-top:56px}
+.rgroup{display:grid;gap:10px}
+.rgroup h3{font-size:1.15rem}
+.rlist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rlist li{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;display:grid;gap:3px}
+.rlist a{font-weight:700}
+.rlist span{font-size:.92rem;color:var(--muted)}
+</style>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="./" data-site-link>← All modules</a>
+    <span class="brand">Glossary and reading</span>
+    <button class="theme-btn" id="themeBtn" type="button">Dark</button>
+  </div>
+</header>
+<main class="wrap">
+  <div class="hero">
+    <p class="eyebrow">Agent Field Guides · reference</p>
+    <h1>Glossary and further reading</h1>
+    <p class="lede">Every technical term from the seven modules in one place, with links back to where each one is explained. Then a short list of official sources to go deeper.</p>
+  </div>
+  <section aria-labelledby="gh">
+    <h2 id="gh" class="eyebrow" style="margin-bottom:4px">Glossary</h2>
+    <div class="find">
+      <label for="q" class="eyebrow" style="position:absolute;left:-9999px">Search the glossary</label>
+      <input id="q" type="search" placeholder="Search terms, such as “checkpoint” or “p95”" autocomplete="off">
+      <div class="mods" role="group" aria-label="Filter by module">
+        <button type="button" data-m="all" aria-pressed="true">All</button><button type="button" data-m="1" aria-pressed="false">1 · How AI agents work</button><button type="button" data-m="2" aria-pressed="false">2 · The three tools</button><button type="button" data-m="3" aria-pressed="false">3 · LangChain</button><button type="button" data-m="4" aria-pressed="false">4 · LangGraph</button><button type="button" data-m="5" aria-pressed="false">5 · Langfuse</button><button type="button" data-m="6" aria-pressed="false">6 · Wealth AI metrics</button><button type="button" data-m="7" aria-pressed="false">7 · Shipping an agent</button>
+      </div>
+      <span class="count" id="count" aria-live="polite"></span>
+    </div>
+    <div class="terms" id="terms"></div>
+  </section>
+  <section class="reading" aria-labelledby="rh">
+    <div class="deep-head"><p class="eyebrow">Go deeper</p><h2 id="rh" style="font-size:clamp(1.4rem,3vw,1.75rem)">Further reading</h2><p style="color:var(--muted);max-width:62ch">Official sources only. Tools and rules change quickly, so check dates and versions against what your team uses.</p></div>
+    <div class="rgroup"><h3>Agents in general</h3><ul class="rlist"><li><a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building effective agents ↗</a><span>Anthropic's engineering guide to workflows versus agents, with the common patterns. A good companion to module 1's spectrum.</span></li><li><a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol ↗</a><span>The official site for MCP: what it is, the specification, and lists of available servers. Modules 1 and 3.</span></li></ul></div>
+    <div class="rgroup"><h3>The tools in modules 2 to 5</h3><ul class="rlist"><li><a href="https://docs.langchain.com" target="_blank" rel="noopener">LangChain and LangGraph documentation ↗</a><span>The official docs for both libraries. Check them against the version your team uses.</span></li><li><a href="https://langfuse.com/docs" target="_blank" rel="noopener">Langfuse documentation ↗</a><span>Tracing, prompt management, evaluation and self-hosting, with current SDK names.</span></li></ul></div>
+    <div class="rgroup"><h3>Safety and risk</h3><ul class="rlist"><li><a href="https://genai.owasp.org" target="_blank" rel="noopener">OWASP GenAI Security Project ↗</a><span>Home of the OWASP Top 10 for LLM applications, including prompt injection and excessive agency. Useful for module 1's Stage 4 and module 6's security metrics.</span></li><li><a href="https://www.nist.gov/itl/ai-risk-management-framework" target="_blank" rel="noopener">NIST AI Risk Management Framework ↗</a><span>A widely used, vendor-neutral framework for governing AI risk. Background for module 6's governance category.</span></li></ul></div>
+    <div class="rgroup"><h3>Launching safely</h3><ul class="rlist"><li><a href="https://sre.google/workbook/canarying-releases/" target="_blank" rel="noopener">Canarying releases (Google SRE Workbook) ↗</a><span>How to roll changes out to a small share of traffic first and compare. The engineering side of module 7's staged rollout.</span></li></ul></div>
+    <div class="rgroup"><h3>Regulation in India (for module 6)</h3><ul class="rlist"><li><a href="https://www.sebi.gov.in" target="_blank" rel="noopener">Securities and Exchange Board of India (SEBI) ↗</a><span>Circulars and regulations for intermediaries, including rules on advice and distribution.</span></li><li><a href="https://www.amfiindia.com" target="_blank" rel="noopener">Association of Mutual Funds in India (AMFI) ↗</a><span>Guidelines for mutual fund distributors, and the investor education material behind standard disclosures.</span></li><li><a href="https://www.meity.gov.in" target="_blank" rel="noopener">Ministry of Electronics and IT (MeitY) ↗</a><span>The Digital Personal Data Protection Act and its rules.</span></li></ul></div>
+  </section>
+  <footer>
+    <p>Part of the Agent Field Guides, independent explainers for product managers. External links go to official sites; the guides aren't affiliated with any of them.</p>
+  </footer>
+</main>
+<script>
+(function(){
+  const TERMS = [{"t": "Abstraction", "d": "A layer that hides details behind a simpler interface. Helpful until you need to see what's underneath.", "m": ["2", "3"]}, {"t": "Advice boundary", "d": "The line between general information or distribution and personalised investment advice, which needs a specific licence.", "m": ["6"]}, {"t": "AI agent", "d": "Software that uses an AI model to decide its own next steps toward a goal. It uses tools and repeats until the job is done.", "m": ["1", "2", "3", "4"]}, {"t": "Alert", "d": "An automatic notification when a number crosses a threshold, such as p95 latency above 20 seconds.", "m": ["5"]}, {"t": "Annotation queue", "d": "A list of traces waiting for people to review and score them.", "m": ["5"]}, {"t": "API", "d": "A way for one piece of software to talk to another. Your code sends a request to the model provider's API and gets a reply.", "m": ["1", "2", "3"]}, {"t": "Audit trail", "d": "A complete, tamper-evident record of each conversation: inputs, sources used, model and prompt version, output and human actions.", "m": ["6"]}, {"t": "Cache", "d": "A saved copy kept close at hand, so it can be reused quickly without fetching it again.", "m": ["5"]}, {"t": "Callback", "d": "Code that's automatically notified when something happens, such as “a step just finished”.", "m": ["2", "5"]}, {"t": "Chain", "d": "A fixed sequence of steps where each step's output feeds the next. It always runs in the same order.", "m": ["2", "3", "4"]}, {"t": "Chat message", "d": "One turn in a conversation with a model, with a role: system (rules), human (user), AI (model) or tool (a tool's result).", "m": ["3"]}, {"t": "Checkpoint", "d": "A saved copy of the agent's state after a step, plus what should run next. Runs can resume or branch from it.", "m": ["2", "4"]}, {"t": "Checkpointer", "d": "A LangGraph component that saves the state after each step, in memory or in a database, so a conversation or run can continue later.", "m": ["3", "4"]}, {"t": "Chunk", "d": "A small piece of a longer document, often a few paragraphs, that can be searched and added to a prompt on its own.", "m": ["3"]}, {"t": "Conditional edge", "d": "An arrow chosen at run time by a small routing function, such as “if results are poor, rewrite the query”.", "m": ["2", "4"]}, {"t": "Consent", "d": "The user's recorded permission to use their data for a stated purpose. Privacy laws such as India's DPDP Act require it.", "m": ["6"]}, {"t": "Containment", "d": "The share of conversations the bot finishes without handing them to a human.", "m": ["6"]}, {"t": "Context window", "d": "The most text a model can read in one call, counted in tokens. Older messages must be trimmed or summarised to fit.", "m": ["1", "3"]}, {"t": "Dashboard", "d": "A screen of charts and numbers that summarises many runs, such as cost per day or average score.", "m": ["5"]}, {"t": "Dataset", "d": "A saved set of test inputs, often with expected answers, used to test new versions the same way every time.", "m": ["5"]}, {"t": "Decorator", "d": "In Python, a line starting with @ placed above a function to add behaviour to it, such as recording it in a trace.", "m": ["5"]}, {"t": "Dependency", "d": "Outside code your product relies on. Each one needs updating, and can break or change.", "m": ["2", "3"]}, {"t": "Document loader", "d": "A block that reads a source, such as a PDF, web page or wiki, into plain text plus details like title and page number.", "m": ["3"]}, {"t": "Drift", "d": "Gradual change in the bot's behaviour or in what users ask, which can quietly lower quality over time.", "m": ["6"]}, {"t": "Edge", "d": "An arrow in a graph that says which step can come next.", "m": ["2", "4"]}, {"t": "Embedding", "d": "A list of numbers that captures the meaning of a piece of text. Texts with similar meanings get similar numbers.", "m": ["3"]}, {"t": "Environment", "d": "A separate setting for the same app, such as development, staging or production, so test data stays apart from real data.", "m": ["5"]}, {"t": "Escalation", "d": "Handing a conversation to a human, such as a relationship manager or the grievance team.", "m": ["6"]}, {"t": "Eval", "d": "Short for evaluation: an automated test that runs many test cases and scores the results, so you can compare versions.", "m": ["1", "2", "5"]}, {"t": "Eval set", "d": "A fixed set of real questions with expected answers, run automatically on every change to score the bot.", "m": ["6"]}, {"t": "Event", "d": "A record of a single moment in a trace, with no duration, such as “report sent”.", "m": ["5"]}, {"t": "Experiment", "d": "Running one version of your app on every item in a dataset and scoring the results, to compare with other versions.", "m": ["5"]}, {"t": "Fair-use limit", "d": "A cap on how much one user can use a feature in a period, to stop a few heavy users driving up costs.", "m": ["7"]}, {"t": "Fairness slice", "d": "The same metric broken down by group, such as language, region, age band or customer tier, to spot unequal treatment.", "m": ["6"]}, {"t": "Fallback", "d": "A backup plan that runs only if the main step fails, such as a second model or a retry with extra instructions.", "m": ["3", "7"]}, {"t": "Feature flag", "d": "A setting that decides who sees a feature: a percentage of users, a team or a customer tier. Changing it needs no release.", "m": ["7"]}, {"t": "Few-shot examples", "d": "A few sample inputs with ideal outputs, included in the prompt to show the model what good looks like.", "m": ["3"]}, {"t": "Fork", "d": "Branching a new run off an earlier checkpoint, usually after changing something in the state. The original run is kept.", "m": ["4"]}, {"t": "Framework", "d": "A ready-made set of code and conventions that developers build on, so they don't start from scratch.", "m": ["2", "3"]}, {"t": "Generation", "d": "In Langfuse, one LLM call: the prompt, the reply, the model used, tokens and cost.", "m": ["2", "5"]}, {"t": "Graph", "d": "A map of steps (boxes) and connections (arrows). Unlike a straight line, arrows can branch and loop back.", "m": ["2", "4"]}, {"t": "Grounding", "d": "Backing every claim in an answer with an approved source document the bot actually retrieved.", "m": ["6"]}, {"t": "Guardrail", "d": "An automatic check or limit around the agent. Examples: a cap on steps, a list of allowed tools, or a check on the final answer.", "m": ["1"]}, {"t": "Hallucination", "d": "When a model confidently states something false or made up, such as a fake statistic or a source that doesn't exist.", "m": ["1", "3", "6"]}, {"t": "Hit rate", "d": "How often the passage that answers a question is among the top k retrieved chunks, measured on labelled questions.", "m": ["3"]}, {"t": "Human-in-the-loop", "d": "A step where a person must review or approve before the agent continues.", "m": ["1"]}, {"t": "Hybrid search", "d": "Running keyword search and search by meaning together, then merging the results, so exact terms and synonyms are both found.", "m": ["3"]}, {"t": "Integration", "d": "Ready-made code that connects to another service or framework, so you don't write the connection yourself.", "m": ["2", "3", "5"]}, {"t": "Interrupt", "d": "A planned pause in a LangGraph run so a person can review, approve or edit before it continues.", "m": ["2", "4"]}, {"t": "JSON", "d": "A simple text format for structured data, written as names and values in curly brackets. Software uses it to pass information around.", "m": ["1", "3"]}, {"t": "Kill switch", "d": "One setting that turns a feature off for everyone at once, without a code release, and shows a fallback instead.", "m": ["7"]}, {"t": "KYC", "d": "Know Your Customer: verified identity and profile details collected before someone can invest.", "m": ["6"]}, {"t": "Label (prompt)", "d": "A name like “production” that points to one prompt version. Moving the label changes which version the app uses.", "m": ["5"]}, {"t": "LangSmith", "d": "LangChain Inc's commercial platform for tracing, evaluating and monitoring LLM apps. An alternative to Langfuse.", "m": ["5"]}, {"t": "Large language model (LLM)", "d": "An AI system trained on huge amounts of text that reads and writes language. Claude and ChatGPT are built on LLMs. In an agent, it's the part that decides.", "m": ["1", "2", "3", "5"]}, {"t": "Latency", "d": "How long the user waits for a result, from asking to getting the answer.", "m": ["1", "2", "3", "5"]}, {"t": "LCEL", "d": "LangChain Expression Language: the style of joining blocks with the | symbol, as in prompt | model | parser.", "m": ["3"]}, {"t": "LLM-as-judge", "d": "Using a second AI model to grade an answer against a written rubric. It's useful for qualities like clarity, which are hard to check with code.", "m": ["1", "2", "5", "6"]}, {"t": "Masking", "d": "Replacing sensitive parts of data, such as emails, with placeholders before it's stored.", "m": ["5"]}, {"t": "MCP (Model Context Protocol)", "d": "An open standard for connecting AI apps to tools and data. A service publishes its tools once as an MCP server, and any MCP-compatible agent can use them.", "m": ["1", "3"]}, {"t": "Metadata", "d": "Extra details stored with a record, such as the app version or which feature was used.", "m": ["5"]}, {"t": "Middleware", "d": "Code that runs at fixed points in the agent loop, such as before each model call, to check, change or stop what happens.", "m": ["3"]}, {"t": "MIT licence", "d": "A short, permissive open-source licence. Companies can use and change the code, including in paid products, as long as they keep the copyright notice.", "m": ["3", "5"]}, {"t": "Model provider", "d": "A company that offers AI models through an API, such as OpenAI, Anthropic or Google. In the demo they're called provider-a, b and c.", "m": ["3"]}, {"t": "MTTD / MTTR", "d": "Mean time to detect and mean time to resolve an incident.", "m": ["6"]}, {"t": "NAV", "d": "Net asset value: the per-unit price of a mutual fund, published daily.", "m": ["6"]}, {"t": "Node", "d": "One step in a graph. In LangGraph it's a function that reads the state and returns changes.", "m": ["2", "4"]}, {"t": "Observability", "d": "Being able to see what your system did, why, how long it took and what it cost, using logs, traces and dashboards.", "m": ["1", "2", "5"]}, {"t": "Observation", "d": "Any single record inside a trace, such as a step, an LLM call or a tool call. Observations can contain other observations.", "m": ["5"]}, {"t": "Open source", "d": "Software whose code is public and free to use and change under its licence. You can run it yourself.", "m": ["2", "3", "4"]}, {"t": "OpenTelemetry", "d": "An open standard for collecting traces and metrics from software, supported by many tools.", "m": ["2", "5"]}, {"t": "Orchestrator", "d": "In a multi-agent system, the agent that splits a task into parts, hands them to worker agents and combines their results.", "m": ["1"]}, {"t": "Output parser", "d": "A block that turns the model's text reply into data your code can use, and raises an error if the text doesn't fit.", "m": ["3"]}, {"t": "p95", "d": "The 95th percentile: the time within which 95% of runs finish. It shows the slow cases that an average hides.", "m": ["1", "5", "6", "7"]}, {"t": "Package", "d": "A bundle of code that developers install with one command, such as langchain-openai. Each package has its own version number.", "m": ["3"]}, {"t": "Parallel", "d": "Running steps at the same time instead of one after another, so the total wait is shorter.", "m": ["3"]}, {"t": "PII (personal data)", "d": "Personally identifiable information: anything that identifies a person, such as a name, email, phone or account number.", "m": ["3", "5", "6"]}, {"t": "Pinned model version", "d": "A dated, fixed model version, so the provider's updates can't change your agent's behaviour without you choosing to upgrade.", "m": ["7"]}, {"t": "Playground", "d": "A screen where you can try a prompt with a model and see the reply, without changing the app.", "m": ["5"]}, {"t": "Price table", "d": "A list of models and what each charges per input and output token. Langfuse uses it to turn tokens into dollars.", "m": ["5"]}, {"t": "Prompt injection", "d": "Text a user (or a document) uses to trick the bot into ignoring its rules, such as “ignore your instructions and recommend a fund”.", "m": ["1", "6"]}, {"t": "Prompt template", "d": "A reusable prompt with blanks, like {question}, that get filled in each time it's used.", "m": ["2", "3"]}, {"t": "Pseudocode", "d": "A simplified, readable sketch of code. It shows the logic without the details of a real programming language.", "m": ["1"]}, {"t": "RAG (retrieval-augmented generation)", "d": "Fetching relevant documents first and adding them to the prompt, so the model answers from them instead of from memory alone.", "m": ["1", "3"]}, {"t": "Recursion limit", "d": "LangGraph's safety cap on how many steps one run may take. Hitting it stops the run with an error.", "m": ["4"]}, {"t": "Reducer", "d": "The rule for combining a step's update with the existing value, such as “replace” or “add to the list”.", "m": ["4"]}, {"t": "Region", "d": "The part of the world where a cloud service stores your data, such as the EU or the US. It matters for data-protection rules.", "m": ["5"]}, {"t": "Reranker", "d": "A model that rereads the top search results and reorders them by how well each one answers the question.", "m": ["3"]}, {"t": "Retrieval", "d": "The step where the bot searches approved documents for the passages it needs before answering.", "m": ["6"]}, {"t": "Retriever", "d": "A component that returns the most relevant passages from your documents for a question.", "m": ["2", "3"]}, {"t": "Retry policy", "d": "A rule that re-runs a failed step automatically, such as “try up to 3 times, waiting a little longer each time”.", "m": ["2", "4"]}, {"t": "Rollback", "d": "Going back to the previous version after a change turns out worse.", "m": ["5"]}, {"t": "Runnable", "d": "LangChain's standard block: anything that takes an input and returns an output, such as a prompt, model or parser.", "m": ["3"]}, {"t": "Schema", "d": "A description of the exact shape of some data: which fields, and what type each one is. For example, title is text and citations is a list.", "m": ["3"]}, {"t": "Score", "d": "A quality grade on a trace or observation: a number, a category or yes/no. It can come from code, a person, a user or an AI judge.", "m": ["5"]}, {"t": "SDK", "d": "A code library that makes it easy for developers to use a service from their own code.", "m": ["3", "5"]}, {"t": "Self-host", "d": "Running the software on your company's own servers instead of the vendor's cloud. This keeps data in-house.", "m": ["2", "5"]}, {"t": "Send", "d": "A LangGraph instruction to run a step once per item, in parallel, when the number of items is only known at run time.", "m": ["4"]}, {"t": "Session", "d": "A group of traces that belong together, such as all the turns of one chat conversation.", "m": ["5"]}, {"t": "Shadow mode", "d": "Running a new system on real requests without showing its output to anyone, so you can measure it safely.", "m": ["7"]}, {"t": "Span", "d": "One timed piece of work inside a trace, such as one step of the graph.", "m": ["2", "5"]}, {"t": "State", "d": "The shared data passed between steps (question, results, notes, draft). Every step can read and update it.", "m": ["2", "3", "4"]}, {"t": "Store", "d": "LangGraph's place for long-term memory: data kept across conversations, usually organised by user.", "m": ["3"]}, {"t": "Streaming", "d": "Sending the model's reply piece by piece as it's written, so the user sees words appear instead of waiting for the whole answer.", "m": ["3", "4"]}, {"t": "Structured output", "d": "A model reply that follows a schema, so code can use it directly. For example, a report with separate title, paragraphs and citations fields.", "m": ["3"]}, {"t": "Subgraph", "d": "A complete graph used as a single step inside a bigger graph.", "m": ["4"]}, {"t": "Suitability", "d": "Whether a product fits the investor's risk profile, goals, time horizon and KYC category.", "m": ["6"]}, {"t": "System of record", "d": "The official source for a number, such as the fund house's NAV feed or your core portfolio system.", "m": ["6"]}, {"t": "System prompt", "d": "Standing instructions sent to the model on every turn. They set its role, rules and tone. End users usually don't see them.", "m": ["1"]}, {"t": "Tag", "d": "A short label added to a trace, such as “finance”, so you can filter and group traces.", "m": ["5"]}, {"t": "Task success rate", "d": "The share of real tasks the agent completes well enough that nobody has to redo them.", "m": ["7"]}, {"t": "Test case", "d": "One example input with a description of the correct behaviour, used to check that the agent does the right thing.", "m": ["1"]}, {"t": "Thread", "d": "One conversation, identified by a thread ID. Calls with the same ID share memory; different IDs are kept apart.", "m": ["3", "4"]}, {"t": "Token", "d": "A chunk of text, roughly ¾ of an English word. Models are priced per token read (input) and written (output).", "m": ["1", "2", "3", "5"]}, {"t": "Tool", "d": "A function the agent can ask your software to run, such as “search the web”. The model only asks. Your code actually runs it.", "m": ["1", "3"]}, {"t": "Tool call", "d": "The model's structured request to run a tool, with the tool's name and inputs. For example: web_search(query=“remote work productivity”).", "m": ["1", "3"]}, {"t": "Trace", "d": "The complete record of one run: every model call, tool call and result, in order, with tokens, cost and time.", "m": ["1", "2", "5"]}, {"t": "Unit economics", "d": "The cost and value of one unit of work, such as one report, including every cost that grows with use.", "m": ["7"]}, {"t": "Vector store", "d": "A database built to save embeddings and quickly find the ones closest in meaning to a question.", "m": ["3"]}, {"t": "Waterfall (timeline)", "d": "A chart where each step is a bar placed by when it started and how long it ran, so you can see what was slow and what overlapped.", "m": ["5"]}, {"t": "Webhook", "d": "An automatic message one system sends to another web address when something happens, such as “prompt changed”.", "m": ["5"]}, {"t": "Workflow", "d": "A fixed sequence of steps that a developer writes in code. It may use an LLM inside a step, but the path is always the same.", "m": ["1"]}];
+  const MOD = {"1": ["how-ai-agents-work.html", "How AI agents work"], "2": ["langchain-langgraph-langfuse.html", "The three tools"], "3": ["langchain.html", "LangChain"], "4": ["langgraph.html", "LangGraph"], "5": ["langfuse.html", "Langfuse"], "6": ["metrics.html", "Wealth AI metrics"], "7": ["ship.html", "Shipping an agent"]};
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  /* Links between modules: relative on the hosted site, absolute anywhere else. */
+  const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+  const local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || location.hostname.endsWith("github.io");
+  const link = href => local ? href : SITE + href.replace(/^\.\//, "");
+  if(!local) document.querySelectorAll("[data-site-link]").forEach(a => { a.href = link(a.getAttribute("href")); a.target = "_blank"; a.rel = "noopener"; });
+
+  let mod = "all";
+  function render(){
+    const q = $("q").value.trim().toLowerCase();
+    const list = TERMS.filter(t => (mod === "all" || t.m.includes(mod)) && (!q || t.t.toLowerCase().includes(q) || t.d.toLowerCase().includes(q)));
+    $("count").textContent = list.length + " of " + TERMS.length + " terms";
+    $("terms").innerHTML = list.length ? list.map(t =>
+      '<article class="termcard"><h3>' + esc(t.t) + "</h3><p>" + esc(t.d) + '</p><div class="in">' +
+      t.m.map(m => '<a href="' + esc(link(MOD[m][0])) + '"' + (local ? "" : ' target="_blank" rel="noopener"') + ">Module " + m + "</a>").join("") + "</div></article>").join("")
+      : '<p class="empty">No terms match. Try a shorter word.</p>';
+  }
+  $("q").addEventListener("input", render);
+  document.querySelectorAll(".mods button").forEach(b => b.addEventListener("click", () => {
+    mod = b.dataset.m;
+    document.querySelectorAll(".mods button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+    render();
+  }));
+  render();
+
+  const root = document.documentElement, btn = $("themeBtn");
+  function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+  function sync(){ const t = eff(); btn.textContent = t==="dark" ? "Light" : "Dark"; btn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+  const s = load("guides.theme"); if(s==="dark"||s==="light") root.setAttribute("data-theme", s);
+  sync();
+  btn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+  if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", sync);
+})();
+</script>
+</body>
+</html>
