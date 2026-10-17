@@ -88,6 +88,10 @@ a{color:var(--accent)}
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
 .topbar-in{max-width:1160px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
 .brand{font-family:var(--font-display);font-weight:800;font-size:1rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
 .stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
 .stages::-webkit-scrollbar{display:none}
 .stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
@@ -358,6 +362,7 @@ footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1p
 
 <header class="topbar">
   <div class="topbar-in">
+    <a class="home-link" href="./" data-site-link>← All modules</a>
     <a class="brand" href="#top">LangChain · LangGraph · Langfuse</a>
     <nav class="stages" aria-label="Sections">
       <a href="#picture" data-nav="picture"><span class="n">1</span>Big picture</a>
@@ -941,6 +946,11 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
   </div>
 </section>
 
+<div class="next-module">
+  <span class="eyebrow">Previous · Module 1</span>
+  <a href="how-ai-agents-work.html" data-site-link>← How AI agents work</a>
+</div>
+
 <footer>
   <p>The demo is a scripted simulation. No AI model, search engine, LangChain, LangGraph or Langfuse service is contacted, and the example web addresses are made up. Model names, timings, token counts and prices are illustrative.</p>
   <p>The code snippets are simplified to show the idea. Real code varies by library version. LangChain, LangGraph, LangSmith and Langfuse are the names of their respective projects. This page is an independent explainer and isn't affiliated with them.</p>
@@ -954,6 +964,16 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
 
 /* ---------- Glossary ---------- */
 const GLOSS = {
@@ -1013,9 +1033,9 @@ $("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t
 const root = document.documentElement, themeBtn = $("themeBtn");
 function effTheme(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
 function syncTheme(){ const t = effTheme(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
-const saved = load("lc.theme"); if(saved==="dark"||saved==="light") root.setAttribute("data-theme", saved);
+const saved = load("guides.theme"); if(saved==="dark"||saved==="light") root.setAttribute("data-theme", saved);
 syncTheme();
-themeBtn.addEventListener("click", () => { const n = effTheme()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("lc.theme", n); syncTheme(); });
+themeBtn.addEventListener("click", () => { const n = effTheme()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); syncTheme(); });
 if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncTheme);
 
 /* ---------- Nav ---------- */
