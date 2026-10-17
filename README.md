@@ -11,6 +11,7 @@ Interactive guides for product managers, built around one running example: a res
 | **3 · LangChain in depth**: models, prompts, tools, retrieval, chains and agents, with a chain workbench demo | https://lalwalataukir.github.io/how-ai-agents-work/langchain.html |
 | **4 · LangGraph in depth**: state, edges, retries, checkpoints, human-in-the-loop and time travel, with a crash/resume/fork demo | https://lalwalataukir.github.io/how-ai-agents-work/langgraph.html |
 | **5 · Langfuse in depth**: traces, cost, latency, prompt management and evaluation, with a debug-a-complaint demo | https://lalwalataukir.github.io/how-ai-agents-work/langfuse.html |
+| **6 · Metrics for a compliant wealth AI bot**: 7 metric categories, each with P0/P1/P2 metrics, plus a P0 launch checklist | https://lalwalataukir.github.io/how-ai-agents-work/metrics.html |
 
 **Demo lab:** https://lalwalataukir.github.io/how-ai-agents-work/demo-lab.html has the LangChain, LangGraph and Langfuse demos in one page, with tabs. Each tab loads the demo from its module page, so there's only one copy of each demo.
 

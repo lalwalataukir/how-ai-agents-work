@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>Wealth AI Metrics</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module 6 of the field guides, a metrics framework you can scan like a control sheet.
+   The matrix up top is the summary; each category below expands it into metric cards, and a
+   priority filter (P0 / P1 / P2) cuts across all of them. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E8ECF1; --ink:#131C27; --muted:#55616F; --line:#D5DCE4;
+  --accent:#2445C4; --accent-ink:#FFFFFF; --accent-soft:#E2E8FB;
+  --p0:#B42318; --p0-soft:#FCE7E4;
+  --p1:#9C5800; --p1-soft:#FBEEDA;
+  --p2:#2A6B8F; --p2-soft:#DDEEF6;
+  --code-bg:#ECEFF4;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+    --accent:#8BA3FF; --accent-ink:#0D131A; --accent-soft:#1D2A4F;
+    --p0:#FF8F84; --p0-soft:#3E1D1A;
+    --p1:#F1B45E; --p1-soft:#3A2B15;
+    --p2:#7CC4EA; --p2-soft:#132E3D;
+    --code-bg:#101821;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+  --accent:#8BA3FF; --accent-ink:#0D131A; --accent-soft:#1D2A4F;
+  --p0:#FF8F84; --p0-soft:#3E1D1A;
+  --p1:#F1B45E; --p1-soft:#3A2B15;
+  --p2:#7CC4EA; --p2-soft:#132E3D;
+  --code-bg:#101821;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:120px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.3rem);font-weight:800}
+h2{font-size:clamp(1.5rem,3.4vw,2.05rem);font-weight:750}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+
+/* top bar + sticky filter */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1160px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1rem;white-space:nowrap}
+.filters{display:flex;gap:6px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;padding-block:8px}
+.filters > :first-child{margin-left:auto} /* right-aligned when it fits, scrollable from the start when it doesn't */
+.filters::-webkit-scrollbar{display:none}
+.fbtn{flex:none;font:inherit;font-size:.84rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer;white-space:nowrap}
+.fbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.fbtn.p0[aria-pressed="true"]{background:var(--p0);border-color:var(--p0);color:var(--bg)}
+.fbtn.p1[aria-pressed="true"]{background:var(--p1);border-color:var(--p1);color:var(--bg)}
+.fbtn.p2[aria-pressed="true"]{background:var(--p2);border-color:var(--p2);color:var(--bg)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+@media (max-width:760px){.brand{display:none}}
+
+/* glossary popover */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop[hidden]{display:none}
+#termPop strong{font-family:var(--font-display)}
+
+.hero{padding-block:44px 24px;display:grid;gap:14px}
+.hero .lede{font-size:1.12rem;max-width:68ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+
+/* priority legend */
+.legend{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.prio{border-radius:var(--radius);padding:14px 16px;display:grid;gap:4px;border:1px solid var(--line);background:var(--surface);border-top:4px solid var(--c)}
+.prio .pt{display:flex;gap:8px;align-items:center;font-family:var(--font-display);font-weight:800;font-size:1.15rem}
+.prio p{font-size:.92rem;color:var(--muted)}
+.prio .rule{font-family:var(--font-mono);font-size:.74rem;color:var(--c);letter-spacing:.04em}
+.pb{display:inline-block;font-family:var(--font-mono);font-size:.72rem;font-weight:500;padding:1px 7px;border-radius:5px;letter-spacing:.04em;flex:none}
+.pb.p0{background:var(--p0-soft);color:var(--p0)} .pb.p1{background:var(--p1-soft);color:var(--p1)} .pb.p2{background:var(--p2-soft);color:var(--p2)}
+
+section.blk{padding-block:48px 8px;border-top:1px solid var(--line);display:grid;gap:20px;margin-top:40px}
+.blk-head{display:grid;gap:8px}
+.blk-head p{max-width:70ch;color:var(--muted)}
+
+/* matrix */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:820px;font-size:.9rem}
+th,td{text-align:left;vertical-align:top;padding:11px 13px;border-bottom:1px solid var(--line)}
+thead th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tbody tr:last-child td,tbody tr:last-child th{border-bottom:0}
+tbody th{font-family:var(--font-display);font-weight:700;width:200px}
+tbody th a{color:var(--ink);text-decoration:none}
+tbody th a:hover{color:var(--accent)}
+tbody th .own{display:block;font-family:var(--font-body);font-weight:400;font-size:.78rem;color:var(--muted);margin-top:2px}
+td ul{margin:0;padding-left:1.05em;display:grid;gap:3px}
+.col-p0{background:color-mix(in srgb, var(--p0-soft) 45%, transparent)}
+th.h-p0{color:var(--p0)} th.h-p1{color:var(--p1)} th.h-p2{color:var(--p2)}
+.dim{opacity:.28}
+
+/* category sections */
+.cat{padding-block:44px 8px;border-top:1px solid var(--line);display:grid;gap:18px}
+.cat-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;align-items:baseline}
+.cat-num{font-family:var(--font-display);font-weight:800;font-size:2.4rem;line-height:1;color:var(--accent);grid-row:span 3}
+.cat-head .own{font-family:var(--font-mono);font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cat-head .why{color:var(--muted);max-width:70ch}
+.lanes{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+@media (max-width:980px){.lanes{grid-template-columns:minmax(0,1fr)}}
+.lane{display:grid;gap:10px;align-content:start;min-width:0}
+.lane-h{display:flex;gap:8px;align-items:baseline;font-family:var(--font-display);font-weight:700;font-size:.95rem;padding-bottom:6px;border-bottom:2px solid var(--c)}
+.lane-h .lbl{color:var(--muted);font-family:var(--font-body);font-weight:400;font-size:.8rem}
+.mcard{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:8px;padding:12px 14px;display:grid;gap:6px;min-width:0}
+.mcard h4{font-size:1rem;font-family:var(--font-display);font-weight:700}
+.mcard .what{font-size:.9rem}
+.mcard dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 10px;font-size:.82rem}
+.mcard dt{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding-top:2px}
+.mcard dd{margin:0}
+.mcard .tgt{font-family:var(--font-mono);font-size:.8rem;font-weight:500}
+.lane.c0{--c:var(--p0)} .lane.c1{--c:var(--p1)} .lane.c2{--c:var(--p2)}
+.lane[hidden]{display:none}
+.takeaway{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;border-top:2px solid var(--ink);padding-top:12px;max-width:86ch}
+.takeaway .k{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.takeaway p{font-family:var(--font-display);font-weight:700;font-size:1.08rem;line-height:1.35}
+@media (max-width:520px){.takeaway{grid-template-columns:1fr;gap:4px}}
+
+/* checklist + cadence */
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:22px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .col{display:grid;gap:10px;align-content:start;min-width:0}
+.checklist{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:.92rem}
+.checklist li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:start}
+.checklist input{margin-top:5px;accent-color:var(--p0)}
+.checklist .c{color:var(--muted);font-size:.8rem}
+.cad{display:grid;gap:10px}
+.cad div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;font-size:.92rem;border-bottom:1px solid var(--line);padding-bottom:8px}
+.cad b{font-family:var(--font-display)}
+.progress-line{font-family:var(--font-mono);font-size:.8rem;color:var(--muted)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss b{font-family:var(--font-display)}
+.callout{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--radius);padding:14px 16px;max-width:86ch;font-size:.95rem}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+footer{padding-block:32px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px;display:grid;gap:8px}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="./" data-site-link>← All modules</a>
+    <span class="brand">Wealth AI metrics</span>
+    <div class="filters" role="group" aria-label="Show metrics by priority">
+      <button type="button" class="fbtn" data-f="all" aria-pressed="true">All</button>
+      <button type="button" class="fbtn p0" data-f="p0" aria-pressed="false">P0</button>
+      <button type="button" class="fbtn p1" data-f="p1" aria-pressed="false">P1</button>
+      <button type="button" class="fbtn p2" data-f="p2" aria-pressed="false">P2</button>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button">Dark</button>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <div class="hero">
+    <p class="eyebrow">Module 6 · Agent Field Guides · about 20 minutes</p>
+    <h1>Metrics for a compliant wealth AI bot</h1>
+    <p class="lede">What to measure when an AI assistant talks to investors. The example is a <strong>wealth assistant for a mutual fund distributor</strong>: it answers fund and portfolio questions, helps start a SIP, and hands off to a relationship manager. Seven categories of metrics, each split into <strong>P0, P1 and P2</strong> priorities.</p>
+    <p class="small muted">Tap any word with a dotted underline, like <button type="button" class="term" data-term="llm_judge" aria-expanded="false">LLM-as-judge</button>, for a plain-English definition. Use the P0 / P1 / P2 buttons at the top to filter the whole page.</p>
+  </div>
+
+  <div class="legend">
+    <div class="prio" style="--c:var(--p0)"><span class="pt"><span class="pb p0">P0</span>Launch blockers</span><p>Measured on every conversation from day one, with real-time alerts. A single breach is an incident. Most are zero-tolerance.</p><span class="rule">no launch without these</span></div>
+    <div class="prio" style="--c:var(--p1)"><span class="pt"><span class="pb p1">P1</span>Core health</span><p>Measured from launch and reviewed weekly. They drive fixes, and release go/no-go decisions.</p><span class="rule">weekly review</span></div>
+    <div class="prio" style="--c:var(--p2)"><span class="pt"><span class="pb p2">P2</span>Optimisation</span><p>Added once the bot is stable. Reviewed monthly or quarterly. They shape the roadmap and long-term trust.</p><span class="rule">monthly / quarterly</span></div>
+  </div>
+
+  <section class="blk" id="matrix" aria-labelledby="hm">
+    <div class="blk-head">
+      <p class="eyebrow">At a glance</p>
+      <h2 id="hm">The seven categories and their top metrics</h2>
+      <p>Each row is a category with its owning team. Click a category name to jump to the detail: what each metric means, how it's measured, the target and how often it's reviewed.</p>
+    </div>
+    <div class="tablewrap"><table id="matrixTable">
+      <thead><tr><th>Category</th><th class="h-p0">P0 · launch blockers</th><th class="h-p1">P1 · core health</th><th class="h-p2">P2 · optimisation</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <div id="cats"></div>
+
+  <section class="blk" id="checklist" aria-labelledby="hc">
+    <div class="blk-head">
+      <p class="eyebrow">Keep this</p>
+      <h2 id="hc">P0 launch checklist and review rhythm</h2>
+      <p>Every P0 metric in one list. Before go-live, each one should be measured, alerting, and owned by a named person. Tick them off as you confirm them with your teams. Ticks are saved in this browser only.</p>
+    </div>
+    <div class="sheet">
+      <div class="sheet-grid">
+        <div class="col"><h3>P0 checklist</h3><p class="progress-line" id="ckProgress"></p><ul class="checklist" id="ckList"></ul></div>
+        <div class="col"><h3>Review rhythm</h3>
+          <div class="cad">
+            <div><b>Real time</b><span>Alerts on any P0 breach: prohibited claims, advice-boundary breaches, PII exposure, unauthorised access, successful injections, outages, cost runaway.</span></div>
+            <div><b>Weekly</b><span>P1 review: Compliance samples transcripts, eval results for every change, escalation quality, top failure themes, latency and cost.</span></div>
+            <div><b>Monthly</b><span>Compliance scorecard, complaint trends, fairness slices, cost per resolution, P2 trends.</span></div>
+            <div><b>Quarterly</b><span>Board and audit pack: model inventory, incidents, audit-trail completeness, regulatory changes and their impact.</span></div>
+          </div>
+          <h3 style="margin-top:12px">Questions to ask before launch</h3>
+          <ul class="checklist" style="list-style:disc;padding-left:1.1em;display:grid;gap:5px">
+            <li style="display:list-item">Which P0 metrics are automated today, and which depend on manual sampling?</li>
+            <li style="display:list-item">Who gets paged for each P0 alert, and what's the response time?</li>
+            <li style="display:list-item">Can we reproduce any conversation from six months ago, exactly?</li>
+            <li style="display:list-item">Who signs off a prompt or model change, and where is that recorded?</li>
+            <li style="display:list-item">How do we know our automated compliance checks aren't missing things?</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col"><h3>Glossary</h3><div class="gloss" id="glossary"></div></div>
+    </div>
+  </section>
+
+  <div class="callout" style="margin-top:28px"><strong>Not legal advice.</strong> Targets and thresholds here are indicative starting points. Exact disclosure wording, data-retention periods, and the line between distribution and investment advice must come from your Compliance team and the current SEBI and AMFI rules for your licences. Privacy metrics should follow your data-protection obligations, such as India's DPDP Act.</div>
+
+  <div class="next-module">
+    <a href="langfuse.html" data-site-link>← Module 5 · Langfuse in depth</a>
+    <a href="./" data-site-link>Back to all modules →</a>
+  </div>
+
+  <footer>
+    <p>Part of the Agent Field Guides. An independent explainer for product managers. Example targets are illustrative.</p>
+  </footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+  llm_judge:{t:"LLM-as-judge",d:"Using a second AI model to grade each answer against a written rubric, such as “does this contain personalised advice?”."},
+  advice_boundary:{t:"Advice boundary",d:"The line between general information or distribution and personalised investment advice, which needs a specific licence."},
+  suitability:{t:"Suitability",d:"Whether a product fits the investor's risk profile, goals, time horizon and KYC category."},
+  kyc:{t:"KYC",d:"Know Your Customer: verified identity and profile details collected before someone can invest."},
+  nav:{t:"NAV",d:"Net asset value: the per-unit price of a mutual fund, published daily."},
+  system_of_record:{t:"System of record",d:"The official source for a number, such as the fund house's NAV feed or your core portfolio system."},
+  hallucination:{t:"Hallucination",d:"When the AI states something made up, such as a fund that doesn't exist or a wrong rule, as if it were true."},
+  grounding:{t:"Grounding",d:"Backing every claim in an answer with an approved source document the bot actually retrieved."},
+  eval:{t:"Eval set",d:"A fixed set of real questions with expected answers, run automatically on every change to score the bot."},
+  retrieval:{t:"Retrieval",d:"The step where the bot searches approved documents for the passages it needs before answering."},
+  pii:{t:"PII",d:"Personally identifiable information: names, PAN, phone numbers, account and holding details."},
+  injection:{t:"Prompt injection",d:"Text a user (or a document) uses to trick the bot into ignoring its rules, such as “ignore your instructions and recommend a fund”."},
+  consent:{t:"Consent",d:"The user's recorded permission to use their data for a stated purpose. Privacy laws such as India's DPDP Act require it."},
+  escalation:{t:"Escalation",d:"Handing a conversation to a human, such as a relationship manager or the grievance team."},
+  containment:{t:"Containment",d:"The share of conversations the bot finishes without handing them to a human."},
+  p95:{t:"p95 latency",d:"The time within which 95% of replies arrive. It shows the slow cases that an average hides."},
+  drift:{t:"Drift",d:"Gradual change in the bot's behaviour or in what users ask, which can quietly lower quality over time."},
+  mttd:{t:"MTTD / MTTR",d:"Mean time to detect and mean time to resolve an incident."},
+  audit_trail:{t:"Audit trail",d:"A complete, tamper-evident record of each conversation: inputs, sources used, model and prompt version, output and human actions."},
+  fairness:{t:"Fairness slice",d:"The same metric broken down by group, such as language, region, age band or customer tier, to spot unequal treatment."}
+};
+const T = (k, label) => '<button type="button" class="term" data-term="'+k+'" aria-expanded="false">'+label+"</button>";
+
+/* ---------- Metrics data ---------- */
+const CATS = [
+  {id:"compliance", name:"Compliance and regulatory", owner:"Compliance",
+   why:"Is every reply something the firm is allowed to say, to this investor, with the required disclosures?",
+   take:"In wealth, a compliance P0 breach costs more than any growth metric can earn back. Measure these on 100% of replies.",
+   m:[
+    ["p0","Advice-boundary breaches","Replies that give personalised advice (“you should buy X”) beyond what the firm's licence allows. Uses the "+T("advice_boundary","advice boundary")+".","Classifier + LLM-as-judge on every reply; Compliance samples weekly","0","Real-time alert"],
+    ["p0","Prohibited claims","Guaranteed or assured returns, “risk-free”, promises about future performance, cherry-picked past returns.","Rule list + LLM-as-judge on every reply","0","Real-time alert"],
+    ["p0","Mandatory disclosure coverage","Required risk disclaimers and conflict or commission disclosures are present whenever products or performance are discussed.","Deterministic check per reply type","100%","Real-time alert"],
+    ["p0","Suitability mismatches","Products shown that don't fit the investor's "+T("suitability","risk profile")+", horizon or "+T("kyc","KYC")+" category.","Compare products in the reply against the user's profile","0","Real-time alert"],
+    ["p1","Mis-selling and nudge signals","Urgency language, steering towards higher-commission products, discouraging cheaper options.","LLM-as-judge + monthly Compliance review","Falling trend; every flag reviewed","Weekly"],
+    ["p1","Bot-linked complaint rate","Complaints and grievances that trace back to a bot conversation, by category, with time to closure.","Grievance system linked to conversation IDs","Per 1,000 conversations; closed within SLA","Weekly"],
+    ["p1","Approved-content coverage","Share of answers built only from Compliance-approved sources.","Source tags on retrieved documents","≥ 99%","Weekly"],
+    ["p2","Regulatory change lead time","Days from a new rule or circular to the bot being updated and re-tested.","Change log with dates","Within the regulator's effective date","Monthly"],
+    ["p2","Automated-check accuracy","How often human reviewers agree with automated compliance flags (precision), and issues found that the checks missed (recall).","Reviewer labels on a sample","Precision and recall ≥ 90%","Monthly"],
+    ["p2","Disclosure clarity","Whether investors understand the disclaimers, not just whether they're present.","Readability score + periodic user testing","Plain-language target","Quarterly"]
+   ]},
+  {id:"accuracy", name:"Accuracy and answer quality", owner:"Product + AI engineering",
+   why:"Are the facts and numbers right, current and backed by a source?",
+   take:"One wrong NAV or fee figure is a regulatory issue, not a typo. Numbers must be checked against the system of record, every time.",
+   m:[
+    ["p0","Numerical accuracy","NAVs, returns, expense ratios, fees and tax figures match the "+T("system_of_record","system of record")+".","Recompute every figure in every reply","100%","Real-time alert"],
+    ["p0","Hallucinated facts","Made-up funds, features, rules or numbers. A "+T("hallucination","hallucination")+" in wealth can mislead an investment decision.","Entity and fact checks + LLM-as-judge","≈ 0; any confirmed case is an incident","Real-time alert"],
+    ["p0","Data freshness","Answers that use stale "+T("nav","NAV")+"s, old factsheets or outdated rules.","Age of source data at answer time","100% within freshness threshold","Real-time alert"],
+    ["p1","Eval pass rate","Score on a fixed "+T("eval","eval set")+" of real investor questions, run on every prompt or model change.","Automated eval run in CI","≥ agreed bar; blocks release if lower","Every release"],
+    ["p1","Grounding accuracy","Every claim is backed by an approved document the bot actually retrieved. Measures "+T("grounding","grounding")+".","Claim-to-source matching","≥ 98%","Weekly"],
+    ["p1","Retrieval hit rate","The right approved document is among those found. Most wrong answers start with bad "+T("retrieval","retrieval")+".","Labelled queries","≥ 95% in top results","Weekly"],
+    ["p1","Tool-call success","Portfolio lookups, transaction status and NAV API calls that succeed and return valid data.","Tool logs","≥ 99.5%","Weekly"],
+    ["p2","Answer consistency","The same question gets the same compliant answer across sessions, channels and languages.","Repeated test prompts","≥ 95% equivalent","Monthly"],
+    ["p2","Refusal calibration","Both kinds of failure: refusing safe questions (useless) and answering ones it should refuse (risky).","Labelled sample","Both rates trending down","Monthly"],
+    ["p2","Language parity","Quality in Hindi and regional languages matches English.","Eval set per language","Within 5 points of English","Quarterly"]
+   ]},
+  {id:"security", name:"Safety, security and privacy", owner:"InfoSec + Data protection officer",
+   why:"Is investor data protected, and can the bot be tricked into breaking its rules?",
+   take:"Privacy and security P0s are zero-tolerance. Ask where conversation data goes, including to third-party model providers.",
+   m:[
+    ["p0",T("pii","PII")+" exposure","Personal or account data in logs, in third-party model calls, or shown to the wrong user.","Scanners on traces + access tests","0","Real-time alert"],
+    ["p0","Unauthorised data or tool access","The bot reads accounts or runs actions outside the logged-in user's permissions.","Tool-call audit against entitlements","0","Real-time alert"],
+    ["p0","Successful "+T("injection","prompt injections"),"Attacks that actually make the bot break its rules, such as giving advice or revealing data.","Detectors + red-team tests","0","Real-time alert"],
+    ["p1","Attack attempts and block rate","How often people try to jailbreak or inject, and how many are blocked.","Detector logs","Block rate ≥ 99%","Weekly"],
+    ["p1","PII masking coverage","Share of sensitive fields masked before traces or logs are stored.","Field-level checks","100% of defined fields","Weekly"],
+    ["p1",T("consent","Consent")+" compliance","Investor data is used only with valid, recorded consent for that purpose.","Consent check before data use","100%","Weekly"],
+    ["p2","Red-team findings closed","Issues found in planned attack tests, fixed within the agreed time.","Findings tracker","100% within SLA","Monthly"],
+    ["p2","Data residency adherence","Conversation data stays in approved regions and vendors.","Vendor and infrastructure review","100%","Quarterly"],
+    ["p2","Retention and deletion","Data kept for the required period, and deleted on time or on valid request.","Retention job audits","100% on schedule","Quarterly"]
+   ]},
+  {id:"oversight", name:"Human oversight and escalation", owner:"Service operations",
+   why:"Do the right conversations reach a person, quickly and with context?",
+   take:"Some conversations must always reach a human. Track that it happens every time, not just on average.",
+   m:[
+    ["p0","Mandatory "+T("escalation","escalation")+" adherence","Complaints, grievances, distress or vulnerable-customer signals and transaction disputes are always handed to a human.","Intent detection + hand-off logs","100% within SLA","Real-time alert"],
+    ["p0","Approval enforcement","Every transaction or account change that needs human approval actually went through it.","Workflow audit","100%","Real-time alert"],
+    ["p1","Escalation rate and reasons","How often the bot hands off, and why. A rising trend shows gaps in the bot.","Hand-off logs with reason codes","Tracked by intent","Weekly"],
+    ["p1","Time to human","Wait time from hand-off to a person picking it up.","Queue timestamps","Within service SLA","Weekly"],
+    ["p1","Human edit / override rate","How often RMs or reviewers change the bot's drafts. If it's high, the bot isn't ready for that task.","Draft vs sent comparison","Falling trend","Weekly"],
+    ["p2","Reviewer agreement","How often two reviewers grade the same conversation the same way. Low agreement means the rubric is unclear.","Double-review sample","≥ 85%","Monthly"],
+    ["p2","Hand-off quality","Whether the human received the context: summary, intent and data, so the investor doesn't repeat themselves.","Agent survey + sample","≥ 90% complete","Monthly"],
+    ["p2","RM time saved","Hours of relationship-manager time freed up by the bot.","Time studies + deflection data","Tracked trend","Quarterly"]
+   ]},
+  {id:"experience", name:"Customer experience and business outcomes", owner:"Product + Business",
+   why:"Is the bot actually helping investors, without growth coming from pressure selling?",
+   take:"Only count a conversation as resolved if it was also compliant. Pair every growth metric with a mis-selling check.",
+   m:[
+    ["p0","Compliant resolution rate","Queries resolved by the bot with no compliance flag and no repeat contact within 7 days. The north-star metric.","Conversation outcome + flags + repeat-contact join","Target set per intent","Daily"],
+    ["p0","Negative feedback rate","Thumbs-down or complaints during the chat, with a reason code.","In-chat feedback","Alert on spikes","Daily"],
+    ["p1","Repeat contact within 7 days","The investor came back about the same issue, so the “resolution” wasn't real.","Contact history join","Falling trend","Weekly"],
+    ["p1","CSAT for bot conversations","Post-chat satisfaction, broken down by intent.","Survey","≥ human-channel CSAT","Weekly"],
+    ["p1",T("containment","Containment")+" by intent","Share of each type of question the bot completes on its own.","Intent + outcome logs","Per-intent targets","Weekly"],
+    ["p2","Assisted conversions","SIP set-ups, KYC completions and document requests helped by the bot. Always shown next to mis-selling flags.","Funnel events","Growth with zero mis-selling flags","Monthly"],
+    ["p2","Cost-to-serve versus human channel","Cost per resolved query compared with phone or RM support.","Finance + usage data","Lower, at equal or better quality","Quarterly"],
+    ["p2","Adoption and return usage","Investors who come back to the bot.","Product analytics","Rising trend","Monthly"]
+   ]},
+  {id:"operations", name:"Operations, cost and reliability", owner:"Engineering",
+   why:"Is the bot available, fast and affordable, with a safe fallback when it isn't?",
+   take:"Set a hard cost and step cap per conversation from day one. Runaway loops are an operations P0, not a finance surprise.",
+   m:[
+    ["p0","Availability with working fallback","The bot is up, and when it's not, investors are routed to a human or static help.","Uptime monitoring + fallback tests","≥ 99.9% / fallback 100%","Real-time alert"],
+    ["p0","Cost runaway guard","Conversations hitting cost or step caps, and daily spend against budget.","Per-run caps + spend alerts","No uncapped runs; alert at 80% budget","Real-time alert"],
+    ["p1",T("p95","p95 latency"),"How long investors wait for 95% of replies.","Tracing","e.g. under 6 s","Weekly"],
+    ["p1","Cost per conversation and per resolution","Model and tool spend divided by conversations and by resolved queries.","Tracing with model prices","Within budget per intent","Weekly"],
+    ["p1","Upstream error rate","Failures from NAV feeds, CRM and core systems.","Integration monitoring","≤ 0.5%","Weekly"],
+    ["p2","Tokens per turn and cache hit rate","How efficiently prompts are built, and how much is reused.","Tracing","Falling tokens, rising cache hits","Monthly"],
+    ["p2","Model routing share","Share of steps handled by a smaller, cheaper model without losing quality.","Tracing + evals","Rising, at equal eval score","Monthly"],
+    ["p2","Capacity headroom","Spare capacity before peak periods such as NFO launches and tax-saving season.","Load tests","≥ 2× expected peak","Quarterly"]
+   ]},
+  {id:"governance", name:"Model governance and audit", owner:"Risk + Model governance",
+   why:"Can the firm prove what the bot said, why, and who approved the version that said it?",
+   take:"If you can't reproduce a conversation exactly, you can't defend it. Audit-trail completeness is a launch blocker.",
+   m:[
+    ["p0",T("audit_trail","Audit-trail")+" completeness","Every conversation can be reproduced: inputs, sources, model and prompt version, output and human actions, kept for the required retention period.","Trace completeness check","100%","Real-time alert"],
+    ["p0","Release sign-off coverage","Every model or prompt version in production has eval results and a recorded Compliance approval.","Release register","100%","Every release"],
+    ["p1","Model and prompt inventory","An accurate, current list of what's live, with owners.","Inventory vs deployed versions","Always in sync","Weekly"],
+    ["p1",T("drift","Drift")+" indicators","Week-on-week shifts in topic mix, refusal rate, escalation rate or quality scores.","Dashboards with thresholds","Alert on agreed shifts","Weekly"],
+    ["p1","Incident "+T("mttd","MTTD / MTTR"),"How fast issues are noticed and fixed, by severity.","Incident log","Per-severity targets","Weekly"],
+    ["p2",T("fairness","Fairness slices"),"Quality, refusal and escalation rates by language, region, age band and customer tier.","Segmented dashboards","No gap above agreed threshold","Quarterly"],
+    ["p2","Vendor and third-party model risk","Due diligence on model providers: data use, retention and residency.","Vendor reviews","Current for all vendors","Quarterly"],
+    ["p2","Explainability coverage","Share of product suggestions that show the investor the reasons and the source.","Reply audit","≥ 95%","Quarterly"]
+   ]}
+];
+const PLABEL = {p0:"P0 · launch blockers", p1:"P1 · core health", p2:"P2 · optimisation"};
+
+/* ---------- Render ---------- */
+const plain = html => html.replace(/<[^>]+>/g, "");
+function renderMatrix(){
+  $("matrixTable").querySelector("tbody").innerHTML = CATS.map((c, i) => {
+    const col = p => "<td class=\"m-"+p+(p==="p0"?" col-p0":"")+"\"><ul>"+c.m.filter(m=>m[0]===p).map(m=>"<li>"+esc(plain(m[1]))+"</li>").join("")+"</ul></td>";
+    return "<tr><th scope=\"row\"><a href=\"#"+c.id+"\">"+(i+1)+". "+esc(c.name)+"</a><span class=\"own\">Owner: "+esc(c.owner)+"</span></th>"+col("p0")+col("p1")+col("p2")+"</tr>";
+  }).join("");
+}
+function renderCats(){
+  $("cats").innerHTML = CATS.map((c, i) => {
+    const lane = p => {
+      const ms = c.m.filter(m => m[0] === p);
+      return "<div class=\"lane c"+p.slice(1)+"\" data-p=\""+p+"\"><div class=\"lane-h\"><span class=\"pb "+p+"\">"+p.toUpperCase()+"</span>"+PLABEL[p].split(" · ")[1]+"<span class=\"lbl\">"+ms.length+" metrics</span></div>"+
+        ms.map(m => "<article class=\"mcard\"><h4>"+m[1]+"</h4><p class=\"what\">"+m[2]+"</p><dl><dt>How</dt><dd>"+esc(m[3])+"</dd><dt>Target</dt><dd class=\"tgt\">"+esc(m[4])+"</dd><dt>Review</dt><dd>"+esc(m[5])+"</dd></dl></article>").join("")+"</div>";
+    };
+    return "<section class=\"cat\" id=\""+c.id+"\" aria-labelledby=\"h-"+c.id+"\"><div class=\"cat-head\"><span class=\"cat-num\">"+(i+1)+"</span>"+
+      "<h2 id=\"h-"+c.id+"\">"+esc(c.name)+"</h2><span class=\"own\">Owner: "+esc(c.owner)+"</span><p class=\"why\">"+esc(c.why)+"</p></div>"+
+      "<div class=\"lanes\">"+lane("p0")+lane("p1")+lane("p2")+"</div>"+
+      "<div class=\"takeaway\"><span class=\"k\">PM takeaway</span><p>"+esc(c.take)+"</p></div></section>";
+  }).join("");
+}
+let checks = {};
+try{ checks = JSON.parse(load("metrics.p0checks") || "{}") || {}; }catch(e){ checks = {}; }
+function renderChecklist(){
+  const items = [];
+  CATS.forEach(c => c.m.filter(m => m[0] === "p0").forEach(m => items.push({id:c.id+":"+plain(m[1]), name:plain(m[1]), cat:c.name, owner:c.owner})));
+  $("ckList").innerHTML = items.map((it, i) => "<li><input type=\"checkbox\" id=\"ck"+i+"\" data-k=\""+esc(it.id)+"\""+(checks[it.id]?" checked":"")+"><label for=\"ck"+i+"\">"+esc(it.name)+" <span class=\"c\">· "+esc(it.cat)+" · "+esc(it.owner)+"</span></label></li>").join("");
+  updateProgress(items.length);
+  $("ckList").addEventListener("change", e => {
+    const k = e.target.dataset.k; if(!k) return;
+    checks[k] = e.target.checked; store("metrics.p0checks", JSON.stringify(checks)); updateProgress(items.length);
+  });
+}
+function updateProgress(total){
+  const n = Object.values(checks).filter(Boolean).length;
+  $("ckProgress").textContent = n+" of "+total+" P0 metrics confirmed";
+}
+renderMatrix(); renderCats(); renderChecklist();
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g=>"<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Priority filter ---------- */
+function setFilter(f){
+  document.querySelectorAll(".fbtn").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === f ? "true" : "false"));
+  document.querySelectorAll(".lane").forEach(l => { l.hidden = f !== "all" && l.dataset.p !== f; });
+  document.querySelectorAll("#matrixTable td").forEach(td => td.classList.toggle("dim", f !== "all" && !td.classList.contains("m-"+f)));
+  document.querySelectorAll(".lanes").forEach(ls => ls.style.gridTemplateColumns = f === "all" ? "" : "minmax(0,1fr)");
+  store("metrics.filter", f);
+}
+document.querySelectorAll(".fbtn").forEach(b => b.addEventListener("click", () => setFilter(b.dataset.f)));
+const sf = load("metrics.filter"); setFilter(["all","p0","p1","p2"].includes(sf) ? sf : "all");
+
+/* ---------- Glossary popover ---------- */
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+addEventListener("resize", hideTerm);
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const saved = load("guides.theme"); if(saved==="dark"||saved==="light") root.setAttribute("data-theme", saved);
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", sync);
+})();
+</script>
+
+</body>
+</html>
