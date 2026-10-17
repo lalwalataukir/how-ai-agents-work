@@ -353,6 +353,46 @@ svg .t-chain{fill:var(--chain)} svg .t-graph{fill:var(--graph)} svg .t-fuse{fill
 .mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .mistake dd{margin:0}
 footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px;display:grid;gap:8px}
+
+/* Retrieval tuner */
+.rt{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius);overflow:hidden;display:grid}
+.rt > *:not(.sim-banner){margin-inline:16px}
+.rt-controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:end;font-size:.9rem;margin-top:14px}
+.rt-controls label{display:grid;gap:4px;color:var(--muted)}
+.rt-controls select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);max-width:100%}
+.rt-controls .rt-check{display:flex;gap:6px;align-items:center;color:var(--ink);padding-bottom:6px}
+.rt-stats{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));margin-top:14px}
+.rt-stat{background:var(--surface-2);border-radius:8px;padding:10px 12px;display:grid;gap:2px}
+.rt-stat .v{font-family:var(--font-mono);font-size:1.15rem;font-weight:500}
+.rt-stat .k{font-size:.8rem;color:var(--muted)}
+.rt-stat .v.good{color:var(--ok)}
+.rt-stat .v.bad{color:var(--bad)}
+.rt-stat .v.mid{color:var(--warn)}
+.rt-list{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:8px;counter-reset:rt}
+.rt-list li{counter-increment:rt;display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:start;border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;font-size:.9rem;background:var(--bg)}
+.rt-list li::before{content:counter(rt);font-family:var(--font-mono);color:var(--muted)}
+.rt-list li.ans{border-color:var(--ok);background:var(--ok-soft)}
+.rt-list .src{display:block;font-family:var(--font-mono);font-size:.75rem;color:var(--muted);overflow-wrap:anywhere}
+.rt-list .lab{font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.rt-list .lab.a{background:var(--ok-soft);color:var(--ok)}
+.rt-list .lab.r{background:var(--surface-2);color:var(--ink)}
+.rt-list .lab.n{background:var(--bad-soft);color:var(--bad)}
+.rt-why{font-size:.93rem;background:var(--surface-2);border-radius:8px;padding:10px 12px;margin-block:14px 16px}
+
+/* Quizzes (same look as module 1) */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+@media print{.quiz{display:none!important}}
 </style>
 
 <div id="termPop" role="tooltip" hidden></div>
@@ -706,7 +746,36 @@ recent sources. Use a specific query of
     <p class="small muted">With agents, ready-made middleware (Section 8) can catch tool errors, retry and enforce limits. Exact class names vary by version.</p>
   </div>
 
+  <div class="concept">
+    <h3>Tools from MCP servers</h3>
+    <p>You don't have to write every tool yourself. Many services publish their tools as an <button type="button" class="term" data-term="mcp" aria-expanded="false">MCP</button> server: search engines, Google Drive, Slack, GitHub, databases. An adapter package turns those tools into ordinary LangChain tools, so the agent uses them like any other.</p>
+    <pre class="code"><span class="c"># Simplified. The adapter lives in the langchain-mcp-adapters package.</span>
+<span class="k">from</span> langchain_mcp_adapters.client <span class="k">import</span> MultiServerMCPClient
+
+client = MultiServerMCPClient({
+    <span class="s">"search"</span>: {<span class="s">"transport"</span>: <span class="s">"streamable_http"</span>, <span class="s">"url"</span>: <span class="s">"https://mcp.search.example/mcp"</span>},
+    <span class="s">"library"</span>: {<span class="s">"transport"</span>: <span class="s">"stdio"</span>, <span class="s">"command"</span>: <span class="s">"python"</span>, <span class="s">"args"</span>: [<span class="s">"library_server.py"</span>]},
+})
+tools = <span class="k">await</span> client.get_tools()          <span class="c"># every tool the servers offer, as LangChain tools</span>
+agent = create_agent(model, tools=tools)</pre>
+    <div class="grid g2">
+      <div class="box"><span class="tag ok">Why teams use it</span><p class="small">A tool written once works in any MCP-compatible app or framework. Integrations the service owner maintains can be better kept up than community ones.</p></div>
+      <div class="box"><span class="tag warn">What to check</span><p class="small">An MCP server is code you're trusting, and its tool descriptions go straight to the model. Use servers you've reviewed, and pass the agent only the tools it needs, not everything a server offers.</p></div>
+    </div>
+  </div>
+
   <div class="takeaway"><span class="k">PM takeaway</span><p>The model knows a tool only by its name and description. Treat those words as a spec, and decide up front what happens when the tool fails.</p></div>
+
+  <div class="quiz" data-quiz="q3a">
+    <p class="quiz-label">Check your understanding · Tools</p>
+    <p class="quiz-q">Engineers want to connect a CRM's MCP server to the research assistant. The server offers 12 tools, including delete_client. What should you ask for?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Every extra tool is another way to go wrong, and delete_client has no place in a research assistant."><span class="l">A</span><span>Connect all 12 tools, so the agent has the most options</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The agent should see the fewest tools that do the job. Review the server too, because its tool descriptions go straight to the model."><span class="l">B</span><span>Pass the agent only the read-only tools it needs, from a server you've reviewed</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. MCP is a reasonable way to connect tools. The risk is in which tools you expose, not in the protocol."><span class="l">C</span><span>Don't use MCP at all</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
 </section>
 
 <!-- ============ 5. RETRIEVAL ============ -->
@@ -765,7 +834,57 @@ retriever = store.as_retriever(search_kwargs={<span class="s">"k"</span>: 4})
 passages  = retriever.invoke(<span class="s">"Does hybrid work affect resignations?"</span>)   <span class="c"># the 4 closest chunks</span></pre>
   </div>
 
-  <div class="takeaway"><span class="k">PM takeaway</span><p>When a RAG answer is wrong, first ask what was retrieved. Most problems start there, not in the model.</p></div>
+  <div class="concept">
+    <h3>Try it: tune the retriever</h3>
+    <p>The question is <strong>"Does hybrid work affect resignations?"</strong>, asked of a small company library. The right passage is in the hybrid-work trial report. Change the settings and watch what reaches the model.</p>
+    <div class="rt" id="rt">
+      <div class="sim-banner" role="note"><b>Simulation.</b><span>The library, scores and token counts are scripted to show typical behaviour. No search runs.</span></div>
+      <div class="rt-controls">
+        <label>Search type
+          <select id="rtType"><option value="kw">Keyword</option><option value="sem" selected>Meaning (embeddings)</option><option value="hyb">Hybrid (both)</option></select>
+        </label>
+        <label>Chunk size
+          <select id="rtSize"><option value="small">Small (~300 characters)</option><option value="medium" selected>Medium (~1,000)</option><option value="large">Large (~3,000)</option></select>
+        </label>
+        <label>Top k
+          <select id="rtK"><option value="2">2</option><option value="4" selected>4</option><option value="8">8</option></select>
+        </label>
+        <label class="rt-check"><input type="checkbox" id="rtRerank"> Reranker</label>
+      </div>
+      <div class="rt-stats" aria-live="polite">
+        <div class="rt-stat"><span class="v" id="rtFound">–</span><span class="k">right passage found</span></div>
+        <div class="rt-stat"><span class="v" id="rtPrec">–</span><span class="k">useful chunks</span></div>
+        <div class="rt-stat"><span class="v" id="rtTok">–</span><span class="k">tokens sent to the model</span></div>
+      </div>
+      <ol class="rt-list" id="rtList"></ol>
+      <p class="rt-why" id="rtWhy"></p>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>Making retrieval better</h3>
+    <div class="grid g3">
+      <div class="box"><span class="tag chain">Hybrid search</span><p class="small"><button type="button" class="term" data-term="hybrid_search" aria-expanded="false">Hybrid search</button> combines keyword search, which is good at exact names and codes, with search by meaning, which finds synonyms. Each covers the other's blind spots.</p></div>
+      <div class="box"><span class="tag chain">Rerankers</span><p class="small">A <button type="button" class="term" data-term="reranker" aria-expanded="false">reranker</button> rereads the top 20 or so candidates and puts the truly relevant ones first. It adds a fraction of a second and a small cost, and often fixes the order.</p></div>
+      <div class="box"><span class="tag chain">Metadata filters</span><p class="small">Filter before searching: only approved documents, only the last two years, only this client's files. It stops the wrong document winning on wording alone, and is often a permissions rule too.</p></div>
+      <div class="box"><span class="tag chain">Chunk size and overlap</span><p class="small">Small chunks can cut a fact in half. Large ones bury it in noise and cost more tokens. Start around 500 to 1,000 characters with some overlap, then test on your own questions.</p></div>
+      <div class="box"><span class="tag chain">Measure it</span><p class="small">Label 50 to 100 real questions with the passage that answers each. Then track the <button type="button" class="term" data-term="hit_rate" aria-expanded="false">hit rate</button> (right passage in the top k) separately from answer quality.</p></div>
+      <div class="box"><span class="tag chain">Keep it fresh</span><p class="small">Re-index when documents change, and remove old versions. A perfect retriever over last year's policy still gives a wrong answer.</p></div>
+    </div>
+  </div>
+
+  <div class="quiz" data-quiz="q3b">
+    <p class="quiz-label">Check your understanding · Retrieval</p>
+    <p class="quiz-q">Users say the policy assistant gives wrong answers about leave. What should you check first?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. If the right passage never reached the model, a bigger model just writes a more confident wrong answer."><span class="l">A</span><span>Switch to a bigger model</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Most RAG failures start at retrieval. Look at the retrieved chunks in the trace, then measure the hit rate on labelled questions."><span class="l">B</span><span>What was retrieved for those questions, and whether the right passage was in it</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not yet. Examples shape the answer&#x27;s style, but they can&#x27;t supply facts that weren&#x27;t retrieved."><span class="l">C</span><span>Add more few-shot examples to the prompt</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>When a RAG answer is wrong, first ask what was retrieved. Most problems start there, not in the model. Ask for the retrieval hit rate as its own number.</p></div>
 </section>
 
 <!-- ============ 6. CHAINS ============ -->
@@ -857,6 +976,25 @@ agent.invoke({<span class="s">"messages"</span>: [{<span class="s">"role"</span>
 agent.invoke({<span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Shorter, please."</span>}]}, config)  <span class="c"># remembers the first question</span></pre>
   </div>
 
+  <div class="concept">
+    <h3>Deciding what it remembers</h3>
+    <p>Long-term memory isn't saved in the checkpointer. In LangGraph it lives in a separate <button type="button" class="term" data-term="store" aria-expanded="false">store</button>, organised by user, and your code decides what goes in. Make these decisions before engineers build it.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Decision</th><th>Options</th><th>Research assistant v2</th></tr></thead>
+        <tbody>
+          <tr><td>What is remembered?</td><td>Nothing · preferences · facts about the user · full chat history</td><td>Preferences only: report length, favourite sources, regions to focus on</td></tr>
+          <tr><td>Who decides to save it?</td><td>The model, automatically · the user, explicitly · both, with confirmation</td><td>The model suggests ("Remember that you prefer UK sources?"), the user confirms</td></tr>
+          <tr><td>How long is it kept?</td><td>The session · a fixed period · until deleted</td><td>Until the user deletes it, reviewed yearly</td></tr>
+          <tr><td>Who can see it?</td><td>Only the user · their team · admins</td><td>Only the user, plus admins for support</td></tr>
+          <tr><td>Can users see and change it?</td><td>No · view only · view, edit and delete</td><td>A "What I remember" page with edit and delete</td></tr>
+          <tr><td>What is never stored?</td><td>Rules you set up front</td><td>No personal or client data, no passwords, nothing from confidential documents</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Privacy laws, such as India's DPDP Act, expect a clear purpose, consent and deletion on request. A memory feature that users can't see or erase is hard to defend.</p>
+  </div>
+
   <div class="takeaway"><span class="k">PM takeaway</span><p>Memory is a product decision. Decide what the assistant remembers, for how long, and who can see it.</p></div>
 </section>
 
@@ -921,7 +1059,7 @@ agent = <span class="hl">create_agent</span>(
     system_prompt=<span class="s">"You are a research assistant. Cite every claim as [n]."</span>,
     response_format=Report,                       <span class="c"># structured final answer (Section 2)</span>
     middleware=[
-        ModelCallLimitMiddleware(run_limit=8),    <span class="c"># stop runaway loops</span>
+        ModelCallLimitMiddleware(run_limit=12),   <span class="c"># stop runaway loops (module 1's cap: about 12 model calls)</span>
         SummarizationMiddleware(...),             <span class="c"># shrink long histories</span>
         HumanInTheLoopMiddleware(...),            <span class="c"># approve chosen tool calls</span>
     ],
@@ -931,6 +1069,17 @@ result = agent.invoke({<span class="s">"messages"</span>: [{<span class="s">"rol
   </div>
 
   <div class="takeaway"><span class="k">PM takeaway</span><p>create_agent gives you a working agent loop in a few lines. Middleware is where the guardrails go: limits, approvals and privacy.</p></div>
+
+  <div class="quiz" data-quiz="q3c">
+    <p class="quiz-label">Check your understanding · Agents</p>
+    <p class="quiz-q">You want every research run stopped after 12 model calls, and a person to approve before anything is emailed. Where do these rules go?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The model may ignore a prompt. Limits and approvals must be enforced by your code."><span class="l">A</span><span>In the system prompt: “Never use more than 12 calls, and ask before emailing”</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Middleware runs at fixed points in the loop, so the rules are enforced every time, whatever the model decides."><span class="l">B</span><span>In middleware: a call-limit rule and a human-in-the-loop rule on the email tool</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Alerts tell you after it happened. You want the run stopped or paused while it&#x27;s happening."><span class="l">C</span><span>In Langfuse alerts</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
 </section>
 
 <!-- ============ 9. TRADE-OFFS ============ -->
@@ -996,6 +1145,7 @@ result = agent.invoke({<span class="s">"messages"</span>: [{<span class="s">"rol
   <div class="stage-head">
     <p class="eyebrow">Keep this</p>
     <h2 id="hcs">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
   </div>
   <div class="sheet">
     <div class="one-liners">
@@ -1009,8 +1159,8 @@ result = agent.invoke({<span class="s">"messages"</span>: [{<span class="s">"rol
         <ul>
           <li><strong>Models:</strong> one interface, chat messages, streaming, structured output</li>
           <li><strong>Prompts:</strong> templates with blanks, few-shot examples</li>
-          <li><strong>Tools:</strong> functions the model can request</li>
-          <li><strong>Retrieval:</strong> load, split, embed, store, retrieve</li>
+          <li><strong>Tools:</strong> functions the model can request, written by you or loaded from MCP servers</li>
+          <li><strong>Retrieval:</strong> load, split, embed, store, retrieve; improve with hybrid search, rerankers and filters</li>
           <li><strong>Chains:</strong> fixed steps joined with <code>|</code></li>
           <li><strong>Memory:</strong> state saved by a checkpointer, per thread</li>
           <li><strong>Agents:</strong> the tool loop, plus middleware</li>
@@ -1024,6 +1174,7 @@ result = agent.invoke({<span class="s">"messages"</span>: [{<span class="s">"rol
           <li><code>@tool</code>, <code>bind_tools</code>: define and attach tools</li>
           <li><code>ChatPromptTemplate</code>: a prompt with blanks</li>
           <li><code>with_fallbacks</code>: a backup if a block fails</li>
+          <li><code>MultiServerMCPClient</code>: load tools from MCP servers</li>
           <li><code>create_agent</code>, middleware: the agent loop and its guardrails</li>
           <li><code>langchain-classic</code>: legacy code from before 1.0</li>
         </ul>
@@ -1106,7 +1257,7 @@ result = agent.invoke({<span class="s">"messages"</span>: [{<span class="s">"rol
 </div>
 
 <footer>
-  <p>The demo is a scripted simulation. No model, search engine or LangChain code runs, and the example web addresses are made up. Provider names, timings, token counts and prices are illustrative.</p>
+  <p>The demo is a scripted simulation. No model, search engine or LangChain code runs, and the example web addresses are made up. Provider names, timings, token counts and prices are illustrative. Prices are in US dollars, as model providers bill.</p>
   <p>The code snippets are simplified to show the idea. Names match the LangChain 1.x docs as of October 2026, but real code varies by version. LangChain, LangGraph, LangSmith and Langfuse are the names of their respective projects. This page is an independent explainer and isn't affiliated with them.</p>
 </footer>
 </main>
@@ -1172,7 +1323,12 @@ const GLOSS = {
   middleware:{t:"Middleware",d:"Code that runs at fixed points in the agent loop, such as before each model call, to check, change or stop what happens."},
   pii:{t:"PII (personal data)",d:"Personally identifiable information: anything that identifies a person, such as a name, email, phone or account number."},
   abstraction:{t:"Abstraction",d:"A layer that hides details behind a simpler interface. Helpful until you need to see what's underneath."},
-  dependency:{t:"Dependency",d:"Outside code your product relies on. Each one needs updating, and can break or change."}
+  dependency:{t:"Dependency",d:"Outside code your product relies on. Each one needs updating, and can break or change."},
+  mcp:{t:"MCP (Model Context Protocol)",d:"An open standard for connecting AI apps to tools and data. A service publishes its tools once as an MCP server, and any MCP-compatible app can use them."},
+  hybrid_search:{t:"Hybrid search",d:"Running keyword search and search by meaning together, then merging the results, so exact terms and synonyms are both found."},
+  reranker:{t:"Reranker",d:"A model that rereads the top search results and reorders them by how well each one answers the question."},
+  hit_rate:{t:"Hit rate",d:"How often the passage that answers a question is among the top k retrieved chunks, measured on labelled questions."},
+  store:{t:"Store",d:"LangGraph's place for long-term memory: data kept across conversations, usually organised by user."}
 };
 const pop = $("termPop"); let popFor = null;
 function showTerm(btn){
@@ -1662,5 +1818,116 @@ newRun(2);
 })();
 </script>
 
+
+<script>
+/* ---------- Retrieval tuner (scripted) ---------- */
+(function(){
+  const $ = id => document.getElementById(id);
+  if(!$("rt")) return;
+  // kw = keyword score, sem = meaning score, rel = true relevance (2 answer, 1 useful, 0 noise),
+  // part = which half of an answer that small chunks split in two
+  const LIB = {
+    small:[
+      {src:"hybrid-work-trial.pdf · p.2a", text:"Two-year trial: staff who worked from home two days a week got the same performance reviews as office staff…", kw:.55, sem:.74, rel:2, part:1, tok:80},
+      {src:"hybrid-work-trial.pdf · p.2b", text:"…and resignations fell by a third, mostly among women and people with long commutes.", kw:.62, sem:.66, rel:2, part:2, tok:70},
+      {src:"flexible-work-survey.pdf · p.5", text:"Attrition among employees on flexible schedules was 35% lower.", kw:.40, sem:.80, rel:1, tok:60},
+      {src:"hr-handbook.pdf · p.14", text:"Resignations: how to hand in your notice.", kw:.85, sem:.40, rel:0, tok:55},
+      {src:"wellbeing-report.pdf · p.4", text:"Fully remote workers reported more loneliness.", kw:.10, sem:.84, rel:0, tok:55},
+      {src:"rto-memo.pdf · p.1", text:"Return-to-office mandates and staff morale.", kw:.30, sem:.82, rel:0, tok:50},
+      {src:"office-strategy.pdf · p.8", text:"Hybrid desks: booking rules for shared desks.", kw:.60, sem:.35, rel:0, tok:55},
+      {src:"wellbeing-report.pdf · p.2", text:"Long commutes were the top reason staff gave for leaving.", kw:.20, sem:.66, rel:1, tok:60}
+    ],
+    medium:[
+      {src:"hybrid-work-trial.pdf · p.2", text:"Two-year trial with 1,600 staff: two home days a week left performance reviews unchanged, and resignations fell by a third.", kw:.90, sem:.88, rel:2, tok:250},
+      {src:"flexible-work-survey.pdf · p.5", text:"Attrition among employees on flexible schedules was 35% lower than among office-only staff.", kw:.40, sem:.80, rel:1, tok:240},
+      {src:"hr-handbook.pdf · p.14", text:"Resignations: how to hand in your notice, and how long your notice period is.", kw:.85, sem:.40, rel:0, tok:230},
+      {src:"wellbeing-report.pdf · p.4", text:"Fully remote workers reported more loneliness and less contact with managers.", kw:.10, sem:.84, rel:0, tok:250},
+      {src:"rto-memo.pdf · p.1", text:"Return-to-office mandates: what we heard about staff morale.", kw:.30, sem:.82, rel:0, tok:240},
+      {src:"hybrid-work-trial.pdf · p.1", text:"The trial covered 1,600 graduate employees in engineering, marketing and finance.", kw:.55, sem:.70, rel:1, tok:230},
+      {src:"office-strategy.pdf · p.8", text:"Hybrid desks: booking rules for shared desks on office days.", kw:.60, sem:.35, rel:0, tok:220},
+      {src:"wellbeing-report.pdf · p.2", text:"Long commutes were the top reason staff gave for leaving.", kw:.20, sem:.66, rel:1, tok:240}
+    ],
+    large:[
+      {src:"hybrid-work-trial.pdf · pp.1–4", text:"The whole trial report: design, the 1,600 staff, methods, results (resignations fell by a third), limitations…", kw:.70, sem:.72, rel:2, tok:760},
+      {src:"hr-handbook.pdf · pp.12–16", text:"Leaving the company: resignations, notice periods, exit interviews, final pay…", kw:.75, sem:.42, rel:0, tok:750},
+      {src:"flexible-work-survey.pdf + wellbeing-report.pdf", text:"Survey findings on flexible schedules and attrition, plus wellbeing results and reasons for leaving…", kw:.38, sem:.74, rel:1, tok:780},
+      {src:"wellbeing-report.pdf + rto-memo.pdf", text:"Loneliness among remote workers, return-to-office mandates and morale…", kw:.22, sem:.78, rel:0, tok:770},
+      {src:"office-strategy.pdf · pp.6–10", text:"Office layout, hybrid desk booking, parking and canteen changes…", kw:.48, sem:.30, rel:0, tok:740}
+    ]
+  };
+  function render(){
+    const type = $("rtType").value, size = $("rtSize").value, k = +$("rtK").value, rerank = $("rtRerank").checked;
+    const score = c => type === "kw" ? c.kw : type === "sem" ? c.sem : (c.kw + c.sem) / 2;
+    let ranked = LIB[size].map(c => Object.assign({s:score(c)}, c)).sort((a,b) => b.s - a.s);
+    // a reranker rereads the candidates and orders them by how well they answer the question
+    if(rerank) ranked = ranked.slice().sort((a,b) => (b.rel - a.rel) || (b.s - a.s));
+    const top = ranked.slice(0, k);
+    let found, foundTxt;
+    if(size === "small"){
+      const parts = new Set(top.filter(c => c.part).map(c => c.part));
+      found = parts.size === 2 ? "yes" : parts.size === 1 ? "half" : "no";
+      foundTxt = found === "yes" ? "Yes, both halves" : found === "half" ? "Only half" : "No";
+    } else {
+      const pos = top.findIndex(c => c.rel === 2);
+      found = pos >= 0 ? "yes" : "no";
+      foundTxt = pos >= 0 ? "Yes, at #" + (pos + 1) : "No";
+    }
+    const useful = top.filter(c => c.rel > 0).length;
+    const tok = top.reduce((n, c) => n + c.tok, 0);
+    $("rtFound").textContent = foundTxt;
+    $("rtFound").className = "v " + (found === "yes" ? "good" : found === "half" ? "mid" : "bad");
+    $("rtPrec").textContent = useful + " of " + top.length;
+    $("rtPrec").className = "v " + (useful === top.length ? "good" : useful * 2 >= top.length ? "mid" : "bad");
+    $("rtTok").textContent = tok.toLocaleString("en-IN") + (rerank ? " · +0.3 s" : "");
+    $("rtList").innerHTML = top.map(c => {
+      const lab = c.rel === 2 ? '<span class="lab a">answer</span>' : c.rel === 1 ? '<span class="lab r">useful</span>' : '<span class="lab n">noise</span>';
+      return '<li class="' + (c.rel === 2 ? "ans" : "") + '"><span><span class="src">' + c.src + " · score " + c.s.toFixed(2) + "</span>" + c.text + "</span>" + lab + "</li>";
+    }).join("");
+    let why;
+    if(size === "small" && found !== "yes") why = "Small chunks cut the key fact in half: one chunk has “two home days a week”, the other has “resignations fell by a third”. The model may get only half the story. Raise k, add overlap between chunks, or use bigger chunks.";
+    else if(size === "large") why = "Large chunks find the answer, but each one drags in pages of unrelated text. That's " + tok.toLocaleString("en-IN") + " tokens per question, and the key sentence is buried. Cost goes up and answers get vaguer.";
+    else if(rerank) why = "The reranker reread the candidates and moved the useful ones to the top. It costs a fraction of a second, and it's often the cheapest big improvement.";
+    else if(type === "kw") why = "Keyword search loves exact words. It ranks the HR page about how to resign highly because it says “resignations”, and it misses the survey that says “attrition” instead.";
+    else if(type === "sem") why = "Search by meaning finds “attrition” as a match for “resignations”, but it also pulls in pages that are merely about the same topic, like loneliness and office morale.";
+    else why = "Hybrid search rewards chunks both methods like. Traps that only one method liked, such as the loneliness report and the desk-booking page, fall down the list. The HR page about resigning still sneaks in, so now try the reranker.";
+    if(k === 8 && size !== "large") why += " With k = 8 you send almost the whole library, which costs more and gives the model more noise to sort through.";
+    $("rtWhy").textContent = why;
+  }
+  ["rtType","rtSize","rtK","rtRerank"].forEach(id => $(id).addEventListener("change", render));
+  render();
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.m3";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
 </body>
 </html>

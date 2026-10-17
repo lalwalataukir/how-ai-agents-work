@@ -126,7 +126,7 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
   <div class="hero">
     <p class="eyebrow">Interactive guides for product managers</p>
     <h1>Understand AI agents well enough to make good product calls</h1>
-    <p class="lede">Six modules, written for PMs rather than engineers. Start with how agents work and the tools at a glance, go deeper on each tool, then learn what to measure in production. They all follow the same example: a <strong>research assistant</strong> that takes a question, searches the web, reads the results and writes a short report. Each module has a hands-on demo you can click through.</p>
+    <p class="lede">Seven modules, written for PMs rather than engineers. Start with how agents work and the tools at a glance, go deeper on each tool, learn what to measure in production, then how to launch. Modules 1 to 5 and 7 follow the same example: a <strong>research assistant</strong> that takes a question, searches the web, reads the results and writes a short report. Module 6 takes those ideas into a regulated setting, a wealth assistant for investors. Every module has a hands-on demo you can click through, and quizzes to check yourself.</p>
   </div>
 
   <div class="modules">
@@ -136,12 +136,12 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
       <p class="sum">What an agent is, and how it gets from idea to launch.</p>
       <div class="chips"><span class="chip c-plan">plan</span><span class="chip c-act">act</span><span class="chip c-obs">observe</span><span class="chip c-chain">repeat</span></div>
       <ul>
-        <li>Agent vs chatbot vs workflow, and when an agent is worth it</li>
-        <li>The five parts: model, instructions, tools, memory and the loop</li>
-        <li>Testing with evals, and how agents fail</li>
-        <li>Guardrails, human approval, cost and monitoring</li>
+        <li>Agent vs chatbot vs workflow, and the spectrum in between</li>
+        <li>The five parts, choosing a model, tool failures and MCP</li>
+        <li>Evals that account for randomness, and how agents fail</li>
+        <li>Guardrails, human approval, cost, monitoring and staged rollout</li>
       </ul>
-      <div class="meta"><span>about 20 min</span><span>step-by-step agent demo</span><span>5 quizzes</span><span>cheat sheet</span></div>
+      <div class="meta"><span>about 30 min</span><span>step-by-step agent demo</span><span>5 quizzes</span><span>spec template</span><span>cheat sheet</span></div>
       <span class="cta" aria-hidden="true">Start module 1 →</span>
     </article>
 
@@ -154,9 +154,9 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
         <li>What each tool is, in plain language and a kitchen analogy</li>
         <li>Why real agents need a graph, not a straight line</li>
         <li>Reading a trace to debug cost, speed and wrong answers</li>
-        <li>A decision guide and questions to ask your engineers</li>
+        <li>A decision guide, the alternatives and what each really costs</li>
       </ul>
-      <div class="meta"><span>about 20 min</span><span>clickable graph + trace demo</span><span>decision guide</span><span>cheat sheet</span></div>
+      <div class="meta"><span>about 25 min</span><span>clickable graph + trace demo</span><span>3 quizzes</span><span>decision guide with alternatives</span></div>
       <span class="cta" aria-hidden="true">Start module 2 →</span>
       <p class="hint">Builds on module 1. If agents are new to you, start there.</p>
     </article>
@@ -173,16 +173,16 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
         <span class="num">3</span>
         <h2><a href="langchain.html">LangChain in depth</a></h2>
         <div class="chips"><span class="chip c-chain">build</span></div>
-        <p class="sum">Models, prompts, tools, retrieval, chains and agents: the building blocks, and where they feel heavy.</p>
-        <div class="meta"><span>about 25 min</span><span>chain workbench demo</span></div>
+        <p class="sum">Models, prompts, tools and MCP, retrieval, chains, memory and agents: the building blocks, and where they feel heavy.</p>
+        <div class="meta"><span>about 30 min</span><span>chain workbench + retrieval tuner</span><span>3 quizzes</span></div>
         <span class="cta" aria-hidden="true">Start module 3 →</span>
       </article>
       <article class="module">
         <span class="num">4</span>
         <h2><a href="langgraph.html">LangGraph in depth</a></h2>
         <div class="chips"><span class="chip c-plan">orchestrate</span></div>
-        <p class="sum">State, branches, retries, checkpoints, human approval and time travel: agents that pause, crash and recover.</p>
-        <div class="meta"><span>about 25 min</span><span>crash, resume and fork demo</span></div>
+        <p class="sum">State, branches, retries, checkpoints, human approval, time travel and testing: agents that pause, crash and recover.</p>
+        <div class="meta"><span>about 30 min</span><span>crash, resume and fork demo</span><span>3 quizzes</span></div>
         <span class="cta" aria-hidden="true">Start module 4 →</span>
       </article>
       <article class="module">
@@ -190,7 +190,7 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
         <h2><a href="langfuse.html">Langfuse in depth</a></h2>
         <div class="chips"><span class="chip c-obs">observe</span></div>
         <p class="sum">Traces, cost and latency, prompt versions and evals: how to find out why an agent went wrong.</p>
-        <div class="meta"><span>about 25 min</span><span>debug-a-complaint demo</span></div>
+        <div class="meta"><span>about 30 min</span><span>debug-a-complaint demo</span><span>3 quizzes</span></div>
         <span class="cta" aria-hidden="true">Start module 5 →</span>
       </article>
     </div>
@@ -200,10 +200,21 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
     <div class="txt">
       <p class="eyebrow">Module 6 · Running it in production</p>
       <h2><a href="metrics.html">Metrics for a compliant wealth AI bot</a></h2>
-      <p class="sum">What to measure when an AI assistant talks to investors: 7 categories, each split into P0 launch blockers, P1 core health and P2 optimisation, plus a P0 launch checklist.</p>
+      <p class="sum">What to measure when an AI assistant talks to investors: 7 categories split into P0 launch blockers, P1 core health and P2 optimisation. Includes a spot-the-breach demo, how to prove a zero, wiring it up in Langfuse, an incident runbook and a P0 launch checklist.</p>
       <div class="chips"><span class="chip c-chain">compliance</span><span class="chip c-plan">accuracy</span><span class="chip c-obs">governance</span></div>
+      <div class="meta"><span>about 35 min</span><span>spot-the-breach demo</span><span>3 quizzes</span></div>
     </div>
     <span class="cta" aria-hidden="true">Start module 6 →</span>
+  </article>
+  <article class="lab">
+    <div class="txt">
+      <p class="eyebrow">Module 7 · Launch</p>
+      <h2><a href="ship.html">Shipping an agent: rollout, experience and economics</a></h2>
+      <p class="sum">The product work around launch: staged rollout with a kill switch, designing an experience people trust, all-in unit economics and pricing, build or buy, and the research assistant's first six weeks.</p>
+      <div class="chips"><span class="chip c-plan">rollout</span><span class="chip c-act">experience</span><span class="chip c-obs">economics</span></div>
+      <div class="meta"><span>about 25 min</span><span>staged-rollout simulator</span><span>3 quizzes</span></div>
+    </div>
+    <span class="cta" aria-hidden="true">Start module 7 →</span>
   </article>
 
   <article class="lab">
@@ -215,13 +226,21 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
     </div>
     <span class="cta" aria-hidden="true">Open the lab →</span>
   </article>
+  <article class="lab">
+    <div class="txt">
+      <p class="eyebrow">Reference</p>
+      <h2><a href="reference.html">Glossary and further reading</a></h2>
+      <p class="sum">Every term from the seven modules in one searchable list, with links back to where it's explained, plus official sources to go deeper.</p>
+    </div>
+    <span class="cta" aria-hidden="true">Open the reference →</span>
+  </article>
 
   <section class="how" aria-labelledby="howh">
     <h2 id="howh">How to use these guides</h2>
     <div class="tips">
       <div class="tip"><b>Tap underlined terms</b><p>The first time a technical word appears, it has a dotted underline. Tap it for a one-sentence definition.</p></div>
       <div class="tip"><b>Break the demos</b><p>Each demo has failure modes you can trigger. Seeing how an agent goes wrong teaches more than watching it succeed.</p></div>
-      <div class="tip"><b>Keep the cheat sheets</b><p>Each module ends with a one-page summary and the questions to ask your engineering team.</p></div>
+      <div class="tip"><b>Keep the cheat sheets</b><p>Each module ends with a one-page summary and the questions to ask your engineering team. Module 1 also has a one-page agent spec template to download.</p></div>
     </div>
   </section>
 

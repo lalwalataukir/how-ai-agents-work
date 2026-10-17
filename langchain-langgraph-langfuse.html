@@ -358,6 +358,21 @@ dl.defs dd{margin:0;font-size:.93rem;color:var(--muted)}
 .mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .mistake dd{margin:0}
 footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px;display:grid;gap:8px}
+
+/* Quizzes (same look as module 1) */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+@media print{.quiz{display:none!important}}
 </style>
 
 <div id="termPop" role="tooltip" hidden></div>
@@ -656,8 +671,9 @@ report = write_report.invoke({<span class="s">"question"</span>: q, <span class=
           <text class="lbl" x="538" y="144">unsure</text>
         </svg>
       </div>
-      <figcaption>A chain only moves forward. A graph can loop back, take different routes based on what it found, and stop to ask a person. Real agents need all three.</figcaption>
+      <figcaption>A chain only moves forward. A graph can loop back, take different routes based on what it found, and stop to ask a person. Most production agents need at least one of these.</figcaption>
     </figure>
+    <div class="callout"><b>Is a graph still an agent?</b> In module 1's terms, a developer draws this map, and the model decides which arrow to take and what to search. That's level 4 on <a href="how-ai-agents-work.html#ideation" data-site-link>module 1's spectrum</a>: an agent with fences. A fully open agent loop is also a graph, just a tiny one (model → tools → model), and LangChain's <code>create_agent</code> builds exactly that.</div>
   </div>
 
   <div class="concept">
@@ -680,7 +696,8 @@ graph.add_node(<span class="s">"plan"</span>, plan)
 graph.add_node(<span class="s">"search"</span>, search, retry_policy=RetryPolicy(max_attempts=3))
 graph.add_node(<span class="s">"grade"</span>, grade)
 graph.add_node(<span class="s">"rewrite_query"</span>, rewrite_query)
-<span class="c"># …read, write, human_review, no_sources</span>
+graph.add_node(<span class="s">"human_review"</span>, human_review)  <span class="c"># calls interrupt() to wait for a person</span>
+<span class="c"># …read, write, no_sources</span>
 
 graph.add_edge(START, <span class="s">"plan"</span>)
 graph.add_edge(<span class="s">"plan"</span>, <span class="s">"search"</span>)
@@ -688,7 +705,7 @@ graph.add_edge(<span class="s">"search"</span>, <span class="s">"grade"</span>)
 graph.add_conditional_edges(<span class="s">"grade"</span>, route_after_grade)  <span class="c"># good → read · poor → rewrite_query · 2 tries → no_sources</span>
 graph.add_edge(<span class="s">"rewrite_query"</span>, <span class="s">"search"</span>)          <span class="c"># the loop</span>
 
-app = graph.compile(checkpointer=saver, interrupt_before=[<span class="s">"human_review"</span>])</pre>
+app = graph.compile(checkpointer=saver)       <span class="c"># checkpoints let a paused run resume later</span></pre>
   </div>
 
   <div class="concept">
@@ -707,6 +724,17 @@ app = graph.compile(checkpointer=saver, interrupt_before=[<span class="s">"human
       </table>
     </div>
     <p class="small muted">In recent versions, LangChain's own "create an agent" helper runs on LangGraph underneath. Teams often start there and drop down to a custom graph when they need more control.</p>
+  </div>
+
+<div class="quiz" data-quiz="q2b">
+    <p class="quiz-label">Check your understanding · LangGraph</p>
+    <p class="quiz-q">The search returns junk results. In the stack described here, which part decides to rewrite the query and search again?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. LangChain makes the model call inside the grade step, but it doesn&#x27;t decide where the run goes next."><span class="l">A</span><span>LangChain's model wrapper</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The grade step scores the results, and the conditional edge routes poor ones to rewrite_query. The loop&#x27;s exit rule (2 tries) is in the graph too."><span class="l">B</span><span>A conditional edge in LangGraph, based on the grade step's result</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Langfuse records what happened and scores it, but it doesn&#x27;t steer a live run."><span class="l">C</span><span>Langfuse, after it sees a low score</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
   </div>
 
   <a class="deeper c-graph" href="langgraph.html" data-site-link><span>Go deeper</span>Module 4 · LangGraph in depth →</a>
@@ -772,6 +800,17 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
     <p class="code-note">A <button type="button" class="term" data-term="callback" aria-expanded="false">callback</button> handler is a listener that LangChain notifies at every step, so Langfuse can record it.</p>
   </div>
 
+<div class="quiz" data-quiz="q2c">
+    <p class="quiz-label">Check your understanding · Langfuse</p>
+    <p class="quiz-q">A client says Tuesday's report cited a dodgy source. What do you need to find out why, quickly?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The bill tells you what you spent, not what happened in one run."><span class="l">A</span><span>The monthly bill from the model provider</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The trace shows what the search returned, what the model was given and where it went wrong. A user ID on every trace is what makes it findable."><span class="l">B</span><span>A trace of that run, findable by the client's user ID and date</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not yet. You can&#x27;t fix it until you know what went wrong, and that&#x27;s in the trace."><span class="l">C</span><span>A new prompt version</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+
   <a class="deeper c-fuse" href="langfuse.html" data-site-link><span>Go deeper</span>Module 5 · Langfuse in depth →</a>
 
   <div class="takeaway"><span class="k">PM takeaway</span><p>Without tracing you're guessing about quality, cost and speed. Langfuse gives you the evidence, whichever framework you use.</p></div>
@@ -782,20 +821,20 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
   <div class="stage-head">
     <p class="eyebrow"><b>5</b> · How they work together</p>
     <h2 id="h5s">The same research assistant, before and after</h2>
-    <p>"Before" is one long hand-written script. "After" splits the work between the three tools. Here is how each version copes with real situations.</p>
+    <p>"Before" is a plain script written by a good engineer. "After" splits the work between the three tools. Everything on the right <em>can</em> be built by hand. The real question is whether you want to build and maintain it yourself.</p>
   </div>
 
   <div class="tablewrap">
     <table>
-      <thead><tr><th>Situation</th><th>Before: one script</th><th>After: all three tools</th></tr></thead>
+      <thead><tr><th>Situation</th><th>Before: a plain script, done well</th><th>After: all three tools</th></tr></thead>
       <tbody>
-        <tr><td>Switch to another model provider</td><td>Rewrite every API call</td><td>Change one line <span class="tag chain">LangChain</span></td></tr>
-        <tr><td>Search returns junk</td><td>Writes a report from junk anyway</td><td>Grade step loops to a better query <span class="tag graph">LangGraph</span></td></tr>
-        <tr><td>Search tool times out</td><td>The whole run crashes</td><td>The step retries automatically <span class="tag graph">LangGraph</span></td></tr>
-        <tr><td>Report needs sign-off</td><td>Custom code, and progress is lost on restart</td><td>Interrupt and checkpoint, resume any time <span class="tag graph">LangGraph</span></td></tr>
-        <tr><td>"Why was Tuesday's report wrong?"</td><td>Search server logs, if there are any</td><td>Open that trace and see every step <span class="tag fuse">Langfuse</span></td></tr>
-        <tr><td>"What does one report cost?"</td><td>Guess from the monthly bill</td><td>Cost per run, per step, per model <span class="tag fuse">Langfuse</span></td></tr>
-        <tr><td>Improve the report prompt</td><td>Code change and release</td><td>New prompt version, compare with an eval, roll back in a click <span class="tag fuse">Langfuse</span></td></tr>
+        <tr><td>Switch to another model provider</td><td>Write and keep up your own small wrapper around each provider's SDK</td><td>Change one line <span class="tag chain">LangChain</span></td></tr>
+        <tr><td>Search returns junk</td><td>Add a grading call, an if-statement and a loop counter</td><td>Grade step and a conditional edge, drawn on the map <span class="tag graph">LangGraph</span></td></tr>
+        <tr><td>Search tool times out</td><td>Write a retry with back-off around the call</td><td>A retry policy on the step <span class="tag graph">LangGraph</span></td></tr>
+        <tr><td>Report needs sign-off</td><td>Save progress to a database and write your own resume logic</td><td>Interrupt and checkpoint, resume any time <span class="tag graph">LangGraph</span></td></tr>
+        <tr><td>"Why was Tuesday's report wrong?"</td><td>Log every prompt, reply and tool call yourself, then build a way to search the logs</td><td>Open that trace and see every step <span class="tag fuse">Langfuse</span></td></tr>
+        <tr><td>"What does one report cost?"</td><td>Record token counts and keep a price table up to date</td><td>Cost per run, per step, per model <span class="tag fuse">Langfuse</span></td></tr>
+        <tr><td>Improve the report prompt</td><td>Code change and release, or build your own prompt store</td><td>New prompt version, compare with an eval, roll back in a click <span class="tag fuse">Langfuse</span></td></tr>
       </tbody>
     </table>
   </div>
@@ -808,7 +847,7 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
 
   <div class="callout"><b>You don't have to use all three.</b> Many teams use LangGraph without LangChain's extras, or call providers directly and add only Langfuse. Each piece can be swapped for an alternative.</div>
 
-  <div class="takeaway"><span class="k">PM takeaway</span><p>The "after" version isn't smarter. It's sturdier, easier to change and possible to inspect, which is what production needs.</p></div>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>The "after" version isn't smarter. It saves you building and maintaining the plumbing that production needs. If you only need one or two rows of this table, plain code may still be the better choice.</p></div>
 </section>
 
 <!-- ============ 6. DECIDE ============ -->
@@ -827,6 +866,44 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
         <tr><td class="c-fuse">Langfuse</td><td>Anything LLM-based going to real users: you need cost per feature, debugging, prompt versions or evals. Self-hosting helps when data must stay in your own systems.</td><td>It's a throwaway prototype, or the company already uses another LLM tracing tool, such as LangSmith.</td></tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="concept">
+    <h3>The other options your engineers may suggest</h3>
+    <p>These three tools are popular, not the only choice. Each row below can replace one of them.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Instead of…</th><th>Option</th><th>Best when…</th><th>Trade-off</th></tr></thead>
+        <tbody>
+          <tr><td class="c-chain">LangChain</td><td>The provider's own SDK</td><td>One provider, a simple flow, and you want the newest features on day one</td><td>You write the glue. Switching providers means rewriting calls.</td></tr>
+          <tr><td class="c-chain">LangChain</td><td>LlamaIndex</td><td>The product is mostly about your own documents: parsing, indexing and RAG</td><td>Overlaps with LangChain. Different building blocks to learn.</td></tr>
+          <tr><td class="c-graph">LangGraph</td><td>Provider agent SDKs: OpenAI Agents SDK, Claude Agent SDK, Google ADK</td><td>You want a lighter agent loop with tools, handoffs and guardrails built in</td><td>Often tuned to one provider. Less control over the exact flow.</td></tr>
+          <tr><td class="c-graph">LangGraph</td><td>Other agent frameworks, such as CrewAI or Pydantic AI</td><td>The team prefers their style: role-based crews, or strictly typed Python</td><td>Smaller ecosystems. Check how they handle checkpoints and approvals.</td></tr>
+          <tr><td class="c-graph">LangGraph</td><td>A durable workflow engine, such as Temporal</td><td>Long-running jobs where retries and resume must be rock solid, and you already run one</td><td>Not built for LLMs. You write the agent logic yourself.</td></tr>
+          <tr><td class="c-fuse">Langfuse</td><td>LangSmith</td><td>The team is all-in on LangChain and LangGraph and wants one vendor</td><td>Commercial. Self-hosting only on enterprise plans.</td></tr>
+          <tr><td class="c-fuse">Langfuse</td><td>Arize Phoenix, Braintrust, Helicone, W&amp;B Weave</td><td>You want a different balance of open source, evals and set-up effort</td><td>Each has different strengths. Compare on your own traces.</td></tr>
+          <tr><td class="c-fuse">Langfuse</td><td>Your existing monitoring tool, such as Datadog</td><td>The company already runs it and wants one place for all monitoring</td><td>Usually lighter on prompt management and evals.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">This space changes quickly. Treat these as examples, not a ranking, and check each project's current docs and pricing.</p>
+  </div>
+
+  <div class="concept">
+    <h3>What each choice really costs</h3>
+    <p>"Open source" means no licence fee, not no cost. Ask for the total: licences, hosting, the people to run it, and model usage.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Tool</th><th>Licence</th><th>What you pay for</th></tr></thead>
+        <tbody>
+          <tr><td class="c-chain">LangChain</td><td>Open source (MIT)</td><td>Engineering time, and keeping versions and dependencies up to date</td></tr>
+          <tr><td class="c-graph">LangGraph</td><td>Open source (MIT)</td><td>Your own servers and checkpoint database, or a paid managed service from LangChain Inc.</td></tr>
+          <tr><td class="c-fuse">Langfuse</td><td>Open source (MIT core; a few enterprise features need a paid key)</td><td>A Langfuse Cloud plan, or the servers and people to self-host it: a database, an analytics store, a cache and file storage</td></tr>
+          <tr><td>LangSmith</td><td>Commercial</td><td>Seats and usage-based plans</td></tr>
+          <tr><td>Model provider</td><td>Commercial</td><td>Tokens. Usually the biggest bill, whichever framework you pick.</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div class="concept">
@@ -855,6 +932,17 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
     </div>
   </div>
 
+  <div class="quiz" data-quiz="q2d">
+    <p class="quiz-label">Check your understanding · Decision guide</p>
+    <p class="quiz-q">A new feature is one prompt and one model call, going to real users next month. What does it need from this stack?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. That&#x27;s mistake #1 below: wrapping one call in chains and graphs makes it harder to debug and slower to change."><span class="l">A</span><span>All three: LangChain, LangGraph and Langfuse</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. There&#x27;s nothing to loop, branch or pause, so a graph adds nothing."><span class="l">B</span><span>LangGraph, because every AI feature needs a graph</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Anything going to real users needs tracing for cost, debugging and quality. The call itself is simple enough for the provider&#x27;s own SDK."><span class="l">C</span><span>Tracing (Langfuse or similar). The provider's SDK can make the call.</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+
   <div class="takeaway"><span class="k">PM takeaway</span><p>Choose the smallest stack that handles your flow's real needs, and plan tracing from the first day.</p></div>
 </section>
 
@@ -863,6 +951,7 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
   <div class="stage-head">
     <p class="eyebrow">Keep this</p>
     <h2 id="h7s">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
   </div>
   <div class="sheet">
     <div class="one-liners">
@@ -877,6 +966,7 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
           <li><strong>LangChain and LangGraph:</strong> open source, both from LangChain Inc. They work together, and LangGraph also works on its own.</li>
           <li><strong>Langfuse:</strong> open source, from a separate company. Cloud or self-hosted. Works with any framework.</li>
           <li><strong>LangSmith:</strong> LangChain's own tracing and evaluation product, an alternative to Langfuse.</li>
+          <li><strong>Alternatives:</strong> provider SDKs and agent SDKs, LlamaIndex, CrewAI, Temporal, Phoenix and more. See the decision guide.</li>
         </ul>
       </div>
       <div class="blk">
@@ -960,7 +1050,7 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
 </div>
 
 <footer>
-  <p>The demo is a scripted simulation. No AI model, search engine, LangChain, LangGraph or Langfuse service is contacted, and the example web addresses are made up. Model names, timings, token counts and prices are illustrative.</p>
+  <p>The demo is a scripted simulation. No AI model, search engine, LangChain, LangGraph or Langfuse service is contacted, and the example web addresses are made up. Model names, timings, token counts and prices are illustrative. Prices are in US dollars, as model providers bill: $0.0158 is about ₹1.35 at an illustrative ₹85 to the dollar.</p>
   <p>The code snippets are simplified to show the idea. Real code varies by library version. LangChain, LangGraph, LangSmith and Langfuse are the names of their respective projects. This page is an independent explainer and isn't affiliated with them.</p>
 </footer>
 </main>
@@ -1517,5 +1607,37 @@ document.querySelectorAll(".tabs .has-new").forEach(b => b.classList.remove("has
 })();
 </script>
 
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.m2";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
 </body>
 </html>
