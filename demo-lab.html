@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>Agent Demo Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: a workbench. One switch with three positions (build / orchestrate / observe),
+   each in its tool's colour, and the live demo filling the bench below it. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E8ECF1; --ink:#131C27; --muted:#55616F; --line:#D5DCE4;
+  --accent:#2445C4; --accent-ink:#FFFFFF;
+  --chain:#2445C4; --chain-soft:#E2E8FB;
+  --graph:#6A44C0; --graph-soft:#EEE9FA;
+  --fuse:#08716D; --fuse-soft:#DCF1EF;
+  --warn:#9C5800; --warn-soft:#FBEEDA;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+    --accent:#8BA3FF; --accent-ink:#0D131A;
+    --chain:#8BA3FF; --chain-soft:#1D2A4F;
+    --graph:#BBA2FF; --graph-soft:#2A2245;
+    --fuse:#62D3C8; --fuse-soft:#123533;
+    --warn:#F1B45E; --warn-soft:#3A2B15;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+  --accent:#8BA3FF; --accent-ink:#0D131A;
+  --chain:#8BA3FF; --chain-soft:#1D2A4F;
+  --graph:#BBA2FF; --graph-soft:#2A2245;
+  --fuse:#62D3C8; --fuse-soft:#123533;
+  --warn:#F1B45E; --warn-soft:#3A2B15;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3{font-family:var(--font-display);line-height:1.12;text-wrap:balance;margin:0;letter-spacing:-0.015em}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:3px;border-radius:6px}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1160px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;flex:1;white-space:nowrap}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+
+.hero{padding-block:36px 22px;display:grid;gap:12px}
+.hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:800}
+.hero p.lede{color:var(--muted);font-size:1.1rem;max-width:64ch}
+
+/* the three-position switch */
+.switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sw{--c:var(--accent);--cs:var(--surface-2);font:inherit;text-align:left;cursor:pointer;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:grid;gap:4px;align-content:start;min-width:0;transition:border-color .15s, background .15s}
+.sw:hover{border-color:var(--c)}
+.sw[aria-selected="true"]{border-color:var(--c);background:var(--cs);box-shadow:inset 0 -4px 0 var(--c)}
+.sw .stage{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--c)}
+.sw .tool{font-family:var(--font-display);font-weight:800;font-size:1.3rem}
+.sw .what{font-size:.88rem;color:var(--muted)}
+.sw.chain{--c:var(--chain);--cs:var(--chain-soft)}
+.sw.graph{--c:var(--graph);--cs:var(--graph-soft)}
+.sw.fuse{--c:var(--fuse);--cs:var(--fuse-soft)}
+@media (max-width:640px){
+  .switch{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .sw{padding:10px}
+  .sw .what{display:none}
+  .sw .tool{font-size:1.02rem}
+}
+
+.bench{margin-top:18px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.bench > *{min-width:0}
+.bench-head{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;justify-content:space-between}
+.bench-head .try{color:var(--muted);font-size:.95rem;max-width:80ch}
+.bench-head .try b{color:var(--ink)}
+.lesson-link{font-weight:700;text-decoration:none}
+.frame-wrap{position:relative;min-height:420px}
+.frame-wrap iframe{display:block;width:100%;border:0;background:var(--bg);min-height:420px}
+.frame-wrap iframe[hidden]{display:none}
+.loading,.failed{border:1.5px dashed var(--line);border-radius:var(--radius);padding:28px;color:var(--muted);text-align:center;display:grid;gap:8px;place-items:center;min-height:200px}
+.failed{border-color:var(--warn);color:var(--ink);background:var(--warn-soft)}
+.loading[hidden],.failed[hidden]{display:none}
+
+footer{margin-top:40px;padding-block:24px 56px;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem;display:grid;gap:8px}
+</style>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="./" data-site-link>← All modules</a>
+    <span class="brand">Demo lab</span>
+    <button class="theme-btn" id="themeBtn" type="button">Dark</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <p class="eyebrow">Agent Field Guides · hands-on</p>
+    <h1>Demo lab: try LangChain, LangGraph and Langfuse</h1>
+    <p class="lede">Three simulated demos of the same research assistant, one per tool. Pick one and start clicking. Each demo has failures you can trigger, and each links to its full lesson.</p>
+  </div>
+
+  <div class="switch" role="tablist" aria-label="Choose a demo">
+    <button type="button" class="sw chain" role="tab" id="tab-langchain" data-demo="langchain" aria-selected="true" aria-controls="bench">
+      <span class="stage">Build</span><span class="tool">LangChain</span><span class="what">Chain workbench and tool calling</span>
+    </button>
+    <button type="button" class="sw graph" role="tab" id="tab-langgraph" data-demo="langgraph" aria-selected="false" aria-controls="bench">
+      <span class="stage">Orchestrate</span><span class="tool">LangGraph</span><span class="what">Checkpoints, crash, resume and fork</span>
+    </button>
+    <button type="button" class="sw fuse" role="tab" id="tab-langfuse" data-demo="langfuse" aria-selected="false" aria-controls="bench">
+      <span class="stage">Observe</span><span class="tool">Langfuse</span><span class="what">Debug a complaint from its trace</span>
+    </button>
+  </div>
+
+  <section class="bench" id="bench" role="tabpanel" aria-live="polite">
+    <div class="bench-head">
+      <p class="try" id="tryText"></p>
+      <a class="lesson-link" id="lessonLink" href="langchain.html" data-site-link></a>
+    </div>
+    <div class="frame-wrap" id="frameWrap">
+      <div class="loading" id="loading">Loading the demo…</div>
+      <div class="failed" id="failed" hidden></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>All three demos are scripted simulations. No AI model, search engine, framework or tracing service is contacted, and the example web addresses are made up. Prices and timings are illustrative.</p>
+    <p>Independent explainers, not affiliated with LangChain, LangGraph, LangSmith or Langfuse.</p>
+  </footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+const onSite = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || location.hostname.endsWith("github.io");
+function siteHref(rel){ return onSite ? rel : SITE + rel.replace(/^\.\//, ""); }
+document.querySelectorAll("[data-site-link]").forEach(a => {
+  a.href = siteHref(a.getAttribute("href"));
+  if(!onSite){ a.target = "_blank"; a.rel = "noopener"; }
+});
+
+/* ---------- Theme (shared with the lesson pages and the demo frames) ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const saved = load("guides.theme"); if(saved==="dark"||saved==="light") root.setAttribute("data-theme", saved);
+sync();
+themeBtn.addEventListener("click", () => {
+  const n = eff()==="dark" ? "light" : "dark";
+  root.setAttribute("data-theme", n); store("guides.theme", n); sync();
+  Object.values(frames).forEach(f => { try{ f.contentDocument.documentElement.setAttribute("data-theme", n); }catch(e){} });
+});
+if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", sync);
+
+/* ---------- Demos ---------- */
+const DEMOS = {
+  langchain:{page:"langchain.html", lesson:"Read the lesson: Module 3 · LangChain in depth →",
+    try:"<b>Try:</b> run the write chain block by block, switch provider, then turn on <b>Bad output format</b> to watch the fallback. The <b>Tool calling</b> tab shows a tool error being recovered."},
+  langgraph:{page:"langgraph.html", lesson:"Read the lesson: Module 4 · LangGraph in depth →",
+    try:"<b>Try:</b> run until the search loops back, then <b>Rewind</b> to checkpoint #2, change the query and <b>Fork</b>. Or <b>Crash the server</b> mid-run, with the checkpointer on and then off."},
+  langfuse:{page:"langfuse.html", lesson:"Read the lesson: Module 5 · Langfuse in depth →",
+    try:"<b>Try:</b> filter the traces to find Priya's Tuesday report, open it, and spot the bad source and the slow step. Then compare prompt v3 and v4 and promote or roll back."}
+};
+// Show only the demo section of each lesson page inside its frame.
+const DEMO_ONLY_CSS = "<style id=\"demo-only\">.topbar,main>*:not(#demo){display:none!important}" +
+  "main>#demo{border-top:0!important;padding-top:4px!important;padding-bottom:12px!important}html{scroll-padding-top:0!important}" +
+  "body{padding-left:0!important;padding-right:0!important}</style>"; // the lab page already provides the side gutter
+const frames = {};
+let current = null;
+
+function fitHeight(f){
+  try{ const b = f.contentDocument && f.contentDocument.body; if(b) f.style.height = (b.scrollHeight + 8) + "px"; }catch(e){}
+}
+function showFailed(key){
+  const d = DEMOS[key];
+  $("failed").innerHTML = "<strong>This demo couldn't load here.</strong><span>Open it on its lesson page instead: <a href=\""+siteHref(d.page)+"#demo\" target=\"_blank\" rel=\"noopener\">"+d.page+"</a></span>";
+  $("failed").hidden = false; $("loading").hidden = true;
+}
+async function loadFrame(key){
+  const d = DEMOS[key];
+  const f = document.createElement("iframe");
+  f.title = key + " demo";
+  f.setAttribute("loading", "eager");
+  f.hidden = true;
+  $("frameWrap").appendChild(f);
+  frames[key] = f;
+  try{
+    const res = await fetch(d.page, {cache:"no-cache"});
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    let html = await res.text();
+    if(/<\/head>/i.test(html)) html = html.replace(/<\/head>/i, DEMO_ONLY_CSS + "</head>");
+    else html = "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" + DEMO_ONLY_CSS + "<style>body{margin:0}[hidden]{display:none!important}</style></head><body>" + html + "</body></html>";
+    f.addEventListener("load", () => {
+      const doc = f.contentDocument;
+      const t = root.getAttribute("data-theme"); if(t) doc.documentElement.setAttribute("data-theme", t);
+      fitHeight(f);
+      try{ new ResizeObserver(() => fitHeight(f)).observe(doc.body); }catch(e){ setInterval(() => fitHeight(f), 1000); }
+      if(current === key){ $("loading").hidden = true; f.hidden = false; fitHeight(f); }
+    }, {once:true});
+    f.srcdoc = html;
+  }catch(e){
+    f.dataset.failed = "1";
+    if(current === key) showFailed(key);
+  }
+}
+function select(key){
+  if(!DEMOS[key]) key = "langchain";
+  current = key;
+  document.querySelectorAll(".sw").forEach(b => b.setAttribute("aria-selected", b.dataset.demo === key ? "true" : "false"));
+  $("bench").setAttribute("aria-labelledby", "tab-" + key);
+  $("tryText").innerHTML = DEMOS[key].try;
+  const ll = $("lessonLink"); ll.textContent = DEMOS[key].lesson; ll.href = siteHref(DEMOS[key].page);
+  $("failed").hidden = true;
+  Object.entries(frames).forEach(([k, f]) => { f.hidden = k !== key || !f.contentDocument || !f.contentDocument.body || !f.contentDocument.body.children.length; });
+  const f = frames[key];
+  if(!f){ $("loading").hidden = false; loadFrame(key); }
+  else if(f.dataset.failed){ showFailed(key); }
+  else if(f.hidden){ $("loading").hidden = false; }
+  else { $("loading").hidden = true; fitHeight(f); }
+  if(location.hash !== "#" + key) history.replaceState(null, "", "#" + key);
+}
+document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => select(b.dataset.demo)));
+document.querySelector(".switch").addEventListener("keydown", e => {
+  if(e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  const keys = Object.keys(DEMOS), i = keys.indexOf(current);
+  const n = keys[(i + (e.key === "ArrowRight" ? 1 : keys.length - 1)) % keys.length];
+  select(n); $("tab-" + n).focus();
+});
+addEventListener("resize", () => { if(frames[current]) fitHeight(frames[current]); });
+addEventListener("hashchange", () => { const k = location.hash.replace("#", ""); if(DEMOS[k] && k !== current) select(k); });
+select((location.hash || "").replace("#", "") || "langchain");
+})();
+</script>
+
+</body>
+</html>

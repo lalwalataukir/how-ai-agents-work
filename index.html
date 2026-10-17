@@ -97,6 +97,14 @@ a{color:var(--accent)}
 .modules.three .module{padding:20px}
 .modules.three .num{font-size:2.4rem}
 .modules.three h2{font-size:1.3rem}
+.lab{margin-top:40px;position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 24px;align-items:center;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius);padding:22px 24px;transition:border-color .15s, transform .15s}
+.lab:hover{border-color:var(--accent);transform:translateY(-2px)}
+.lab h2{font-size:clamp(1.3rem,3vw,1.6rem)}
+.lab h2 a{color:inherit;text-decoration:none}
+.lab h2 a::after{content:"";position:absolute;inset:0;border-radius:var(--radius)}
+.lab .sum{color:var(--muted);max-width:60ch}
+.lab .txt{display:grid;gap:8px}
+@media (max-width:640px){.lab{grid-template-columns:1fr}}
 
 .how{padding-block:48px 8px;display:grid;gap:16px}
 .how h2{font-size:1.4rem}
@@ -187,6 +195,16 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
       </article>
     </div>
   </section>
+
+  <article class="lab">
+    <div class="txt">
+      <p class="eyebrow">Just want to try things?</p>
+      <h2><a href="demo-lab.html">Demo lab: all three tool demos in one place</a></h2>
+      <p class="sum">Switch between the LangChain, LangGraph and Langfuse demos without the lessons around them. Each one links back to its full module.</p>
+      <div class="chips"><span class="chip c-chain">LangChain</span><span class="chip c-plan">LangGraph</span><span class="chip c-obs">Langfuse</span></div>
+    </div>
+    <span class="cta" aria-hidden="true">Open the lab →</span>
+  </article>
 
   <section class="how" aria-labelledby="howh">
     <h2 id="howh">How to use these guides</h2>
