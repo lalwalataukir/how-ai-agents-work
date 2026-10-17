@@ -1,0 +1,1493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>LangChain, LangGraph &amp; Langfuse</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: a companion to the agent field guide. One colour per tool (build = blue,
+   orchestrate = violet, observe = teal), a live graph + trace console near the top,
+   then one section per tool, ending in a decision guide and cheat sheet. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E8ECF1; --ink:#131C27; --muted:#55616F; --line:#D5DCE4;
+  --accent:#2445C4; --accent-ink:#FFFFFF;
+  --chain:#2445C4; --chain-soft:#E2E8FB;
+  --graph:#6A44C0; --graph-soft:#EEE9FA;
+  --fuse:#08716D; --fuse-soft:#DCF1EF;
+  --ok:#2A7639; --ok-soft:#E0F0E3;
+  --warn:#9C5800; --warn-soft:#FBEEDA;
+  --bad:#B42318; --bad-soft:#FCE7E4;
+  --code-bg:#ECEFF4;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+    --accent:#8BA3FF; --accent-ink:#0D131A;
+    --chain:#8BA3FF; --chain-soft:#1D2A4F;
+    --graph:#BBA2FF; --graph-soft:#2A2245;
+    --fuse:#62D3C8; --fuse-soft:#123533;
+    --ok:#82D893; --ok-soft:#163520;
+    --warn:#F1B45E; --warn-soft:#3A2B15;
+    --bad:#FF8F84; --bad-soft:#3E1D1A;
+    --code-bg:#101821;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+  --accent:#8BA3FF; --accent-ink:#0D131A;
+  --chain:#8BA3FF; --chain-soft:#1D2A4F;
+  --graph:#BBA2FF; --graph-soft:#2A2245;
+  --fuse:#62D3C8; --fuse-soft:#123533;
+  --ok:#82D893; --ok-soft:#163520;
+  --warn:#F1B45E; --warn-soft:#3A2B15;
+  --bad:#FF8F84; --bad-soft:#3E1D1A;
+  --code-bg:#101821;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.3rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.c-chain{color:var(--chain)} .c-graph{color:var(--graph)} .c-fuse{color:var(--fuse)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1160px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:700px){.brand{display:none}}
+
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:64ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.trio{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-family:var(--font-mono);font-size:.8rem;padding:4px 11px;border-radius:999px;border:1.5px solid currentColor;font-weight:500}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop[hidden]{display:none}
+#termPop strong{font-family:var(--font-display)}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:26px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{font-weight:500}
+.stage-head p{max-width:66ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:70ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.chain{background:var(--chain-soft);color:var(--chain)}
+.tag.graph{background:var(--graph-soft);color:var(--graph)}
+.tag.fuse{background:var(--fuse-soft);color:var(--fuse)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--radius);padding:14px 16px;max-width:80ch}
+.callout.fuse{background:var(--fuse-soft);border-color:transparent}
+.callout b{font-family:var(--font-display)}
+.takeaway{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;border-top:2px solid var(--ink);padding-top:12px;max-width:86ch}
+.takeaway .k{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.takeaway p{font-family:var(--font-display);font-weight:700;font-size:1.12rem;line-height:1.35}
+@media (max-width:520px){.takeaway{grid-template-columns:1fr;gap:4px}}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.good{color:var(--ok);font-weight:700}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;overflow-x:auto;font-family:var(--font-mono);font-size:.82rem;line-height:1.65;white-space:pre}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--graph)}
+pre.code .s{color:var(--fuse)}
+.code-note{font-size:.85rem;color:var(--muted)}
+.pros-cons{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.pros-cons .box h4{display:flex;gap:8px;align-items:center}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+.diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+.diagram svg{display:block;width:100%;height:auto;min-width:560px;max-width:780px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:74ch}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px;fill:var(--ink)}
+svg .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px}
+svg .tagtxt{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .ah{fill:var(--muted)}
+svg .b-app{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:6 5}
+svg .b-chain{fill:var(--chain-soft);stroke:var(--chain);stroke-width:1.5}
+svg .b-graph{fill:var(--graph-soft);stroke:var(--graph);stroke-width:1.5}
+svg .b-fuse{fill:var(--fuse-soft);stroke:var(--fuse);stroke-width:1.5}
+svg .b-plain{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+svg .b-bad{fill:var(--bad-soft);stroke:var(--bad);stroke-width:1.5}
+svg .t-chain{fill:var(--chain)} svg .t-graph{fill:var(--graph)} svg .t-fuse{fill:var(--fuse)} svg .t-bad{fill:var(--bad)}
+
+/* Kitchen analogy */
+.kitchen{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.kcard{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:var(--radius);padding:16px 18px;display:grid;gap:8px;align-content:start}
+.kcard .who{font-family:var(--font-display);font-weight:800;font-size:1.25rem;color:var(--c)}
+.kcard .stage-name{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kcard .analogy{font-weight:700}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--warn)}
+.demo-top{padding:14px 16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.row .lbl{font-size:.85rem;color:var(--muted)}
+.chip{font:inherit;font-size:.85rem;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+select,.sel{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.row label{display:flex;gap:6px;align-items:center;font-size:.9rem}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 13px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-sm{padding:4px 10px;font-size:.85rem}
+.btn-bad{border-color:var(--bad);color:var(--bad)}
+.spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"graph trace" "state trace"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-graph{grid-area:graph;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.p-state{grid-area:state;border-right:1px solid var(--line)}
+.p-trace{grid-area:trace}
+@media (max-width:899px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"graph" "state" "trace"}
+  .p-graph,.p-state{border-right:0}
+  .demo-body[data-tab="graph"] .p-state,.demo-body[data-tab="graph"] .p-trace,
+  .demo-body[data-tab="state"] .p-graph,.demo-body[data-tab="state"] .p-trace,
+  .demo-body[data-tab="trace"] .p-graph,.demo-body[data-tab="trace"] .p-state{display:none}
+  .p-graph{border-bottom:0}
+}
+
+/* narration */
+.narr{padding:14px 16px;display:grid;gap:10px;border-bottom:1px solid var(--line);min-height:190px;align-content:start}
+.narr-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stepno{font-family:var(--font-mono);font-size:.75rem;color:var(--muted)}
+.nodechip{font-family:var(--font-mono);font-size:.78rem;padding:2px 9px;border-radius:999px;background:var(--graph-soft);color:var(--graph);font-weight:500}
+.nodechip.err{background:var(--bad-soft);color:var(--bad)}
+.nodechip.wait{background:var(--warn-soft);color:var(--warn)}
+.nodechip.done{background:var(--ok-soft);color:var(--ok)}
+.narr-t{font-weight:700}
+.narr p{font-size:.95rem}
+.who{display:grid;gap:6px;grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:640px){.who{grid-template-columns:1fr}}
+.who div{border-radius:8px;padding:7px 10px;font-size:.83rem;line-height:1.4;min-width:0}
+.who b{display:block;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;font-weight:500}
+.who .w-chain{background:var(--chain-soft)} .who .w-chain b{color:var(--chain)}
+.who .w-graph{background:var(--graph-soft)} .who .w-graph b{color:var(--graph)}
+.who .w-fuse{background:var(--fuse-soft)} .who .w-fuse b{color:var(--fuse)}
+.decide{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:12px 14px;background:var(--surface-2);display:grid;gap:8px;font-size:.92rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.report{display:grid;gap:6px;font-size:.92rem;border-left:3px solid var(--ok);padding-left:12px}
+.report h4{font-size:1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:2px 0 0;padding-left:1.4em;font-size:.82rem;display:grid;gap:2px}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+
+/* graph svg */
+.graphwrap{overflow-x:auto;padding:10px 12px}
+.graphwrap svg{display:block;width:100%;min-width:560px;height:auto}
+.gnode rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .25s,stroke .25s}
+.gnode .nm{font-family:var(--font-mono);font-size:13px;font-weight:500;fill:var(--ink)}
+.gnode .kd{font-size:10.5px;fill:var(--muted)}
+.gnode.visited rect{stroke:var(--graph);stroke-opacity:.55}
+.gnode.active rect{fill:var(--graph-soft);stroke:var(--graph);stroke-width:3}
+.gnode.err rect{fill:var(--bad-soft);stroke:var(--bad);stroke-width:3}
+.gnode.wait rect{fill:var(--warn-soft);stroke:var(--warn);stroke-width:3}
+.gnode.off rect{stroke-dasharray:5 4;fill:transparent}
+.gnode.off .nm,.gnode.off .kd{fill:var(--muted)}
+.gedge{stroke:var(--line);stroke-width:1.6;fill:none;transition:stroke .25s}
+.gedge.walked{stroke:var(--graph);stroke-opacity:.5;stroke-width:2}
+.gedge.hot{stroke:var(--graph);stroke-opacity:1;stroke-width:3;stroke-dasharray:7 5;animation:flow .9s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-24}}
+.glbl{font-size:11px;fill:var(--muted)}
+.gah{fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:0 16px 12px;font-size:.78rem;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.legend i{width:12px;height:12px;border-radius:3px;border:2px solid var(--line);display:inline-block}
+.legend i.a{background:var(--graph-soft);border-color:var(--graph)}
+.legend i.v{border-color:var(--graph);opacity:.6}
+.legend i.e{background:var(--bad-soft);border-color:var(--bad)}
+.legend i.w{background:var(--warn-soft);border-color:var(--warn)}
+
+/* state */
+.state{padding:12px 16px;display:grid;gap:2px;font-family:var(--font-mono);font-size:.78rem;overflow:auto;max-height:420px}
+.state .cp{font-family:var(--font-body);font-size:.8rem;color:var(--muted);margin-bottom:6px}
+.kv{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;padding:4px 6px;border-radius:6px;transition:background .8s}
+.kv .k{color:var(--graph)}
+.kv .v{white-space:pre-wrap;word-break:break-word;color:var(--ink)}
+.kv .v.none{color:var(--muted)}
+.kv.flash{background:var(--graph-soft);transition:none}
+.kv.err .v{color:var(--bad)}
+
+/* trace */
+.trace-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.trace-sum div{background:var(--surface);padding:8px 10px;display:grid}
+.trace-sum .v{font-family:var(--font-mono);font-size:.95rem;font-variant-numeric:tabular-nums;font-weight:500}
+.trace-sum .k{font-size:.72rem;color:var(--muted)}
+.trace-meta{padding:8px 16px;font-family:var(--font-mono);font-size:.72rem;color:var(--muted);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px 14px}
+.trace-list{overflow:auto;max-height:470px;padding:6px 0}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:5px 16px;cursor:pointer;border-left:3px solid transparent;width:100%;text-align:left;background:none;border-top:0;border-right:0;border-bottom:0;font:inherit;color:inherit}
+.tr:hover{background:var(--surface-2)}
+.tr.sel{background:var(--surface-2);border-left-color:var(--fuse)}
+.tr.new{animation:pop .5s ease-out}
+@keyframes pop{from{background:var(--fuse-soft)}to{background:transparent}}
+.tr .nm{display:flex;gap:6px;align-items:center;min-width:0;font-size:.84rem}
+.tr .nm span.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono);font-size:.8rem}
+.tr .dur{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+.tr .bar{grid-column:1 / -1;height:6px;background:var(--surface-2);border-radius:3px;position:relative}
+.tr .bar i{position:absolute;top:0;bottom:0;border-radius:3px;background:var(--fuse);min-width:2px}
+.tr .bar i.gen{background:var(--chain)}
+.tr .bar i.tool{background:var(--warn)}
+.tr .bar i.err{background:var(--bad)}
+.tr .bar i.ev{background:var(--muted);width:3px!important}
+.tr .meta{grid-column:1 / -1;font-family:var(--font-mono);font-size:.7rem;color:var(--muted)}
+.ty{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.05em;padding:1px 5px;border-radius:4px;flex:none;font-weight:500}
+.ty-TRACE{background:var(--ink);color:var(--bg)}
+.ty-SPAN{background:var(--fuse-soft);color:var(--fuse)}
+.ty-GENERATION{background:var(--chain-soft);color:var(--chain)}
+.ty-TOOL{background:var(--warn-soft);color:var(--warn)}
+.ty-EVENT{background:var(--surface-2);color:var(--muted)}
+.ty-SCORE{background:var(--ok-soft);color:var(--ok)}
+.lvl-err{color:var(--bad);font-family:var(--font-mono);font-size:.62rem;font-weight:500}
+.trace-detail{border-top:1px solid var(--line);padding:12px 16px;font-size:.82rem;display:grid;gap:6px;background:var(--code-bg)}
+.trace-detail .dl{display:grid;grid-template-columns:90px minmax(0,1fr);gap:4px 10px}
+.trace-detail .dl div:nth-child(odd){color:var(--muted);font-family:var(--font-mono);font-size:.72rem;padding-top:2px}
+.trace-detail pre{margin:0;font-family:var(--font-mono);font-size:.74rem;white-space:pre-wrap;word-break:break-word}
+.empty{color:var(--muted);font-size:.9rem;padding:16px}
+
+/* static trace example */
+.anatomy{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));align-items:start}
+.tree{font-family:var(--font-mono);font-size:.8rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:4px;overflow-x:auto}
+.tree div{white-space:nowrap}
+.tree .d1{padding-left:18px}.tree .d2{padding-left:36px}
+.tree .m{color:var(--muted)}
+dl.defs{margin:0;display:grid;gap:10px}
+dl.defs dt{display:flex;gap:8px;align-items:center;font-weight:700}
+dl.defs dd{margin:0;font-size:.93rem;color:var(--muted)}
+
+/* Cheat sheet */
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:22px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.one-liners{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+.one-liners div{border-left:4px solid var(--c);padding:4px 0 4px 12px}
+.one-liners b{font-family:var(--font-display);font-size:1.1rem;color:var(--c);display:block}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px;display:grid;gap:8px}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#top">LangChain · LangGraph · Langfuse</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#picture" data-nav="picture"><span class="n">1</span>Big picture</a>
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#langchain" data-nav="langchain"><span class="n">2</span>LangChain</a>
+      <a href="#langgraph" data-nav="langgraph"><span class="n">3</span>LangGraph</a>
+      <a href="#langfuse" data-nav="langfuse"><span class="n">4</span>Langfuse</a>
+      <a href="#together" data-nav="together"><span class="n">5</span>Together</a>
+      <a href="#decide" data-nav="decide"><span class="n">6</span>Decide</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">A field guide for product managers · about 20 minutes</p>
+  <h1>LangChain, LangGraph and Langfuse, explained with one agent</h1>
+  <p class="lede">Engineers often mention these three tools in the same breath. They do three different jobs. We'll use one example throughout: a <strong>research assistant</strong> that takes a question, searches the web, reads the results and writes a short report.</p>
+  <div class="trio"><span class="pill c-chain">LangChain · build</span><span class="pill c-graph">LangGraph · orchestrate</span><span class="pill c-fuse">Langfuse · observe</span></div>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="framework" aria-expanded="false">framework</button>, are technical terms. Tap one for a plain-English definition.</p>
+</div>
+
+<!-- ============ 1. BIG PICTURE ============ -->
+<section class="stage" id="picture" aria-labelledby="h1s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · The big picture</p>
+    <h2 id="h1s">Three tools, three jobs</h2>
+    <p>Think of building an <button type="button" class="term" data-term="agent" aria-expanded="false">AI agent</button> as running a restaurant kitchen. You need ingredients and utensils, a recipe that says what to do and when, and a camera that records how each dish was actually made.</p>
+  </div>
+
+  <div class="kitchen">
+    <div class="kcard" style="--c:var(--chain)">
+      <span class="stage-name">Build</span>
+      <span class="who">LangChain</span>
+      <p class="analogy">The ingredients and utensils</p>
+      <p class="small">Ready-made parts for talking to an <button type="button" class="term" data-term="llm" aria-expanded="false">LLM</button>, writing prompts and connecting tools such as web search.</p>
+    </div>
+    <div class="kcard" style="--c:var(--graph)">
+      <span class="stage-name">Orchestrate</span>
+      <span class="who">LangGraph</span>
+      <p class="analogy">The recipe card, with decisions</p>
+      <p class="small">"If the sauce is too thin, reduce it again." "Chef tastes before it goes out." It sets the order of steps, the loops and the checks.</p>
+    </div>
+    <div class="kcard" style="--c:var(--fuse)">
+      <span class="stage-name">Observe</span>
+      <span class="who">Langfuse</span>
+      <p class="analogy">The kitchen camera and the receipts</p>
+      <p class="small">A record of every step: what went in, what came out, how long it took and what it cost. You use it to find out why a dish went wrong.</p>
+    </div>
+  </div>
+
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 710 270" role="img" aria-label="Inside your app, LangGraph runs the flow and uses LangChain building blocks at each step. The app sends traces to Langfuse, a separate service, and Langfuse sends prompt versions back.">
+        <defs><marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+        <rect class="b-app" x="14" y="14" width="440" height="242" rx="12"/>
+        <text class="lbl" x="30" y="36">Your research assistant app</text>
+        <rect class="b-graph" x="34" y="50" width="400" height="82" rx="10"/>
+        <text class="tagtxt t-graph" x="50" y="70">ORCHESTRATE</text>
+        <text class="ttl" x="50" y="92">LangGraph: the flow</text>
+        <text class="sub" x="50" y="114">plan → search → grade → read → write → review</text>
+        <rect class="b-chain" x="34" y="168" width="400" height="70" rx="10"/>
+        <text class="tagtxt t-chain" x="50" y="188">BUILD</text>
+        <text class="ttl" x="50" y="210">LangChain: building blocks</text>
+        <text class="sub" x="50" y="228">models · prompts · tools · retrievers</text>
+        <line class="edge" x1="234" y1="132" x2="234" y2="166" marker-end="url(#m1)"/>
+        <text class="lbl" x="242" y="154">each step uses</text>
+        <rect class="b-fuse" x="530" y="50" width="166" height="188" rx="10"/>
+        <text class="tagtxt t-fuse" x="546" y="70">OBSERVE</text>
+        <text class="ttl" x="546" y="92">Langfuse</text>
+        <text class="sub" x="546" y="112">separate service</text>
+        <text class="sub" x="546" y="128">(cloud or self-hosted)</text>
+        <text class="sub" x="546" y="160">traces</text>
+        <text class="sub" x="546" y="178">prompt versions</text>
+        <text class="sub" x="546" y="196">evals and scores</text>
+        <text class="sub" x="546" y="214">cost dashboards</text>
+        <line class="edge" x1="456" y1="96" x2="528" y2="96" marker-end="url(#m1)"/>
+        <text class="lbl" x="492" y="88" text-anchor="middle">traces</text>
+        <line class="edge" x1="528" y1="196" x2="456" y2="196" marker-end="url(#m1)"/>
+        <text class="lbl" x="492" y="214" text-anchor="middle">prompts</text>
+      </svg>
+    </div>
+    <figcaption>LangGraph and LangChain live inside your app's code. Langfuse sits outside it as its own service. Your app sends it a record of each run, and can fetch the latest prompt versions from it.</figcaption>
+  </figure>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>LangChain builds the parts, LangGraph runs them in the right order, and Langfuse shows you what actually happened.</p></div>
+</section>
+
+<!-- ============ DEMO ============ -->
+<section class="stage" id="demo" aria-labelledby="hdemo">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="hdemo">Click through one run of the research assistant</h2>
+    <p>Each click runs one step of the graph. Watch the active step light up, the state change, and the trace grow on the right. Then pick a failure to see how the graph retries or changes route.</p>
+  </div>
+
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>No real AI model, search engine, LangChain, LangGraph or Langfuse is running here. The steps, results, timings, token counts and prices are realistic scripted examples, and the trace panel is a simplified look-alike, not the real Langfuse screen.</span></div>
+    <div class="demo-top">
+      <div class="row">
+        <span class="lbl">Question:</span>
+        <button type="button" class="chip" data-q="remote" aria-pressed="true">Is remote work better for productivity?</button>
+        <button type="button" class="chip" data-q="index" aria-pressed="false">How do index funds work?</button>
+        <button type="button" class="chip" data-q="rag" aria-pressed="false">What is RAG in AI?</button>
+      </div>
+      <div class="row">
+        <label for="scenario">What happens
+          <select id="scenario">
+            <option value="normal">Everything works</option>
+            <option value="bad">Failure: poor search results</option>
+            <option value="timeout">Failure: search tool times out</option>
+            <option value="nosrc">Failure: no good sources at all</option>
+          </select>
+        </label>
+        <label for="approval"><input type="checkbox" id="approval" checked> Human approves the report</label>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="btnNext">Run next step →</button>
+        <button type="button" class="btn" id="btnPlay" aria-pressed="false">▶ Autoplay</button>
+        <label class="small muted" for="speed">Speed
+          <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+        </label>
+        <button type="button" class="btn" id="btnReset">↺ Restart</button>
+        <span class="spacer"></span>
+        <span class="small muted">Keys: <span class="kbd">N</span> next · <span class="kbd">P</span> play/pause</span>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Demo panels">
+      <button type="button" role="tab" data-tab="graph" aria-selected="true">Graph</button>
+      <button type="button" role="tab" data-tab="state" aria-selected="false">State</button>
+      <button type="button" role="tab" data-tab="trace" aria-selected="false">Trace</button>
+    </div>
+
+    <div class="demo-body" id="demoBody" data-tab="graph">
+      <div class="panel p-graph">
+        <div class="panel-h">Graph <span class="c-graph">LangGraph · which step runs, and where it goes next</span></div>
+        <div class="narr" id="narr" aria-live="polite"></div>
+        <div class="graphwrap">
+          <svg id="graph" viewBox="0 0 710 400" role="img" aria-label="Research assistant graph. Start, plan, search, grade. Grade goes to read if results are good, to rewrite query if poor (which loops back to search), or to no sources after two tries. Read, write, human review, end. Review can send the draft back to write. Search can retry itself on errors.">
+            <defs><marker id="gm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="gah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+            <path class="gedge" id="e-start-plan" d="M77,152 H123" marker-end="url(#gm)"/>
+            <path class="gedge" id="e-plan-search" d="M235,152 H273" marker-end="url(#gm)"/>
+            <path class="gedge" id="e-search-grade" d="M385,152 H423" marker-end="url(#gm)"/>
+            <path class="gedge" id="e-grade-nosrc" d="M535,152 H640 V248" marker-end="url(#gm)"/>
+            <text class="glbl" x="590" y="144" text-anchor="middle">gave up</text>
+            <path class="gedge" id="e-grade-read" d="M480,174 V248" marker-end="url(#gm)"/>
+            <text class="glbl" x="488" y="216">good</text>
+            <path class="gedge" id="e-grade-rewrite" d="M480,130 V42 H463" marker-end="url(#gm)"/>
+            <text class="glbl" x="488" y="92">poor</text>
+            <path class="gedge" id="e-rewrite-search" d="M350,42 H330 V128" marker-end="url(#gm)"/>
+            <text class="glbl" x="322" y="92" text-anchor="end">new query</text>
+            <path class="gedge" id="e-search-retry" d="M312,174 C296,222 364,222 348,177" marker-end="url(#gm)"/>
+            <text class="glbl" x="364" y="214">auto-retry</text>
+            <path class="gedge" id="e-read-write" d="M425,272 H388" marker-end="url(#gm)"/>
+            <path class="gedge" id="e-write-review" d="M275,272 H238" marker-end="url(#gm)"/>
+            <path class="gedge" id="e-review-end" d="M125,272 H80" marker-end="url(#gm)"/>
+            <text class="glbl" x="102" y="306" text-anchor="middle">approved</text>
+            <path class="gedge" id="e-review-write" d="M180,294 V340 H330 V297" marker-end="url(#gm)"/>
+            <text class="glbl" x="255" y="356" text-anchor="middle">changes requested</text>
+            <path class="gedge" id="e-nosrc-end" d="M640,296 V384 H45 V293" marker-end="url(#gm)"/>
+            <text class="glbl" x="630" y="378" text-anchor="end">ends early</text>
+
+            <g class="gnode" data-node="START"><rect x="13" y="134" width="64" height="36" rx="18"/><text class="nm" x="45" y="157" text-anchor="middle">START</text></g>
+            <g class="gnode" data-node="plan"><rect x="125" y="130" width="110" height="44" rx="9"/><text class="nm" x="180" y="149" text-anchor="middle">plan</text><text class="kd" x="180" y="165" text-anchor="middle">LLM</text></g>
+            <g class="gnode" data-node="search"><rect x="275" y="130" width="110" height="44" rx="9"/><text class="nm" x="330" y="149" text-anchor="middle">search</text><text class="kd" x="330" y="165" text-anchor="middle">tool</text></g>
+            <g class="gnode" data-node="grade"><rect x="425" y="130" width="110" height="44" rx="9"/><text class="nm" x="480" y="149" text-anchor="middle">grade</text><text class="kd" x="480" y="165" text-anchor="middle">LLM · router</text></g>
+            <g class="gnode" data-node="rewrite"><rect x="350" y="20" width="113" height="44" rx="9"/><text class="nm" x="406" y="39" text-anchor="middle">rewrite_query</text><text class="kd" x="406" y="55" text-anchor="middle">LLM</text></g>
+            <g class="gnode" data-node="no_sources"><rect x="585" y="250" width="110" height="44" rx="9"/><text class="nm" x="640" y="269" text-anchor="middle">no_sources</text><text class="kd" x="640" y="285" text-anchor="middle">LLM · fallback</text></g>
+            <g class="gnode" data-node="read"><rect x="425" y="250" width="110" height="44" rx="9"/><text class="nm" x="480" y="269" text-anchor="middle">read</text><text class="kd" x="480" y="285" text-anchor="middle">tool ×3 + LLM</text></g>
+            <g class="gnode" data-node="write"><rect x="275" y="250" width="110" height="44" rx="9"/><text class="nm" x="330" y="269" text-anchor="middle">write</text><text class="kd" x="330" y="285" text-anchor="middle">LLM</text></g>
+            <g class="gnode" data-node="review"><rect x="125" y="250" width="110" height="44" rx="9"/><text class="nm" x="180" y="269" text-anchor="middle">human_review</text><text class="kd" x="180" y="285" text-anchor="middle">pause for a person</text></g>
+            <g class="gnode" data-node="END"><rect x="13" y="254" width="64" height="36" rx="18"/><text class="nm" x="45" y="277" text-anchor="middle">END</text></g>
+          </svg>
+        </div>
+        <div class="legend"><span><i class="a"></i>running now</span><span><i class="v"></i>already ran</span><span><i class="e"></i>error</span><span><i class="w"></i>waiting for a person</span></div>
+      </div>
+
+      <div class="panel p-state">
+        <div class="panel-h">State <span class="c-graph">the shared notebook every step reads and writes</span></div>
+        <div class="state" id="state"></div>
+      </div>
+
+      <div class="panel p-trace">
+        <div class="panel-h">Trace <span class="c-fuse">Langfuse-style · simulated</span></div>
+        <div class="trace-sum">
+          <div><span class="v" id="tLat">0.0 s</span><span class="k">latency</span></div>
+          <div><span class="v" id="tTok">0</span><span class="k">tokens</span></div>
+          <div><span class="v" id="tCost">$0.0000</span><span class="k">cost</span></div>
+          <div><span class="v" id="tObs">0</span><span class="k">observations</span></div>
+        </div>
+        <div class="trace-meta" id="traceMeta"></div>
+        <div class="trace-list" id="traceList"></div>
+        <div class="trace-detail" id="traceDetail"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. LANGCHAIN ============ -->
+<section class="stage" id="langchain" aria-labelledby="h2s">
+  <div class="stage-head">
+    <p class="eyebrow c-chain"><b>2</b> · LangChain · build</p>
+    <h2 id="h2s">LangChain: a box of building blocks for LLM apps</h2>
+    <p>LangChain is an <button type="button" class="term" data-term="open_source" aria-expanded="false">open-source</button> framework, available for Python and JavaScript. It gives developers standard parts for common LLM tasks, so they don't have to build each one from scratch.</p>
+  </div>
+
+  <div class="concept">
+    <h3>The main parts, in our research assistant</h3>
+    <div class="grid g3">
+      <div class="box"><span class="tag chain">Models</span><p>One standard way to call many LLM providers. Switching providers can be a one-line change instead of a rewrite.</p><p class="small muted">Ours: a large model writes the report, a small, cheap one grades search results.</p></div>
+      <div class="box"><span class="tag chain">Prompts</span><p>A <button type="button" class="term" data-term="prompt_template" aria-expanded="false">prompt template</button> is a reusable prompt with blanks to fill in, such as <code>{question}</code> and <code>{notes}</code>.</p><p class="small muted">Ours: "Write a 150-word report answering {question} using only these notes: {notes}"</p></div>
+      <div class="box"><span class="tag chain">Tools</span><p>Wrappers that let the model ask for actions, like searching. LangChain has ready-made <button type="button" class="term" data-term="integration" aria-expanded="false">integrations</button> for hundreds of services.</p><p class="small muted">Ours: <code>web_search</code> and <code>fetch_page</code>.</p></div>
+      <div class="box"><span class="tag chain">Memory</span><p>Ways to keep the conversation and earlier results so later steps can use them. In recent versions, this is mostly handled by LangGraph's saved state.</p><p class="small muted">Ours: the question, search results and notes carried from step to step.</p></div>
+      <div class="box"><span class="tag chain">Chains</span><p>A <button type="button" class="term" data-term="chain" aria-expanded="false">chain</button> links parts in a fixed line: prompt, then model, then clean up the output.</p><p class="small muted">Ours: the "write the report" step is a small chain.</p></div>
+      <div class="box tint"><span class="tag">Also included</span><p class="small">Document loaders, text splitters, and <button type="button" class="term" data-term="retriever" aria-expanded="false">retrievers</button> for searching your own documents, plus parsers that turn model output into structured data.</p></div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>What it looks like in code</h3>
+    <pre class="code"><span class="c"># Simplified. The "|" symbol means "then".</span>
+model  = init_chat_model(<span class="s">"provider:large-model"</span>)   <span class="c"># change this line to switch provider</span>
+prompt = ChatPromptTemplate.from_template(
+  <span class="s">"Write a 150-word report answering {question} using only these notes: {notes}"</span>)
+write_report = prompt | model | StrOutputParser()
+report = write_report.invoke({<span class="s">"question"</span>: q, <span class="s">"notes"</span>: notes})</pre>
+    <p class="code-note">Four lines replace a lot of hand-written code for building the request, calling the provider's <button type="button" class="term" data-term="api" aria-expanded="false">API</button> and reading the reply.</p>
+  </div>
+
+  <div class="pros-cons">
+    <div class="box"><h4><span class="tag ok">Makes easier</span></h4><ul class="clean">
+      <li>Swapping between model providers</li>
+      <li>Connecting common tools, databases and document stores with ready-made integrations</li>
+      <li>Getting a prototype working in days</li>
+      <li>Hiring: many engineers already know it</li>
+    </ul></div>
+    <div class="box"><h4><span class="tag bad">Can feel heavy</span></h4><ul class="clean">
+      <li>Many layers of <button type="button" class="term" data-term="abstraction" aria-expanded="false">abstraction</button>. When something breaks, the error can be hard to trace back.</li>
+      <li>Overkill for one or two model calls, where the provider's own SDK is simpler</li>
+      <li>Fast-moving: past versions changed often, so upgrades can take work</li>
+      <li>Adds <button type="button" class="term" data-term="dependency" aria-expanded="false">dependencies</button> your team must keep up to date</li>
+    </ul></div>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>LangChain speeds up building the parts. Ask whether you need the speed or whether the parts are simple enough to write directly.</p></div>
+</section>
+
+<!-- ============ 3. LANGGRAPH ============ -->
+<section class="stage" id="langgraph" aria-labelledby="h3s">
+  <div class="stage-head">
+    <p class="eyebrow c-graph"><b>3</b> · LangGraph · orchestrate</p>
+    <h2 id="h3s">LangGraph: an agent drawn as a map of steps</h2>
+    <p>LangGraph is an open-source library from the same company as LangChain. You describe your agent as a <button type="button" class="term" data-term="graph" aria-expanded="false">graph</button>: boxes for steps and arrows for what can come next. It can be used with or without LangChain.</p>
+  </div>
+
+  <div class="concept">
+    <h3>Why a straight-line chain isn't enough</h3>
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 700 220" role="img" aria-label="Left, a chain: search, read, write in a fixed line, so junk results still get written up. Right, a graph: search then grade; grade loops back to search if results are poor, goes to write if good, and asks a human if unsure.">
+          <defs><marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+          <text class="ttl" x="20" y="30">Chain</text>
+          <rect class="b-plain" x="20" y="80" width="80" height="40" rx="8"/><text x="60" y="105" text-anchor="middle" font-size="13" fill="var(--ink)">search</text>
+          <rect class="b-plain" x="130" y="80" width="80" height="40" rx="8"/><text x="170" y="105" text-anchor="middle" font-size="13" fill="var(--ink)">read</text>
+          <rect class="b-plain" x="240" y="80" width="80" height="40" rx="8"/><text x="280" y="105" text-anchor="middle" font-size="13" fill="var(--ink)">write</text>
+          <line class="edge" x1="100" y1="100" x2="128" y2="100" marker-end="url(#m2)"/>
+          <line class="edge" x1="210" y1="100" x2="238" y2="100" marker-end="url(#m2)"/>
+          <text class="lbl" x="20" y="160">Always the same order.</text>
+          <text class="lbl t-bad" x="20" y="178">Junk results still get written up.</text>
+          <line x1="350" y1="14" x2="350" y2="206" stroke="var(--line)" stroke-width="1.5"/>
+          <text class="ttl" x="380" y="30">Graph</text>
+          <rect class="b-graph" x="380" y="80" width="80" height="40" rx="8"/><text x="420" y="105" text-anchor="middle" font-size="13" fill="var(--ink)">search</text>
+          <rect class="b-graph" x="490" y="80" width="80" height="40" rx="8"/><text x="530" y="105" text-anchor="middle" font-size="13" fill="var(--ink)">grade</text>
+          <rect class="b-graph" x="600" y="80" width="80" height="40" rx="8"/><text x="640" y="105" text-anchor="middle" font-size="13" fill="var(--ink)">write</text>
+          <rect class="b-plain" x="490" y="160" width="80" height="40" rx="8"/><text x="530" y="185" text-anchor="middle" font-size="13" fill="var(--ink)">ask human</text>
+          <line class="edge" x1="460" y1="100" x2="488" y2="100" marker-end="url(#m2)"/>
+          <line class="edge" x1="570" y1="100" x2="598" y2="100" marker-end="url(#m2)"/>
+          <text class="lbl" x="584" y="92" text-anchor="middle">good</text>
+          <path class="edge" d="M530,80 V54 H420 V78" marker-end="url(#m2)"/>
+          <text class="lbl" x="475" y="48" text-anchor="middle">poor → search again</text>
+          <line class="edge" x1="530" y1="120" x2="530" y2="158" marker-end="url(#m2)"/>
+          <text class="lbl" x="538" y="144">unsure</text>
+        </svg>
+      </div>
+      <figcaption>A chain only moves forward. A graph can loop back, take different routes based on what it found, and stop to ask a person. Real agents need all three.</figcaption>
+    </figure>
+  </div>
+
+  <div class="concept">
+    <h3>The key ideas</h3>
+    <div class="grid g3">
+      <div class="box"><span class="tag graph">Nodes</span><p>A <button type="button" class="term" data-term="node" aria-expanded="false">node</button> is one step, such as <code>search</code> or <code>write</code>. Inside, it can use LangChain parts or any other code.</p></div>
+      <div class="box"><span class="tag graph">Edges and branches</span><p>An <button type="button" class="term" data-term="edge" aria-expanded="false">edge</button> is an arrow to the next step. A <button type="button" class="term" data-term="conditional_edge" aria-expanded="false">conditional edge</button> picks the route based on results: good results go to <code>read</code>, poor ones to <code>rewrite_query</code>.</p></div>
+      <div class="box"><span class="tag graph">State</span><p>The <button type="button" class="term" data-term="state" aria-expanded="false">state</button> is a shared notebook passed between steps: the question, results, notes and draft. Every node reads it and updates it.</p></div>
+      <div class="box"><span class="tag graph">Loops and retries</span><p>Arrows can point backwards to try again. A <button type="button" class="term" data-term="retry_policy" aria-expanded="false">retry policy</button> re-runs a step automatically when it errors, for example a search that times out.</p></div>
+      <div class="box"><span class="tag graph">Checkpoints</span><p>A <button type="button" class="term" data-term="checkpoint" aria-expanded="false">checkpoint</button> saves the state after every step. If the server crashes, the run picks up where it stopped instead of starting over.</p></div>
+      <div class="box"><span class="tag graph">Human approval</span><p>An <button type="button" class="term" data-term="interrupt" aria-expanded="false">interrupt</button> pauses the run so a person can approve, edit or reject. It can wait minutes or days, then resume.</p></div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>The research assistant as a graph, in code</h3>
+    <pre class="code"><span class="c"># Simplified. This is the same graph you clicked through in the demo.</span>
+graph = StateGraph(ResearchState)              <span class="c"># state: question, query, results, notes, draft…</span>
+graph.add_node(<span class="s">"plan"</span>, plan)
+graph.add_node(<span class="s">"search"</span>, search, retry_policy=RetryPolicy(max_attempts=3))
+graph.add_node(<span class="s">"grade"</span>, grade)
+graph.add_node(<span class="s">"rewrite_query"</span>, rewrite_query)
+<span class="c"># …read, write, human_review, no_sources</span>
+
+graph.add_edge(START, <span class="s">"plan"</span>)
+graph.add_edge(<span class="s">"plan"</span>, <span class="s">"search"</span>)
+graph.add_edge(<span class="s">"search"</span>, <span class="s">"grade"</span>)
+graph.add_conditional_edges(<span class="s">"grade"</span>, route_after_grade)  <span class="c"># good → read · poor → rewrite_query · 2 tries → no_sources</span>
+graph.add_edge(<span class="s">"rewrite_query"</span>, <span class="s">"search"</span>)          <span class="c"># the loop</span>
+
+app = graph.compile(checkpointer=saver, interrupt_before=[<span class="s">"human_review"</span>])</pre>
+  </div>
+
+  <div class="concept">
+    <h3>When to choose LangGraph over LangChain alone</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Your flow needs…</th><th>LangChain alone</th><th>Add LangGraph</th></tr></thead>
+        <tbody>
+          <tr><td>A fixed sequence (prompt → model → answer)</td><td class="good">Enough</td><td>Not needed</td></tr>
+          <tr><td>Different routes depending on results</td><td>Possible, but gets messy</td><td class="good">Built in</td></tr>
+          <tr><td>Loops ("try again until good enough")</td><td>Hand-written</td><td class="good">Built in, with limits</td></tr>
+          <tr><td>Pausing for human approval</td><td>Hand-written</td><td class="good">Built in (interrupts)</td></tr>
+          <tr><td>Surviving crashes and long waits</td><td>Hand-written</td><td class="good">Built in (checkpoints)</td></tr>
+          <tr><td>Several agents handing work to each other</td><td>Hard</td><td class="good">Designed for it</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">In recent versions, LangChain's own "create an agent" helper runs on LangGraph underneath. Teams often start there and drop down to a custom graph when they need more control.</p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>If your agent needs to loop, branch, retry or wait for a person, it needs a graph. LangGraph is one well-used way to build one.</p></div>
+</section>
+
+<!-- ============ 4. LANGFUSE ============ -->
+<section class="stage" id="langfuse" aria-labelledby="h4s">
+  <div class="stage-head">
+    <p class="eyebrow c-fuse"><b>4</b> · Langfuse · observe</p>
+    <h2 id="h4s">Langfuse: a flight recorder for your LLM app</h2>
+    <p>Langfuse is an open-source platform for <button type="button" class="term" data-term="observability" aria-expanded="false">observability</button> of LLM apps. It has three main jobs: tracing, prompt management and evaluation. Your team can use Langfuse's cloud version or <button type="button" class="term" data-term="self_host" aria-expanded="false">self-host</button> it.</p>
+  </div>
+
+  <div class="callout fuse"><b>A separate project.</b> Langfuse is made by a different company from LangChain and LangGraph. It works with them through a ready-made connector, and it works just as well without them: with plain provider SDKs, other frameworks, or anything that speaks <button type="button" class="term" data-term="otel" aria-expanded="false">OpenTelemetry</button>. LangChain's own product for this job is called LangSmith.</div>
+
+  <div class="concept">
+    <h3>What a trace looks like</h3>
+    <p>A <button type="button" class="term" data-term="trace" aria-expanded="false">trace</button> is the full record of one run. Inside it are nested pieces called observations.</p>
+    <div class="anatomy">
+      <div class="tree" aria-label="Example trace tree">
+        <div><span class="ty ty-TRACE">TRACE</span> research-assistant <span class="m">8.4 s · $0.0158</span></div>
+        <div class="d1"><span class="ty ty-SPAN">SPAN</span> plan <span class="m">1.6 s</span></div>
+        <div class="d2"><span class="ty ty-GENERATION">GENERATION</span> chat-large <span class="m">780 tok · $0.0044</span></div>
+        <div class="d1"><span class="ty ty-SPAN">SPAN</span> search <span class="m">0.9 s</span></div>
+        <div class="d2"><span class="ty ty-TOOL">TOOL</span> web_search <span class="m">0.9 s</span></div>
+        <div class="d1"><span class="ty ty-SPAN">SPAN</span> write <span class="m">3.0 s</span></div>
+        <div class="d2"><span class="ty ty-GENERATION">GENERATION</span> chat-large <span class="m">2,200 tok · $0.0102</span></div>
+        <div class="d1"><span class="ty ty-SCORE">SCORE</span> citations_valid = 1.0</div>
+      </div>
+      <dl class="defs">
+        <dt><span class="ty ty-TRACE">TRACE</span> One run</dt><dd>Everything that happened for one question, with total time and cost.</dd>
+        <dt><span class="ty ty-SPAN">SPAN</span> One step</dt><dd>A <button type="button" class="term" data-term="span" aria-expanded="false">span</button> is a timed piece of work, such as one node of the graph.</dd>
+        <dt><span class="ty ty-GENERATION">GENERATION</span> One LLM call</dt><dd>A <button type="button" class="term" data-term="generation" aria-expanded="false">generation</button> shows the exact prompt, the reply, the model, the <button type="button" class="term" data-term="token" aria-expanded="false">tokens</button> and the cost.</dd>
+        <dt><span class="ty ty-SCORE">SCORE</span> A quality grade</dt><dd>Added by code checks, an <button type="button" class="term" data-term="llm_judge" aria-expanded="false">LLM-as-judge</button> or user feedback such as a thumbs-down.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>How it helps you debug</h3>
+    <div class="grid g3">
+      <div class="box"><span class="tag fuse">Cost</span><h4>"Why did costs double this week?"</h4><p class="small">Filter traces by cost and see which step and which model spends the most. For example, a loop that searched 5 times instead of once.</p></div>
+      <div class="box"><span class="tag fuse">Latency</span><h4>"Why is it slow?"</h4><p class="small">The timeline bars show where time goes. <button type="button" class="term" data-term="latency" aria-expanded="false">Latency</button> is often one slow tool, or steps that could run at the same time but don't.</p></div>
+      <div class="box"><span class="tag fuse">Wrong answers</span><h4>"Why did it say that?"</h4><p class="small">Open the trace for a bad report. Check what the search returned, what the model was given, and the exact step where it went wrong.</p></div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>Prompt management and evaluation</h3>
+    <div class="grid g2">
+      <div class="box"><span class="tag fuse">Prompt management</span><p>Prompts are stored and versioned in Langfuse rather than in the code. A PM or engineer can change the report prompt, label it "production" and roll it back if it's worse, without a code release. Each trace shows which prompt version produced it.</p></div>
+      <div class="box"><span class="tag fuse">Evaluation</span><p>Score traces automatically (citation check, LLM-as-judge), collect user feedback, and run a saved set of test questions, called a dataset, against a new prompt or model before it ships. An <button type="button" class="term" data-term="eval" aria-expanded="false">eval</button> turns "it seems better" into a number.</p></div>
+    </div>
+    <pre class="code"><span class="c"># Simplified. With LangChain/LangGraph: pass one handler.</span>
+handler = CallbackHandler()
+app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"callbacks"</span>: [handler]})
+
+<span class="c"># Without them: mark your own functions to be traced.</span>
+@observe()
+<span class="k">def</span> research(question): ...</pre>
+    <p class="code-note">A <button type="button" class="term" data-term="callback" aria-expanded="false">callback</button> handler is a listener that LangChain notifies at every step, so Langfuse can record it.</p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Without tracing you're guessing about quality, cost and speed. Langfuse gives you the evidence, whichever framework you use.</p></div>
+</section>
+
+<!-- ============ 5. TOGETHER ============ -->
+<section class="stage" id="together" aria-labelledby="h5s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · How they work together</p>
+    <h2 id="h5s">The same research assistant, before and after</h2>
+    <p>"Before" is one long hand-written script. "After" splits the work between the three tools. Here is how each version copes with real situations.</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Situation</th><th>Before: one script</th><th>After: all three tools</th></tr></thead>
+      <tbody>
+        <tr><td>Switch to another model provider</td><td>Rewrite every API call</td><td>Change one line <span class="tag chain">LangChain</span></td></tr>
+        <tr><td>Search returns junk</td><td>Writes a report from junk anyway</td><td>Grade step loops to a better query <span class="tag graph">LangGraph</span></td></tr>
+        <tr><td>Search tool times out</td><td>The whole run crashes</td><td>The step retries automatically <span class="tag graph">LangGraph</span></td></tr>
+        <tr><td>Report needs sign-off</td><td>Custom code, and progress is lost on restart</td><td>Interrupt and checkpoint, resume any time <span class="tag graph">LangGraph</span></td></tr>
+        <tr><td>"Why was Tuesday's report wrong?"</td><td>Search server logs, if there are any</td><td>Open that trace and see every step <span class="tag fuse">Langfuse</span></td></tr>
+        <tr><td>"What does one report cost?"</td><td>Guess from the monthly bill</td><td>Cost per run, per step, per model <span class="tag fuse">Langfuse</span></td></tr>
+        <tr><td>Improve the report prompt</td><td>Code change and release</td><td>New prompt version, compare with an eval, roll back in a click <span class="tag fuse">Langfuse</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid g3">
+    <div class="box"><span class="tag chain">LangChain does</span><p class="small">The model calls in <code>plan</code>, <code>grade</code> and <code>write</code>, the prompt templates, and the <code>web_search</code> and <code>fetch_page</code> tools.</p></div>
+    <div class="box"><span class="tag graph">LangGraph does</span><p class="small">The order of steps, the poor-results loop, the retry on timeout, the human approval pause and the saved state.</p></div>
+    <div class="box"><span class="tag fuse">Langfuse does</span><p class="small">Records every run as a trace, adds scores, stores the prompts and powers the cost and quality dashboards.</p></div>
+  </div>
+
+  <div class="callout"><b>You don't have to use all three.</b> Many teams use LangGraph without LangChain's extras, or call providers directly and add only Langfuse. Each piece can be swapped for an alternative.</div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>The "after" version isn't smarter. It's sturdier, easier to change and possible to inspect, which is what production needs.</p></div>
+</section>
+
+<!-- ============ 6. DECIDE ============ -->
+<section class="stage" id="decide" aria-labelledby="h6s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · Decision guide</p>
+    <h2 id="h6s">Which ones does your team need?</h2>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Tool</th><th>Use it when…</th><th>Skip it when…</th></tr></thead>
+      <tbody>
+        <tr><td class="c-chain">LangChain</td><td>You want to try several model providers, need ready-made integrations (search, databases, documents), or want a fast prototype.</td><td>It's one or two model calls, the team prefers the provider's own SDK, or you want the fewest dependencies possible.</td></tr>
+        <tr><td class="c-graph">LangGraph</td><td>Your agent loops, branches, retries, waits for human approval, runs for a long time, or involves several agents.</td><td>The flow is a straight line, or a simpler agent toolkit already covers what you need.</td></tr>
+        <tr><td class="c-fuse">Langfuse</td><td>Anything LLM-based going to real users: you need cost per feature, debugging, prompt versions or evals. Self-hosting helps when data must stay in your own systems.</td><td>It's a throwaway prototype, or the company already uses another LLM tracing tool, such as LangSmith.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="concept">
+    <h3>Questions to ask your engineering team before choosing a stack</h3>
+    <div class="grid g2">
+      <div class="box"><h4>Do we need it?</h4><ul class="clean">
+        <li>What's the simplest version that would work? Do we need a framework at all?</li>
+        <li>Which parts of our flow need loops, retries or human approval?</li>
+        <li>How hard would it be to swap one of these tools out later?</li>
+      </ul></div>
+      <div class="box"><h4>Will it hold up in production?</h4><ul class="clean">
+        <li>If a run crashes halfway, can it resume? Where is the state saved?</li>
+        <li>What limits stop a loop from running forever, and what does a run cost at most?</li>
+        <li>Which versions are we on, and who owns upgrades?</li>
+      </ul></div>
+      <div class="box"><h4>Can we see what it does?</h4><ul class="clean">
+        <li>Where do traces go, and who can see them?</li>
+        <li>Do traces contain personal or client data? Should we hide it or self-host?</li>
+        <li>How will we spot cost spikes and quality drops? Who gets alerted?</li>
+      </ul></div>
+      <div class="box"><h4>Can we improve it safely?</h4><ul class="clean">
+        <li>How do we change a prompt: code release or prompt management? Who can do it?</li>
+        <li>What's our eval set, and does it run on every change?</li>
+        <li>How do user complaints turn into new test cases?</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Choose the smallest stack that handles your flow's real needs, and plan tracing from the first day.</p></div>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="h7s">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="h7s">One-page cheat sheet</h2>
+  </div>
+  <div class="sheet">
+    <div class="one-liners">
+      <div style="--c:var(--chain)"><b>LangChain</b>Building blocks: models, prompts, tools, retrievers. The ingredients and utensils.</div>
+      <div style="--c:var(--graph)"><b>LangGraph</b>The flow as a graph: state, branches, loops, retries, checkpoints, human approval. The recipe card.</div>
+      <div style="--c:var(--fuse)"><b>Langfuse</b>Traces, prompt versions, evals, cost and latency. The camera and receipts.</div>
+    </div>
+    <div class="sheet-grid">
+      <div class="blk">
+        <h3>Who makes what</h3>
+        <ul>
+          <li><strong>LangChain and LangGraph:</strong> open source, both from LangChain Inc. They work together, and LangGraph also works on its own.</li>
+          <li><strong>Langfuse:</strong> open source, from a separate company. Cloud or self-hosted. Works with any framework.</li>
+          <li><strong>LangSmith:</strong> LangChain's own tracing and evaluation product, an alternative to Langfuse.</li>
+        </ul>
+      </div>
+      <div class="blk">
+        <h3>Words you'll hear</h3>
+        <ul>
+          <li><strong>Chain:</strong> fixed sequence of steps</li>
+          <li><strong>Node / edge:</strong> a step / an arrow between steps</li>
+          <li><strong>State:</strong> the shared notebook between steps</li>
+          <li><strong>Checkpoint:</strong> saved state, so runs can resume</li>
+          <li><strong>Interrupt:</strong> pause for a person</li>
+          <li><strong>Trace / span / generation:</strong> a run / a step / an LLM call</li>
+          <li><strong>Score / eval:</strong> a quality grade / a test across many examples</li>
+        </ul>
+      </div>
+      <div class="blk">
+        <h3>PM takeaways</h3>
+        <ol>
+          <li>Build, orchestrate, observe: three different jobs.</li>
+          <li>LangChain speeds up building, but can be heavy for simple apps.</li>
+          <li>Loops, branches, retries or approvals mean you need a graph.</li>
+          <li>Tracing is how you find out about quality, cost and speed.</li>
+          <li>The "after" version is sturdier, not smarter.</li>
+          <li>Choose the smallest stack, and trace from the first day.</li>
+        </ol>
+      </div>
+      <div class="blk">
+        <h3>Numbers to ask for</h3>
+        <ul>
+          <li>Cost per run, and the most one run can cost</li>
+          <li>p95 latency, and the slowest step</li>
+          <li>Retries and loops per run</li>
+          <li>Eval pass rate, and how it changed after the last release</li>
+          <li>Human approval rate and rejection rate</li>
+        </ul>
+      </div>
+    </div>
+    <div class="blk">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="h8s">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="h8s">3 common mistakes teams make with these tools</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake">
+      <span class="num">1</span>
+      <h3>Adopting the whole stack on day one</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>A feature that is really one prompt and one API call gets wrapped in chains, graphs and agents. It becomes harder to debug and slower to change than plain code.</dd>
+        <dt>Fix</dt><dd>Start with the simplest version. Add LangChain or LangGraph when a real need appears, such as a second provider, a loop or an approval step.</dd>
+      </dl>
+    </article>
+    <article class="mistake">
+      <span class="num">2</span>
+      <h3>Graphs without limits or checkpoints</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>A "try again" loop has no maximum, so a bad day for the search tool burns through budget. Runs waiting for approval are lost when the server restarts.</dd>
+        <dt>Fix</dt><dd>Cap every loop and retry (our graph gives up after 2 rewrites). Turn on a checkpointer, and test the failure paths, not just the happy path.</dd>
+      </dl>
+    </article>
+    <article class="mistake">
+      <span class="num">3</span>
+      <h3>Treating tracing as a checkbox</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>Langfuse is switched on, but no one reviews traces, sets cost alerts or adds scores. Meanwhile, traces quietly store customers' personal data.</dd>
+        <dt>Fix</dt><dd>Agree on who reviews traces each week. Set alerts on cost and errors, score quality automatically, and hide sensitive fields before they're sent.</dd>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<footer>
+  <p>The demo is a scripted simulation. No AI model, search engine, LangChain, LangGraph or Langfuse service is contacted, and the example web addresses are made up. Model names, timings, token counts and prices are illustrative.</p>
+  <p>The code snippets are simplified to show the idea. Real code varies by library version. LangChain, LangGraph, LangSmith and Langfuse are the names of their respective projects. This page is an independent explainer and isn't affiliated with them.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+  framework:{t:"Framework",d:"A ready-made set of code and conventions that developers build on, so they don't start from scratch."},
+  agent:{t:"AI agent",d:"Software that uses an AI model to decide its own next steps toward a goal, using tools, until the job is done."},
+  llm:{t:"LLM (large language model)",d:"An AI system trained on huge amounts of text that reads and writes language. Claude and ChatGPT are built on LLMs."},
+  open_source:{t:"Open source",d:"Software whose code is public and free to use and change under its licence. You can run it yourself."},
+  prompt_template:{t:"Prompt template",d:"A reusable prompt with blanks, like {question}, that get filled in each time it's used."},
+  integration:{t:"Integration",d:"Ready-made code that connects to another service, such as a search engine or database."},
+  chain:{t:"Chain",d:"A fixed sequence of steps where each step's output feeds the next. It always runs in the same order."},
+  retriever:{t:"Retriever",d:"A component that finds the most relevant pieces of your own documents for a question."},
+  api:{t:"API",d:"A way for one piece of software to talk to another. Your code sends a request to the model provider's API and gets a reply."},
+  abstraction:{t:"Abstraction",d:"A layer that hides details behind a simpler interface. Helpful until you need to see what's underneath."},
+  dependency:{t:"Dependency",d:"Outside code your product relies on. Each one needs updating, and can break or change."},
+  graph:{t:"Graph",d:"A map of steps (boxes) and connections (arrows). Unlike a straight line, arrows can branch and loop back."},
+  node:{t:"Node",d:"One step in a graph, such as “search” or “write”."},
+  edge:{t:"Edge",d:"An arrow in a graph that says which step can come next."},
+  conditional_edge:{t:"Conditional edge",d:"An arrow that's chosen at run time based on results, such as “if results are poor, go to rewrite_query”."},
+  state:{t:"State",d:"The shared data passed between steps (question, results, notes, draft). Every step can read and update it."},
+  retry_policy:{t:"Retry policy",d:"A rule that re-runs a failed step automatically, such as “try up to 3 times, waiting a little longer each time”."},
+  checkpoint:{t:"Checkpoint",d:"A saved copy of the state after a step, so a run can resume after a crash or a long pause."},
+  interrupt:{t:"Interrupt",d:"A planned pause in a LangGraph run so a person can review, approve or edit before it continues."},
+  observability:{t:"Observability",d:"Being able to see what your system did, why, how long it took and what it cost, using logs, traces and dashboards."},
+  self_host:{t:"Self-host",d:"Running the software on your company's own servers instead of the vendor's cloud. This keeps data in-house."},
+  otel:{t:"OpenTelemetry",d:"An open standard for collecting traces and metrics from software, supported by many tools."},
+  trace:{t:"Trace",d:"The full record of one run: every step, LLM call and tool call in order, with inputs, outputs, time and cost."},
+  span:{t:"Span",d:"One timed piece of work inside a trace, such as one step of the graph."},
+  generation:{t:"Generation",d:"In Langfuse, one LLM call: the prompt, the reply, the model used, tokens and cost."},
+  token:{t:"Token",d:"A chunk of text, roughly ¾ of an English word. Models are priced per token."},
+  llm_judge:{t:"LLM-as-judge",d:"Using a second AI model to grade answers against a written rubric."},
+  latency:{t:"Latency",d:"How long the user waits, from asking to getting the result."},
+  eval:{t:"Eval",d:"An automated test that runs many example questions and scores the answers, so you can compare versions."},
+  callback:{t:"Callback",d:"Code that's automatically notified when something happens, such as “a step just finished”."}
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  let left = Math.max(window.scrollX + 16, Math.min(r.left + window.scrollX, window.scrollX + vw - pw - 16));
+  pop.style.left = left + "px"; pop.style.top = (r.bottom + window.scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g=>"<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function effTheme(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function syncTheme(){ const t = effTheme(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const saved = load("lc.theme"); if(saved==="dark"||saved==="light") root.setAttribute("data-theme", saved);
+syncTheme();
+themeBtn.addEventListener("click", () => { const n = effTheme()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("lc.theme", n); syncTheme(); });
+if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncTheme);
+
+/* ---------- Nav ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")], bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, scrollY / h * 100) : 0) + "%";
+  let cur = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) cur = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === cur));
+  // scroll only the tab strip; scrollIntoView would cancel a smooth page scroll in progress
+  if(cur && cur !== lastActive){
+    lastActive = cur;
+    const strip = cur.parentElement, l = cur.offsetLeft - strip.offsetLeft, r = l + cur.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+addEventListener("scroll", onScroll, {passive:true}); onScroll();
+
+/* ---------- Scripted data ---------- */
+const PRICES = {"chat-large":{in:3, out:15}, "chat-small":{in:0.25, out:1.25}}; // illustrative $ per 1M tokens
+const Q = {
+  remote:{
+    question:"Is remote work better for productivity?", topic:"remote work",
+    plan:["Find research on remote work and productivity","Check the results are credible","Read the 3 best sources","Write a ~150-word report with citations"],
+    queries:["remote work productivity research","remote work productivity randomised study","hybrid work performance peer-reviewed research"],
+    good:[
+      {title:"Does working from home work? Evidence from a randomised experiment",url:"https://econ-journal.example/wfh-experiment"},
+      {title:"Hybrid working improves retention without hurting performance",url:"https://science-weekly.example/hybrid-trial"},
+      {title:"The effects of remote work on collaboration among information workers",url:"https://behaviour-research.example/remote-collaboration"},
+      {title:"10 reasons remote work is ALWAYS better (sponsored)",url:"https://productivity-hacks.example/always-better"}
+    ],
+    notes:["Fully remote: performance up ~13% for individual, measurable work [1]","Hybrid (2 days home): performance unchanged, resignations down a third [2]","Remote work makes cross-team collaboration more siloed [3]"],
+    paras:["It depends on the type of work. For focused, individual tasks, working from home raised output by 13% in a nine-month trial [1].","Hybrid work (two home days a week) left performance reviews unchanged over two years and cut resignations by a third [2].","The main cost is collaboration: fully remote teams connected less across groups, which may slow new ideas [3]."],
+    caveat:"Caveat: most studies cover office jobs at large firms, so results may not hold for every team."
+  },
+  index:{
+    question:"How do index funds work?", topic:"index funds",
+    plan:["Find educational and research sources on index funds","Check the results are credible","Read the 3 best sources","Write a ~150-word report with citations"],
+    queries:["how do index funds work","index fund explained expense ratio tracking error","passive index fund vs active fund research"],
+    good:[
+      {title:"Index funds explained: how passive investing works",url:"https://investor-education.example/index-funds"},
+      {title:"Scorecard: active funds vs their benchmarks",url:"https://index-research.example/active-vs-index"},
+      {title:"What is tracking error, and why does it matter?",url:"https://fund-basics.example/tracking-error"},
+      {title:"Turn ₹10,000 into ₹1 crore with this ONE fund!",url:"https://get-rich.example/one-fund"}
+    ],
+    notes:["Copies an index (e.g. Nifty 50) in the same proportions; no stock picking [1]","Low fees; most active large-cap funds trail their index over 10+ years [2]","Compare funds on expense ratio and tracking error [3]"],
+    paras:["An index fund copies a market index, such as the Nifty 50, instead of trying to beat it [1].","Because no one picks shares, fees stay low, and over 10+ years most active large-cap funds trail their index after fees [2].","When comparing funds on the same index, look at the expense ratio and the tracking error [3]."],
+    caveat:"Caveat: index funds still fall when the market falls. This is general education, not investment advice."
+  },
+  rag:{
+    question:"What is RAG in AI?", topic:"RAG",
+    plan:["Find the original research and practical guides on RAG","Check the results are credible","Read the 3 best sources","Write a ~150-word report with citations"],
+    queries:["retrieval augmented generation explained","retrieval augmented generation original paper","RAG how it works chunking retrieval"],
+    good:[
+      {title:"Retrieval-augmented generation for knowledge-intensive tasks",url:"https://ml-papers.example/rag-2020"},
+      {title:"RAG explained for product teams",url:"https://ai-guides.example/rag-for-product"},
+      {title:"Why RAG systems still get things wrong",url:"https://ml-engineering.example/rag-failures"},
+      {title:"RAG is dead, long live giant context windows",url:"https://hot-takes.example/rag-dead"}
+    ],
+    notes:["Introduced in 2020: retrieve passages, then generate [1]","Chunk and index docs, retrieve relevant chunks, answer from them [2]","Most failures come from retrieval; reduces but doesn't remove made-up answers [3]"],
+    paras:["RAG (retrieval-augmented generation) lets an AI model look things up before answering [1].","Documents are split into chunks and indexed. For each question, the most relevant chunks are added to the prompt [2].","Most bad answers come from bad retrieval, so RAG reduces made-up answers but doesn't remove them [3]."],
+    caveat:"Caveat: RAG is only as good as the documents and search behind it."
+  }
+};
+function badResults(q){
+  const slug = q.topic.toLowerCase().replace(/[^a-z0-9]+/g,"-");
+  return [
+    {title:q.topic.charAt(0).toUpperCase()+q.topic.slice(1)+" memes that are too real",url:"https://memes.example/"+slug},
+    {title:"Top 10 "+q.topic+" gadgets (sponsored)",url:"https://deals.example/"+slug+"-gadgets"},
+    {title:"Forum: anyone else think "+q.topic+" is overrated?",url:"https://forum.example/t/"+slug}
+  ];
+}
+const words = a => a.join(" ").split(/\s+/).filter(Boolean).length;
+
+/* ---------- Run engine ---------- */
+let run = {}, qid = "remote";
+const ORDER = ["question","status","plan","query","search_attempts","results","grade","rewrites","sources","notes","draft","review","error"];
+
+function newRun(){
+  clearTimeout(run.timer);
+  const q = Q[qid];
+  run = {q, scenario:$("scenario").value, approval:$("approval").checked,
+    next:"START", via:null, step:0, done:false, waiting:false, playing:false, timer:null, resume:false,
+    state:{}, changed:new Set(), errKeys:new Set(), t:0, rows:[], sel:null, idc:0,
+    searches:0, retried:false, rewrites:0, revisions:0, quality:null, checkpoints:0,
+    visited:new Set(), walked:new Set(), hot:null, active:null, activeCls:"", narr:null};
+  run.rows.push({id:"r0", depth:0, type:"TRACE", name:"research-assistant", start:0, dur:0, input:{question:q.question}, output:null});
+  for(const k of ORDER) run.state[k] = undefined;
+  run.narr = {title:"Ready to run", node:null, text:"Press <strong>Run next step</strong> to start. The graph will light up one step at a time, the state below will fill in, and the trace on the right will grow.", who:null};
+  renderAll(true);
+  setPlaying(false);
+}
+
+function setState(k, v){ run.state[k] = v; run.changed.add(k); }
+function addRow(r){ r.id = "r"+(++run.idc); run.rows.push(r); run.lastNew = r.id; return r; }
+function cost(model, tin, tout){ const p = PRICES[model]; return (tin*p.in + tout*p.out)/1e6; }
+function genRow(name, model, tin, tout, start, dur, input, output){
+  return addRow({depth:2, type:"GENERATION", name, model, tin, tout, cost:cost(model,tin,tout), start, dur, input, output});
+}
+
+const NODES = {
+  START(){
+    setState("question", run.q.question); setState("status", "running");
+    return {next:"plan", via:"e-start-plan", title:"The run starts",
+      text:"LangGraph creates a fresh state holding only the question. Langfuse opens a new trace: one trace is one run.",
+      who:{chain:"Nothing yet.", graph:"Creates the state and a thread ID so the run can be resumed later.", fuse:"Opens trace <code>research-assistant</code>."}};
+  },
+  plan(){
+    const s = run.t, d = 1600, q = run.q;
+    addRow({depth:1, type:"SPAN", name:"plan", start:s, dur:d, input:{question:q.question}, output:{plan:q.plan, query:q.queries[0]}});
+    genRow("chat-large", "chat-large", 610, 170, s+50, d-100, "System: You are a research assistant…\nUser: "+q.question, JSON.stringify({plan:q.plan, query:q.queries[0]}));
+    run.t += d;
+    setState("plan", q.plan.map((p,i)=>(i+1)+". "+p).join("\n")); setState("query", q.queries[0]);
+    return {next:"search", via:"e-plan-search", title:"Plan the research",
+      text:"The large model reads the question and writes a short plan and a first search query. Both go into the state.",
+      who:{chain:"Fills the prompt template and calls the large model.", graph:"Saves <code>plan</code> and <code>query</code> to state, then follows the arrow to <code>search</code>.", fuse:"Logs a span with one generation: 780 tokens."}};
+  },
+  search(){
+    const q = run.q, s = run.t, query = run.state.query;
+    run.searches++;
+    if(run.scenario === "timeout" && !run.retried){
+      run.retried = true;
+      const d = 5000;
+      addRow({depth:1, type:"SPAN", name:"search", start:s, dur:d, level:"ERROR", input:{query}, output:{error:"TimeoutError: search provider did not respond in 5 s"}});
+      addRow({depth:2, type:"TOOL", name:"web_search", start:s, dur:d, level:"ERROR", input:{query}, output:{error:"TimeoutError after 5.0 s"}});
+      run.t += d + 1000;
+      addRow({depth:1, type:"EVENT", name:"retry 2 of 3 after 1.0 s", start:s+d+500, dur:0, input:null, output:{policy:"RetryPolicy(max_attempts=3)"}});
+      setState("search_attempts", run.searches); setState("error", "TimeoutError after 5 s"); run.errKeys.add("error");
+      return {cls:"err", next:"search", via:"e-search-retry", title:"Search tool timed out",
+        text:"The search provider didn't answer within 5 seconds. Instead of crashing the whole run, LangGraph's retry policy re-runs this step after a short wait.",
+        who:{chain:"The <code>web_search</code> tool raised a timeout error.", graph:"Retry policy: try again (attempt 2 of 3) after 1 second.", fuse:"Marks the span <strong>ERROR</strong> with the message, so it's easy to find later."}};
+    }
+    const poor = (run.scenario === "bad" && run.rewrites === 0) || run.scenario === "nosrc";
+    run.quality = poor ? "poor" : "good";
+    const res = poor ? badResults(q) : q.good;
+    const d = 900;
+    addRow({depth:1, type:"SPAN", name:"search", start:s, dur:d, input:{query}, output:{results:res.length}});
+    addRow({depth:2, type:"TOOL", name:"web_search", start:s, dur:d, input:{query}, output:res.map(r=>r.title)});
+    run.t += d;
+    setState("search_attempts", run.searches);
+    setState("results", res.map((r,i)=>(i+1)+". "+r.title).join("\n"));
+    if(run.state.error){ setState("error", undefined); run.errKeys.delete("error"); }
+    const retryNote = run.retried && run.scenario === "timeout" && run.searches === 2 ? " The retry worked." : "";
+    return {next:"grade", via:"e-search-grade", title: poor ? "Search returns weak results" : "Search returns results",
+      text: poor ? "The search tool returns "+res.length+" results, but they're memes, adverts and forum posts. The graph doesn't judge them here. The next step, <code>grade</code>, will."+retryNote
+                 : "The search tool returns "+res.length+" results."+retryNote+" They're saved to the state for the next step to judge.",
+      who:{chain:"Runs the <code>web_search</code> tool.", graph:"Saves <code>results</code> to state, then moves to <code>grade</code>.", fuse:"Logs a tool call: query in, titles out, 0.9 s."}};
+  },
+  grade(){
+    const s = run.t, d = 700;
+    const verdict = run.quality === "good" ? "good" : (run.rewrites < 2 ? "poor" : "give_up");
+    addRow({depth:1, type:"SPAN", name:"grade", start:s, dur:d, input:{results:run.state.results}, output:{quality:run.quality, route:verdict}});
+    genRow("chat-small", "chat-small", 1150, 40, s+30, d-60, "Are these results credible sources for the question? Answer good or poor.\n"+run.state.results, JSON.stringify({quality:run.quality}));
+    run.t += d;
+    if(verdict === "good"){
+      setState("grade", "good: 3 credible sources (skip #4)");
+      return {next:"read", via:"e-grade-read", title:"Grade: results are good",
+        text:"A small, cheap model checks the results. Three are credible and one is an advert, which is skipped. The <strong>conditional edge</strong> sends the run to <code>read</code>.",
+        who:{chain:"Calls the small model with a grading prompt.", graph:"<code>route_after_grade</code> returns “good”, so the next step is <code>read</code>.", fuse:"Logs a cheap generation: 1,190 tokens, under $0.001."}};
+    }
+    if(verdict === "poor"){
+      setState("grade", "poor: no credible sources");
+      return {next:"rewrite", via:"e-grade-rewrite", title:"Grade: results are poor",
+        text:"The grader says none of these are credible. The conditional edge loops to <code>rewrite_query</code>. A plain chain would have carried on and written a report from junk.",
+        who:{chain:"Calls the small model with a grading prompt.", graph:"Routes “poor” to <code>rewrite_query</code> (try "+(run.rewrites+1)+" of 2).", fuse:"The grade output is in the trace, so you can see why it looped."}};
+    }
+    setState("grade", "poor, after 2 rewrites: giving up");
+    return {next:"no_sources", via:"e-grade-nosrc", title:"Grade: still poor, give up",
+      text:"Still no credible sources after 2 rewritten searches. The routing rule has a limit, so instead of looping forever the graph takes the <code>no_sources</code> route.",
+      who:{chain:"Calls the small model with a grading prompt.", graph:"Rewrite limit reached (2 of 2), so it routes to <code>no_sources</code>.", fuse:"The trace shows 3 searches. Filtering for this pattern finds weak topics."}};
+  },
+  rewrite(){
+    const s = run.t, d = 600, q = run.q;
+    run.rewrites++;
+    const nq = q.queries[Math.min(run.rewrites, q.queries.length-1)];
+    addRow({depth:1, type:"SPAN", name:"rewrite_query", start:s, dur:d, input:{old_query:run.state.query}, output:{query:nq}});
+    genRow("chat-small", "chat-small", 420, 30, s+30, d-60, "The search “"+run.state.query+"” gave poor results. Write a more specific query.", nq);
+    run.t += d;
+    setState("query", nq); setState("rewrites", run.rewrites);
+    return {next:"search", via:"e-rewrite-search", title:"Rewrite the search query",
+      text:"The model writes a more specific query, such as adding “study” or “research”. The arrow loops back to <code>search</code>.",
+      who:{chain:"Calls the small model with a rewrite prompt.", graph:"Updates <code>query</code> and <code>rewrites</code>, then loops back to <code>search</code>.", fuse:"Logs the old and new query side by side."}};
+  },
+  read(){
+    const s = run.t, q = run.q, durs = [1100, 1300, 900];
+    addRow({depth:1, type:"SPAN", name:"read", start:s, dur:1300+900, input:{urls:q.good.slice(0,3).map(r=>r.url)}, output:{notes:q.notes}});
+    durs.forEach((d,i) => addRow({depth:2, type:"TOOL", name:"fetch_page #"+(i+1), start:s, dur:d, input:{url:q.good[i].url}, output:"("+(800+i*90)+" words of page text)"}));
+    genRow("chat-small", "chat-small", 2600, 210, s+1300, 900, "Extract the key facts relevant to the question from these 3 pages…", q.notes.join("\n"));
+    run.t += 2200;
+    setState("sources", q.good.slice(0,3).map(r=>r.url).join("\n"));
+    setState("notes", q.notes.map(n=>"• "+n).join("\n"));
+    return {next:"write", via:"e-read-write", title:"Read the top 3 pages",
+      text:"The 3 pages are fetched <strong>at the same time</strong>, not one after another. Then a small model pulls out key facts as notes. In the trace, the three bars overlap.",
+      who:{chain:"Runs <code>fetch_page</code> 3 times, then a note-taking prompt.", graph:"Saves <code>sources</code> and <code>notes</code>, then moves to <code>write</code>.", fuse:"The timeline shows the parallel fetches, so you can see what's slow."}};
+  },
+  write(){
+    const s = run.t, q = run.q, rev = run.revisions > 0;
+    const paras = rev ? [q.paras[0], q.paras[1], q.caveat] : q.paras;
+    const d = rev ? 2600 : 3000, tin = rev ? 2350 : 1900, tout = rev ? 240 : 300;
+    run.draft = paras;
+    addRow({depth:1, type:"SPAN", name: rev ? "write (revision)" : "write", start:s, dur:d, input:{notes:q.notes, feedback: rev ? "Shorter, and add a caveat." : null}, output:{words:words(paras)}});
+    genRow("chat-large", "chat-large", tin, tout, s+50, d-100, "Prompt: research-report v3\nWrite a 150-word report answering “"+q.question+"” using only these notes…"+(rev?"\nReviewer feedback: Shorter, and add a caveat.":""), paras.join("\n\n"));
+    run.t += d;
+    setState("draft", paras[0].slice(0, 70)+"… ("+words(paras)+" words)");
+    setState("review", run.approval ? "pending" : "not required");
+    return {next:"review", via:"e-write-review", title: rev ? "Rewrite the draft with feedback" : "Write the report",
+      text: rev ? "The reviewer's feedback is now part of the state, so the large model rewrites the draft: shorter, with a caveat."
+                : "The large model writes the report using only the notes, with a citation for each claim. This is the most expensive step.",
+      who:{chain:"Runs the write chain: prompt → large model → text.", graph:"Saves <code>draft</code>, then moves to <code>human_review</code>.", fuse:"Links the generation to prompt version <code>research-report v3</code>."}};
+  },
+  review(){
+    const s = run.t;
+    if(!run.approval){
+      addRow({depth:1, type:"EVENT", name:"human_review skipped (approval off)", start:s, dur:0, input:null, output:null});
+      setState("review", "skipped");
+      return {next:"END", via:"e-review-end", title:"No approval needed",
+        text:"Approval is turned off, so the graph passes straight through to the end. Turn on <em>Human approves the report</em> to see the pause.",
+        who:{chain:"Nothing.", graph:"No interrupt is set, so it continues.", fuse:"Logs an event noting the skipped review."}};
+    }
+    addRow({depth:1, type:"EVENT", name:"interrupt: waiting for human approval", start:s, dur:0, input:{draft:run.draft.join("\n\n")}, output:null});
+    setState("status", "paused: waiting for approval");
+    return {cls:"wait", wait:true, next:null, via:null, title:"Paused for human approval",
+      text:"LangGraph pauses the run here and saves a checkpoint. It can wait minutes or days, even through a server restart, then resume at this exact step. Read the draft and decide:",
+      who:{chain:"Nothing.", graph:"Interrupt before <code>human_review</code>. The state is saved.", fuse:"Logs the pause. Waiting time isn't counted as the agent's latency."}};
+  },
+  no_sources(){
+    const s = run.t, d = 900;
+    addRow({depth:1, type:"SPAN", name:"no_sources", start:s, dur:d, input:{searches:run.searches}, output:{message:"No reliable sources found"}});
+    genRow("chat-small", "chat-small", 500, 120, s+30, d-60, "Explain briefly that no reliable sources were found and suggest how to narrow the question.", "I couldn't find reliable sources…");
+    run.t += d;
+    setState("draft", "I couldn't find reliable sources for this question after "+run.searches+" searches. Try a narrower question, or name a source to start from.");
+    return {next:"END", via:"e-nosrc-end", title:"Fallback: say so honestly",
+      text:"Instead of inventing a report, the fallback step writes a short, honest message and suggests how to narrow the question.",
+      who:{chain:"Calls the small model with a fallback prompt.", graph:"Takes the early-exit route to <code>END</code>.", fuse:"This trace gets a low score, so the topic shows up in quality reviews."}};
+  },
+  END(){
+    const okReport = run.quality === "good";
+    setState("status", okReport ? "done" : "ended early: no reliable sources");
+    if(okReport) addRow({depth:1, type:"SCORE", name:"citations_valid = 1.0", start:run.t, dur:0, input:null, output:{check:"every [n] matches a page opened by fetch_page"}});
+    else addRow({depth:1, type:"SCORE", name:"answered = 0", start:run.t, dur:0, input:null, output:{reason:"no reliable sources"}});
+    if(run.approval && okReport) addRow({depth:1, type:"SCORE", name:"human_approved = "+(run.revisions ? "after 1 revision" : "true"), start:run.t, dur:0, input:null, output:null});
+    return {cls:"done", end:true, next:null, via:null, title: okReport ? "Done" : "Ended early",
+      text: okReport ? "The run is finished. The report below is what the user receives." : "The run ended without a report. That's the right outcome when the sources aren't good enough.",
+      who:{chain:"Nothing more to call.", graph:"Reached <code>END</code>. The final state is saved.", fuse:"Closes the trace and attaches scores. Totals are in the panel."}};
+  }
+};
+
+function step(){
+  if(run.done || run.waiting || !run.next) return;
+  const node = run.next, via = run.via;
+  run.changed = new Set();
+  const out = NODES[node]();
+  run.step++; run.checkpoints++;
+  run.visited.add(node); if(via) run.walked.add(via);
+  run.hot = via; run.active = node; run.activeCls = out.cls || "";
+  run.narr = Object.assign({node}, out);
+  run.next = out.next; run.via = out.via;
+  if(out.wait){ run.waiting = true; run.resume = run.playing; setPlaying(false, true); }
+  if(out.end){ run.done = true; setPlaying(false); }
+  renderAll();
+}
+
+function decide(approve){
+  if(!run.waiting) return;
+  run.waiting = false; run.changed = new Set();
+  if(approve){
+    addRow({depth:1, type:"EVENT", name:"resumed: approved by reviewer", start:run.t, dur:0, input:null, output:null});
+    setState("review", "approved"); setState("status", "running");
+    run.next = "END"; run.via = "e-review-end";
+    run.narr = {node:"review", title:"Approved", cls:"", text:"You approved the draft. LangGraph resumes from the saved checkpoint and continues to the end.",
+      who:{chain:"Nothing.", graph:"Resumes from the checkpoint and routes to <code>END</code>.", fuse:"Logs who approved it and when."}};
+  } else {
+    run.revisions++;
+    addRow({depth:1, type:"EVENT", name:"resumed: changes requested", start:run.t, dur:0, input:{feedback:"Shorter, and add a caveat."}, output:null});
+    setState("review", "changes requested: “Shorter, and add a caveat.”"); setState("status", "running");
+    run.next = "write"; run.via = "e-review-write";
+    run.narr = {node:"review", title:"Changes requested", cls:"", text:"You asked for changes. Your feedback is saved into the state, and the graph loops back to <code>write</code>.",
+      who:{chain:"Nothing yet.", graph:"Resumes and follows the “changes requested” arrow back to <code>write</code>.", fuse:"Logs the feedback, which is useful for improving the prompt later."}};
+  }
+  run.active = "review"; run.activeCls = ""; run.hot = null;
+  renderAll();
+  if(run.resume){ run.resume = false; setPlaying(true); }
+}
+
+/* ---------- Rendering ---------- */
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const secs = ms => (ms/1000).toFixed(1)+" s";
+const usd = v => "$"+v.toFixed(4);
+function renderAll(initial){ renderNarr(); renderGraph(); renderState(initial); renderTrace(); updateControls(); }
+
+function renderNarr(){
+  const n = run.narr, el = $("narr");
+  let html = '<div class="narr-h"><span class="stepno">STEP '+String(run.step).padStart(2,"0")+'</span>';
+  if(n.node) html += '<span class="nodechip '+(n.cls||"")+'">'+esc(n.node === "rewrite" ? "rewrite_query" : n.node === "review" ? "human_review" : n.node)+'</span>';
+  html += '<span class="narr-t">'+esc(n.title)+"</span></div><p>"+n.text+"</p>";
+  if(run.waiting){
+    html += '<div class="report"><h4>Draft</h4>'+run.draft.map(p=>"<p>"+cite(p)+"</p>").join("")+"</div>";
+    html += '<div class="decide"><button type="button" class="btn btn-primary" data-decide="yes">Approve</button><button type="button" class="btn" data-decide="no"'+(run.revisions?" disabled title=\"One revision per run in this demo\"":"")+'>Request changes</button></div>';
+  }
+  if(n.who) html += '<div class="who"><div class="w-chain"><b>LangChain</b>'+n.who.chain+'</div><div class="w-graph"><b>LangGraph</b>'+n.who.graph+'</div><div class="w-fuse"><b>Langfuse</b>'+n.who.fuse+"</div></div>";
+  if(run.done){
+    if(run.quality === "good"){
+      html += '<div class="report"><h4>'+esc(run.q.question)+"</h4>"+run.draft.map(p=>"<p>"+cite(p)+"</p>").join("")+'<ol class="srcs">'+run.q.good.slice(0,3).map(r=>"<li>"+esc(r.title)+' <span class="url">'+esc(r.url)+"</span></li>").join("")+"</ol></div>";
+    }
+    html += lessonHTML();
+  }
+  el.innerHTML = html;
+}
+function cite(p){ return esc(p).replace(/\[(\d)\]/g,'<sup class="cite">[$1]</sup>'); }
+function lessonHTML(){
+  const L = {
+    normal:["What to notice","Every step ran once, in order. Even on the happy path, the trace tells you the cost ("+usd(total().cost)+") and the slowest step ("+slowest()+")."],
+    bad:["What to notice: the loop","Poor results didn't become a poor report. The grade step sent the run back through <code>rewrite_query</code>, and the trace shows the extra search and its small extra cost."],
+    timeout:["What to notice: the retry","The timeout didn't crash the run. The retry policy re-ran <code>search</code>, and Langfuse flagged the failed attempt in red, so an engineer can see how often the provider times out."],
+    nosrc:["What to notice: the limit","The loop stopped after 2 rewrites instead of running forever, and the fallback said so honestly. Without that limit, this run would keep spending money."]
+  };
+  const [h, p] = L[run.scenario];
+  return '<div class="lesson"><strong>'+h+"</strong><p>"+p+'</p><div class="btns">'+
+    '<button type="button" class="btn btn-sm" data-try="bad">Try: poor results</button>'+
+    '<button type="button" class="btn btn-sm" data-try="timeout">Try: tool timeout</button>'+
+    '<button type="button" class="btn btn-sm" data-try="nosrc">Try: no good sources</button>'+
+    '<button type="button" class="btn btn-sm" data-try="normal">Everything works</button></div></div>';
+}
+
+function renderGraph(){
+  document.querySelectorAll("#graph .gnode").forEach(g => {
+    const n = g.dataset.node;
+    g.classList.toggle("visited", run.visited.has(n));
+    g.classList.toggle("active", run.active === n && !run.activeCls);
+    g.classList.toggle("err", run.active === n && run.activeCls === "err");
+    g.classList.toggle("wait", run.active === n && run.activeCls === "wait");
+    g.classList.toggle("off", n === "review" && !run.approval);
+  });
+  document.querySelectorAll("#graph .gedge").forEach(e => {
+    e.classList.toggle("walked", run.walked.has(e.id));
+    e.classList.toggle("hot", run.hot === e.id);
+  });
+}
+
+function renderState(initial){
+  let html = '<div class="cp">thread <span class="mono">rs-0142</span> · '+run.checkpoints+" checkpoint"+(run.checkpoints===1?"":"s")+" saved</div>";
+  for(const k of ORDER){
+    const v = run.state[k];
+    if(k === "error" && v === undefined) continue;
+    const cls = "kv"+(run.changed.has(k) && !initial ? " flash" : "")+(run.errKeys.has(k) ? " err" : "");
+    html += '<div class="'+cls+'"><span class="k">'+k+'</span><span class="v'+(v===undefined?" none":"")+'">'+(v===undefined?"—":esc(v))+"</span></div>";
+  }
+  $("state").innerHTML = html;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>$("state").querySelectorAll(".flash").forEach(e=>e.classList.remove("flash"))));
+  if(run.changed.size && $("demoBody").dataset.tab !== "state") markNew("state");
+}
+
+function total(){
+  let tok = 0, c = 0;
+  run.rows.forEach(r => { if(r.type === "GENERATION"){ tok += r.tin + r.tout; c += r.cost; } });
+  return {tok, cost:c};
+}
+function slowest(){
+  let best = null;
+  run.rows.forEach(r => { if(r.depth === 1 && r.type === "SPAN" && (!best || r.dur > best.dur)) best = r; });
+  return best ? best.name+", "+secs(best.dur) : "n/a";
+}
+function renderTrace(){
+  const rootRow = run.rows[0]; rootRow.dur = run.t;
+  const T = total();
+  $("tLat").textContent = secs(run.t); $("tTok").textContent = fmt(T.tok); $("tCost").textContent = usd(T.cost);
+  $("tObs").textContent = run.rows.length - 1;
+  $("traceMeta").innerHTML = "<span>trace tr_8f3a2c</span><span>session rs-0142</span><span>tags: research-assistant, "+esc(run.scenario)+"</span>";
+  const scale = Math.max(run.t, 1);
+  const list = $("traceList");
+  if(run.rows.length === 1 && run.step === 0){
+    list.innerHTML = '<p class="empty">No observations yet. Each step you run adds spans, LLM calls and tool calls here.</p>';
+  } else {
+    list.innerHTML = run.rows.map(r => {
+      const left = (r.start/scale*100).toFixed(2), width = (r.dur/scale*100).toFixed(2);
+      const bcls = r.level === "ERROR" ? "err" : r.type === "GENERATION" ? "gen" : r.type === "TOOL" ? "tool" : (r.type === "EVENT" || r.type === "SCORE") ? "ev" : "";
+      let meta = "";
+      if(r.type === "GENERATION") meta = esc(r.model)+" · "+fmt(r.tin)+" → "+fmt(r.tout)+" tok · "+usd(r.cost);
+      const dur = (r.type === "EVENT" || r.type === "SCORE") ? "" : secs(r.dur);
+      return '<button type="button" class="tr'+(run.sel === r.id ? " sel" : "")+(run.lastNew === r.id ? " new" : "")+'" data-row="'+r.id+'" style="padding-left:'+(16 + r.depth*16)+'px">'+
+        '<span class="nm"><span class="ty ty-'+r.type+'">'+r.type+'</span><span class="n">'+esc(r.name)+"</span>"+(r.level==="ERROR"?'<span class="lvl-err">ERROR</span>':"")+"</span>"+
+        '<span class="dur">'+dur+"</span>"+
+        '<span class="bar"><i class="'+bcls+'" style="left:'+left+"%;width:"+width+'%"></i></span>'+
+        (meta ? '<span class="meta">'+meta+"</span>" : "")+"</button>";
+    }).join("");
+    run.lastNew = null;
+    list.scrollTop = list.scrollHeight;
+  }
+  renderDetail();
+  if(run.step > 0 && $("demoBody").dataset.tab !== "trace") markNew("trace");
+}
+function renderDetail(){
+  const el = $("traceDetail");
+  const r = run.rows.find(x => x.id === run.sel);
+  if(!r){ el.innerHTML = '<span class="muted">Select any row to see its input and output.</span>'; return; }
+  const show = v => v == null ? "—" : (typeof v === "string" ? v : JSON.stringify(v, null, 1));
+  let dl = "<div>type</div><div>"+r.type+(r.level?" · "+r.level:"")+"</div><div>start</div><div>+"+secs(r.start)+"</div>";
+  if(r.type !== "EVENT" && r.type !== "SCORE") dl += "<div>duration</div><div>"+secs(r.dur)+"</div>";
+  if(r.type === "GENERATION") dl += "<div>model</div><div>"+esc(r.model)+"</div><div>tokens</div><div>"+fmt(r.tin)+" in · "+fmt(r.tout)+" out</div><div>cost</div><div>"+usd(r.cost)+"</div>";
+  el.innerHTML = "<strong>"+esc(r.name)+'</strong><div class="dl">'+dl+"<div>input</div><div><pre>"+esc(show(r.input))+"</pre></div><div>output</div><div><pre>"+esc(show(r.output))+"</pre></div></div>";
+}
+
+function markNew(tab){ const b = document.querySelector('.tabs [data-tab="'+tab+'"]'); if(b) b.classList.add("has-new"); }
+function updateControls(){
+  const blocked = run.done || run.waiting || !run.next;
+  $("btnNext").disabled = blocked; $("btnPlay").disabled = blocked && !run.playing;
+}
+function setPlaying(v, keepResume){
+  run.playing = v;
+  $("btnPlay").textContent = v ? "⏸ Pause" : "▶ Autoplay";
+  $("btnPlay").setAttribute("aria-pressed", v ? "true" : "false");
+  clearTimeout(run.timer);
+  if(!keepResume && !v) run.resume = false;
+  if(v) schedule();
+  updateControls();
+}
+function schedule(){
+  clearTimeout(run.timer);
+  if(!run.playing) return;
+  if(run.done || run.waiting || !run.next){ setPlaying(false, run.waiting); return; }
+  run.timer = setTimeout(() => { step(); schedule(); }, 1900 / parseFloat($("speed").value));
+}
+function togglePlay(){
+  if(run.playing){ setPlaying(false); return; }
+  if(run.done || run.waiting) return;
+  step(); if(!run.done && !run.waiting) setPlaying(true);
+}
+
+/* ---------- Wiring ---------- */
+$("btnNext").addEventListener("click", () => { step(); if(run.playing) schedule(); });
+$("btnPlay").addEventListener("click", togglePlay);
+$("btnReset").addEventListener("click", newRun);
+$("speed").addEventListener("change", () => { if(run.playing) schedule(); });
+$("scenario").addEventListener("change", newRun);
+$("approval").addEventListener("change", newRun);
+document.querySelectorAll(".chip[data-q]").forEach(c => c.addEventListener("click", () => {
+  qid = c.dataset.q;
+  document.querySelectorAll(".chip[data-q]").forEach(x => x.setAttribute("aria-pressed", x === c ? "true" : "false"));
+  newRun();
+}));
+$("narr").addEventListener("click", e => {
+  const d = e.target.closest("[data-decide]"); if(d && !d.disabled){ decide(d.dataset.decide === "yes"); return; }
+  const t = e.target.closest("[data-try]"); if(t){ $("scenario").value = t.dataset.try; newRun(); togglePlay(); }
+});
+$("traceList").addEventListener("click", e => {
+  const r = e.target.closest("[data-row]"); if(!r) return;
+  run.sel = run.sel === r.dataset.row ? null : r.dataset.row;
+  document.querySelectorAll("#traceList .tr").forEach(x => x.classList.toggle("sel", x.dataset.row === run.sel));
+  renderDetail();
+});
+document.querySelectorAll(".tabs [data-tab]").forEach(b => b.addEventListener("click", () => {
+  $("demoBody").dataset.tab = b.dataset.tab;
+  document.querySelectorAll(".tabs [data-tab]").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
+  b.classList.remove("has-new");
+}));
+document.addEventListener("keydown", e => {
+  if(e.target.closest && e.target.closest("input,textarea,select")) return;
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(e.key === "n" || e.key === "N"){ step(); if(run.playing) schedule(); }
+  else if(e.key === "p" || e.key === "P") togglePlay();
+  else if(e.key === "Escape") hideTerm();
+});
+
+/* Open in a working state: first three steps already run */
+newRun();
+for(let i = 0; i < 3; i++) step();
+document.querySelectorAll(".tabs .has-new").forEach(b => b.classList.remove("has-new"));
+})();
+</script>
+
+</body>
+</html>
