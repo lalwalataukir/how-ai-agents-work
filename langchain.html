@@ -1,0 +1,1666 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>LangChain in depth</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module 3 of the series, a deep dive on LangChain. Same tokens and mechanics as
+   module 2, with LangChain blue as the lead colour. A "chain workbench" demo near the top, then one
+   section per building block, ending in trade-offs, a cheat sheet and common mistakes. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E8ECF1; --ink:#131C27; --muted:#55616F; --line:#D5DCE4;
+  --accent:#2445C4; --accent-ink:#FFFFFF;
+  --chain:#2445C4; --chain-soft:#E2E8FB;
+  --graph:#6A44C0; --graph-soft:#EEE9FA;
+  --fuse:#08716D; --fuse-soft:#DCF1EF;
+  --ok:#2A7639; --ok-soft:#E0F0E3;
+  --warn:#9C5800; --warn-soft:#FBEEDA;
+  --bad:#B42318; --bad-soft:#FCE7E4;
+  --code-bg:#ECEFF4;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+    --accent:#8BA3FF; --accent-ink:#0D131A;
+    --chain:#8BA3FF; --chain-soft:#1D2A4F;
+    --graph:#BBA2FF; --graph-soft:#2A2245;
+    --fuse:#62D3C8; --fuse-soft:#123533;
+    --ok:#82D893; --ok-soft:#163520;
+    --warn:#F1B45E; --warn-soft:#3A2B15;
+    --bad:#FF8F84; --bad-soft:#3E1D1A;
+    --code-bg:#101821;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+  --accent:#8BA3FF; --accent-ink:#0D131A;
+  --chain:#8BA3FF; --chain-soft:#1D2A4F;
+  --graph:#BBA2FF; --graph-soft:#2A2245;
+  --fuse:#62D3C8; --fuse-soft:#123533;
+  --ok:#82D893; --ok-soft:#163520;
+  --warn:#F1B45E; --warn-soft:#3A2B15;
+  --bad:#FF8F84; --bad-soft:#3E1D1A;
+  --code-bg:#101821;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.3rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.c-chain{color:var(--chain)} .c-graph{color:var(--graph)} .c-fuse{color:var(--fuse)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1160px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.pager{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));margin-top:40px}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.next-module.is-next{border-color:var(--chain)}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:700px){.brand{display:none}}
+
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:64ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.trio{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-family:var(--font-mono);font-size:.8rem;padding:4px 11px;border-radius:999px;border:1.5px solid currentColor;font-weight:500}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop[hidden]{display:none}
+#termPop strong{font-family:var(--font-display)}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:26px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{font-weight:500}
+.stage-head p{max-width:66ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:70ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.chain{background:var(--chain-soft);color:var(--chain)}
+.tag.graph{background:var(--graph-soft);color:var(--graph)}
+.tag.fuse{background:var(--fuse-soft);color:var(--fuse)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--radius);padding:14px 16px;max-width:80ch}
+.callout.chain{background:var(--chain-soft);border-color:transparent}
+.callout b{font-family:var(--font-display)}
+.takeaway{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;border-top:2px solid var(--ink);padding-top:12px;max-width:86ch}
+.takeaway .k{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.takeaway p{font-family:var(--font-display);font-weight:700;font-size:1.12rem;line-height:1.35}
+@media (max-width:520px){.takeaway{grid-template-columns:1fr;gap:4px}}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.good{color:var(--ok);font-weight:700}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;overflow-x:auto;font-family:var(--font-mono);font-size:.82rem;line-height:1.65;white-space:pre}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--graph)}
+pre.code .s{color:var(--fuse)}
+pre.code .hl{background:var(--chain-soft);color:var(--chain);border-radius:3px;padding:0 2px}
+.code-note{font-size:.85rem;color:var(--muted)}
+.pros-cons{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.pros-cons .box h4{display:flex;gap:8px;align-items:center}
+dl.defs{margin:0;display:grid;gap:10px}
+dl.defs dt{display:flex;gap:8px;align-items:center;font-weight:700;flex-wrap:wrap}
+dl.defs dd{margin:0;font-size:.93rem;color:var(--muted)}
+.mtag{font-family:var(--font-mono);font-size:.74rem;font-weight:500;padding:1px 7px;border-radius:5px;background:var(--surface-2)}
+.mtag.ai{background:var(--chain-soft);color:var(--chain)}
+.mtag.tool{background:var(--warn-soft);color:var(--warn)}
+.mtag.sys{background:var(--graph-soft);color:var(--graph)}
+.compare{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.compare pre{margin:0;font-family:var(--font-mono);font-size:.78rem;white-space:pre-wrap;word-break:break-word;background:var(--code-bg);border-radius:8px;padding:10px 12px}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+.diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+.diagram svg{display:block;width:100%;height:auto;min-width:560px;max-width:780px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:74ch}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px;fill:var(--ink)}
+svg .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px}
+svg .mono{font-family:var(--font-mono);font-size:12px;fill:var(--ink)}
+svg .tagtxt{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge.dash{stroke-dasharray:5 4}
+svg .ah{fill:var(--muted)}
+svg .b-app{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:6 5}
+svg .b-chain{fill:var(--chain-soft);stroke:var(--chain);stroke-width:1.5}
+svg .b-graph{fill:var(--graph-soft);stroke:var(--graph);stroke-width:1.5}
+svg .b-fuse{fill:var(--fuse-soft);stroke:var(--fuse);stroke-width:1.5}
+svg .b-plain{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+svg .b-legacy{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4}
+svg .b-hook{fill:var(--warn-soft);stroke:var(--warn);stroke-width:1.5}
+svg .b-bad{fill:var(--bad-soft);stroke:var(--bad);stroke-width:1.5}
+svg .b-ok{fill:var(--ok-soft);stroke:var(--ok);stroke-width:1.5}
+svg .t-chain{fill:var(--chain)} svg .t-graph{fill:var(--graph)} svg .t-fuse{fill:var(--fuse)} svg .t-bad{fill:var(--bad)} svg .t-warn{fill:var(--warn)} svg .t-ok{fill:var(--ok)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--warn)}
+.mode-tabs{display:flex;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.mode-tabs button{flex:1;font:inherit;font-size:.95rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:11px 6px;color:var(--muted);cursor:pointer}
+.mode-tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--chain);background:var(--surface)}
+.mode-tabs .n{font-family:var(--font-mono);font-size:.75rem;font-weight:500;margin-right:6px;opacity:.75}
+.demo-top{padding:14px 16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.row .lbl{font-size:.85rem;color:var(--muted)}
+.chip{font:inherit;font-size:.85rem;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer;text-align:left}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.chip.mono{font-family:var(--font-mono);font-size:.8rem}
+.row label{display:flex;gap:6px;align-items:center;font-size:.9rem}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 13px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-sm{padding:4px 10px;font-size:.85rem}
+.spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.fail-toggle{border:1.5px dashed var(--bad);border-radius:8px;padding:4px 10px;color:var(--bad);font-weight:700}
+.fail-toggle input{accent-color:var(--bad)}
+.provbox{display:grid;gap:6px;min-width:0}
+.provline{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:7px 11px;font-family:var(--font-mono);font-size:.8rem;overflow-x:auto;white-space:pre}
+.provline .c{color:var(--muted)}
+.provline .hl{background:var(--chain-soft);color:var(--chain);border-radius:3px;padding:0 2px;font-weight:500}
+.provstats{font-size:.85rem;color:var(--muted)}
+.provstats b{font-family:var(--font-mono);font-weight:500;color:var(--ink);font-size:.82rem}
+
+/* strip: the chain blocks, or the actors in tool mode */
+.strip{padding:14px 16px 18px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr);gap:14px;background:var(--bg)}
+.demo-top,.narr,.insp,.msgs{grid-template-columns:minmax(0,1fr)}
+.strip-h > *{min-width:0}
+.strip-h{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;justify-content:space-between}
+.strip-h h3{font-size:1rem}
+.chaincode{margin:0;font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:5px 10px;overflow-x:auto;white-space:pre;max-width:100%}
+.chaincode .c{color:var(--muted)}
+.chaincode .hl{color:var(--chain);font-weight:500}
+.pipe{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px 28px}
+.blk{position:relative;font:inherit;text-align:left;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;cursor:pointer;display:grid;gap:2px;align-content:start;min-width:0;transition:background .25s,border-color .25s,box-shadow .25s}
+.blk:hover{border-color:var(--chain)}
+.blk .bn{font-family:var(--font-mono);font-size:.82rem;font-weight:500;overflow-wrap:anywhere}
+.blk .bk{font-size:.76rem;color:var(--muted);overflow-wrap:anywhere}
+.blk .bs{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.blk:not(.last)::after{content:"→";position:absolute;right:-22px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1.05rem;pointer-events:none}
+.blk.io{background:var(--surface-2);border-color:transparent}
+.blk.ran{border-color:var(--chain)}
+.blk.ran .bs{color:var(--chain)}
+.blk.active{background:var(--chain-soft);border-color:var(--chain);box-shadow:0 0 0 2px var(--chain)}
+.blk.err{background:var(--bad-soft);border-color:var(--bad);box-shadow:0 0 0 2px var(--bad)}
+.blk.err .bs,.blk.err .bn{color:var(--bad)}
+.blk.fixed{background:var(--ok-soft);border-color:var(--ok)}
+.blk.fixed.active{box-shadow:0 0 0 2px var(--ok)}
+.blk.fixed .bs{color:var(--ok)}
+.blk.skip{border-style:dashed;background:transparent}
+.blk.armed{border-style:dashed;border-color:var(--bad)}
+.blk[aria-pressed="true"]::before{content:"";position:absolute;left:-7px;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--ink)}
+.blk-fb{grid-column:2 / 5;grid-row:2}
+@media (max-width:760px){
+  .pipe{grid-template-columns:minmax(0,1fr);gap:24px}
+  .blk:not(.last)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-23px;transform:translateX(-50%)}
+  .blk-fb{grid-column:auto;grid-row:auto}
+}
+.actors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 40px}
+.actor{position:relative;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;display:grid;gap:2px;background:var(--surface);min-width:0;transition:background .25s,border-color .25s,box-shadow .25s}
+.actor .an{font-family:var(--font-display);font-weight:700}
+.actor .ak{font-size:.78rem;color:var(--muted)}
+.actor:not(:last-child)::after{content:"⇄";position:absolute;right:-30px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1.1rem}
+.actor.active{background:var(--chain-soft);border-color:var(--chain);box-shadow:0 0 0 2px var(--chain)}
+.actor.err{background:var(--bad-soft);border-color:var(--bad);box-shadow:0 0 0 2px var(--bad)}
+.actor.ok{background:var(--ok-soft);border-color:var(--ok);box-shadow:0 0 0 2px var(--ok)}
+@media (max-width:760px){
+  .actors{grid-template-columns:minmax(0,1fr);gap:26px}
+  .actor:not(:last-child)::after{content:"⇅";right:auto;left:50%;top:auto;bottom:-25px;transform:translateX(-50%)}
+}
+.toolcard{font-family:var(--font-mono);font-size:.76rem;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:8px 11px;white-space:pre-wrap;word-break:break-word}
+.toolcard .c{color:var(--muted)}
+
+.demo-body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.p-narr{border-right:1px solid var(--line);min-width:0}
+.p-side{min-width:0;display:flex;flex-direction:column}
+@media (max-width:899px){
+  .demo-body{grid-template-columns:minmax(0,1fr)}
+  .p-narr{border-right:0;border-bottom:1px solid var(--line)}
+}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.narr{padding:14px 16px;display:grid;gap:10px;align-content:start;min-height:220px}
+.narr-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stepno{font-family:var(--font-mono);font-size:.75rem;color:var(--muted)}
+.nodechip{font-family:var(--font-mono);font-size:.78rem;padding:2px 9px;border-radius:999px;background:var(--chain-soft);color:var(--chain);font-weight:500}
+.nodechip.err{background:var(--bad-soft);color:var(--bad)}
+.nodechip.done,.nodechip.fixed{background:var(--ok-soft);color:var(--ok)}
+.narr-t{font-weight:700}
+.narr p{font-size:.95rem}
+.plain{background:var(--surface-2);border-radius:8px;padding:9px 12px;font-size:.9rem}
+.plain b{font-family:var(--font-display)}
+.lesson{border-radius:var(--radius);padding:12px 14px;background:var(--surface-2);display:grid;gap:8px;font-size:.92rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.report{display:grid;gap:6px;font-size:.92rem;border-left:3px solid var(--ok);padding-left:12px}
+.report h4{font-size:1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:2px 0 0;padding-left:1.4em;font-size:.82rem;display:grid;gap:2px}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+
+.counters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.counters div{background:var(--surface);padding:8px 10px;display:grid;min-width:0}
+.counters .v{font-family:var(--font-mono);font-size:.95rem;font-variant-numeric:tabular-nums;font-weight:500}
+.counters .k{font-size:.72rem;color:var(--muted)}
+.counters .bump{animation:bump .6s ease-out}
+@keyframes bump{from{background:var(--chain-soft)}to{background:var(--surface)}}
+.insp{padding:14px 16px 18px;display:grid;gap:10px;align-content:start}
+.insp-h{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.insp-h strong{font-family:var(--font-mono);font-weight:500}
+.insp .desc{font-size:.9rem;color:var(--muted)}
+.io-l{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.insp pre{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:.75rem;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow:auto}
+.insp pre.err{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
+.insp pre.none{color:var(--muted)}
+.msgs{padding:12px 16px 16px;display:grid;gap:10px;align-content:start;max-height:600px;overflow:auto}
+.msg{--c:var(--muted);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:8px 11px;display:grid;gap:4px;background:var(--surface);min-width:0}
+.msg.ai{--c:var(--chain)}
+.msg.tool{--c:var(--warn)}
+.msg.bad{--c:var(--bad);background:var(--bad-soft)}
+.msg.new{animation:pop .6s ease-out}
+@keyframes pop{from{background:var(--chain-soft)}}
+.msg-h{display:flex;justify-content:space-between;gap:4px 10px;flex-wrap:wrap}
+.mrole{font-family:var(--font-mono);font-size:.76rem;font-weight:500;color:var(--c)}
+.mmeta{font-family:var(--font-mono);font-size:.68rem;color:var(--muted)}
+.msg pre{margin:0;font-family:var(--font-mono);font-size:.74rem;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.empty{color:var(--muted);font-size:.9rem}
+
+/* Cheat sheet */
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:22px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk2{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.one-liners{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+.one-liners div{border-left:4px solid var(--c);padding:4px 0 4px 12px}
+.one-liners b{font-family:var(--font-display);font-size:1.1rem;color:var(--c);display:block}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px;display:grid;gap:8px}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="./" data-site-link>← All modules</a>
+    <a class="brand" href="#top">Module 3 · LangChain</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#what" data-nav="what"><span class="n">1</span>What it is</a>
+      <a href="#models" data-nav="models"><span class="n">2</span>Models</a>
+      <a href="#prompts" data-nav="prompts"><span class="n">3</span>Prompts</a>
+      <a href="#tools" data-nav="tools"><span class="n">4</span>Tools</a>
+      <a href="#retrieval" data-nav="retrieval"><span class="n">5</span>Retrieval</a>
+      <a href="#chains" data-nav="chains"><span class="n">6</span>Chains</a>
+      <a href="#memory" data-nav="memory"><span class="n">7</span>Memory</a>
+      <a href="#agents" data-nav="agents"><span class="n">8</span>Agents</a>
+      <a href="#tradeoffs" data-nav="tradeoffs"><span class="n">9</span>Trade-offs</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+      <a href="#mistakes" data-nav="mistakes">Mistakes</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow c-chain">Module 3 · LangChain in depth · about 25 minutes</p>
+  <h1>LangChain, one building block at a time</h1>
+  <p class="lede">Module 2 showed where LangChain fits next to LangGraph and Langfuse. This module opens the box. We keep the same <strong>research assistant</strong>: it takes a question, searches the web, reads the results and writes a short report with citations.</p>
+  <div class="trio"><span class="pill c-chain">models</span><span class="pill c-chain">prompts</span><span class="pill c-chain">tools</span><span class="pill c-chain">retrieval</span><span class="pill c-chain">chains</span><span class="pill c-chain">memory</span><span class="pill c-chain">agents</span></div>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="framework" aria-expanded="false">framework</button>, are technical terms. Tap one for a plain-English definition.</p>
+</div>
+
+<!-- ============ DEMO ============ -->
+<section class="stage" id="demo" aria-labelledby="hdemo">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="hdemo">Chain workbench</h2>
+    <p>Two small pieces of the research assistant, taken apart. In <strong>Write chain</strong>, notes pass through a <button type="button" class="term" data-term="chain" aria-expanded="false">chain</button> of three blocks: a <button type="button" class="term" data-term="prompt_template" aria-expanded="false">prompt template</button>, a model and an <button type="button" class="term" data-term="output_parser" aria-expanded="false">output parser</button> that expects <button type="button" class="term" data-term="json" aria-expanded="false">JSON</button>. In <strong>Tool calling</strong>, the model makes a <button type="button" class="term" data-term="tool_call" aria-expanded="false">tool call</button> and your code runs a web search. Press Next step, click any block to look inside, then switch on a failure to see a <button type="button" class="term" data-term="fallback" aria-expanded="false">fallback</button> or a retry.</p>
+  </div>
+
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>No real model or API is called; data, timings and prices are scripted and illustrative.</span></div>
+
+    <div class="mode-tabs" role="tablist" aria-label="Demo mode">
+      <button type="button" role="tab" id="tabWrite" aria-selected="true" aria-controls="demoTop"><span class="n">1</span>Write chain</button>
+      <button type="button" role="tab" id="tabTool" aria-selected="false" aria-controls="demoTop"><span class="n">2</span>Tool calling</button>
+    </div>
+
+    <div class="demo-top" id="demoTop">
+      <div class="row">
+        <span class="lbl">Question:</span>
+        <button type="button" class="chip" id="qRemote" data-q="remote" aria-pressed="true">Is remote work better for productivity?</button>
+        <button type="button" class="chip" id="qIndex" data-q="index" aria-pressed="false">How do index funds work?</button>
+        <button type="button" class="chip" id="qRag" data-q="rag" aria-pressed="false">What is RAG in AI?</button>
+      </div>
+      <div class="row" id="provRow">
+        <span class="lbl">Model provider:</span>
+        <button type="button" class="chip mono" id="provA" data-prov="a" aria-pressed="true">provider-a/large</button>
+        <button type="button" class="chip mono" id="provB" data-prov="b" aria-pressed="false">provider-b/large</button>
+        <button type="button" class="chip mono" id="provC" data-prov="c" aria-pressed="false">provider-c/small</button>
+      </div>
+      <div class="provbox" id="provBox">
+        <pre class="provline" id="provCode"></pre>
+        <p class="provstats" id="provStats"></p>
+      </div>
+      <div class="row">
+        <label class="fail-toggle" for="failFormat" id="failFormatLbl"><input type="checkbox" id="failFormat"> Failure: bad output format</label>
+        <label class="fail-toggle" for="failTool" id="failToolLbl" hidden><input type="checkbox" id="failTool"> Failure: tool error</label>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="btnNext">Next step →</button>
+        <button type="button" class="btn" id="btnPlay" aria-pressed="false">▶ Autoplay</button>
+        <button type="button" class="btn" id="btnReset">↺ Restart</button>
+        <span class="spacer"></span>
+        <span class="small muted">Keys: <span class="kbd">N</span> next · <span class="kbd">P</span> play/pause</span>
+      </div>
+    </div>
+
+    <div class="strip" id="stripWrite">
+      <div class="strip-h">
+        <h3>The write-report chain</h3>
+        <pre class="chaincode" id="chainCode"></pre>
+      </div>
+      <div class="pipe" id="pipe">
+        <button type="button" class="blk io" id="blkInput" data-blk="input" aria-pressed="false"><span class="bs">input</span><span class="bn">question + notes</span><span class="bk">from the read step</span></button>
+        <button type="button" class="blk" id="blkPrompt" data-blk="prompt" aria-pressed="false"><span class="bs">not run</span><span class="bn">PromptTemplate</span><span class="bk">fills in the blanks</span></button>
+        <button type="button" class="blk" id="blkModel" data-blk="model" aria-pressed="false"><span class="bs">not run</span><span class="bn">ChatModel</span><span class="bk" id="blkModelKind">provider-a/large</span></button>
+        <button type="button" class="blk" id="blkParser" data-blk="parser" aria-pressed="false"><span class="bs">not run</span><span class="bn">OutputParser</span><span class="bk">text → structured data</span></button>
+        <button type="button" class="blk io last" id="blkOutput" data-blk="output" aria-pressed="false"><span class="bs">output</span><span class="bn">Report</span><span class="bk">title · paragraphs · citations</span></button>
+        <button type="button" class="blk blk-fb last skip" id="blkFallback" data-blk="fallback" aria-pressed="false"><span class="bs">fallback · only runs if a block raises an error</span><span class="bn">fix_and_retry</span><span class="bk">send the error back to the model and ask for valid JSON</span></button>
+      </div>
+    </div>
+
+    <div class="strip" id="stripTool" hidden>
+      <div class="strip-h">
+        <h3>Who does what in a tool call</h3>
+        <pre class="chaincode">model_with_tools = model.bind_tools([web_search])</pre>
+      </div>
+      <div class="actors">
+        <div class="actor" id="actUser"><span class="an">User</span><span class="ak">asks the question</span></div>
+        <div class="actor" id="actModel"><span class="an">Model</span><span class="ak" id="actModelKind">decides: answer, or ask for a tool</span></div>
+        <div class="actor" id="actTool"><span class="an">Your code · web_search</span><span class="ak">runs the tool the model asked for</span></div>
+      </div>
+      <div class="toolcard" id="toolCard"><span class="c"># What the model sees about the tool (from @tool)</span>
+name: web_search
+description: Search the web for credible, recent sources. Use a specific query of 3 to 8 words. Returns titles and URLs.
+input: {"query": string}</div>
+    </div>
+
+    <div class="demo-body">
+      <div class="p-narr">
+        <div class="panel-h">What's happening <span>one step at a time</span></div>
+        <div class="narr" id="narr" aria-live="polite"></div>
+      </div>
+      <div class="p-side">
+        <div class="panel-h" id="sideHead">Block inspector <span>click any block above</span></div>
+        <div class="counters" aria-label="Run totals">
+          <div><span class="v" id="cMsgs">0</span><span class="k">messages</span></div>
+          <div><span class="v" id="cTok">0</span><span class="k">tokens</span></div>
+          <div><span class="v" id="cCost">$0.0000</span><span class="k">cost</span></div>
+          <div><span class="v" id="cTime">0.0 s</span><span class="k">time</span></div>
+        </div>
+        <div class="insp" id="inspector"></div>
+        <div class="msgs" id="msgList" hidden></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. WHAT IT IS ============ -->
+<section class="stage" id="what" aria-labelledby="h1s">
+  <div class="stage-head">
+    <p class="eyebrow c-chain"><b>1</b> · What LangChain is</p>
+    <h2 id="h1s">A family of packages, not one thing</h2>
+    <p>LangChain is an <button type="button" class="term" data-term="open_source" aria-expanded="false">open-source</button> framework for building apps on top of an <button type="button" class="term" data-term="llm" aria-expanded="false">LLM</button>. It is made by LangChain Inc., uses the permissive <button type="button" class="term" data-term="mit" aria-expanded="false">MIT licence</button>, and comes in two languages: Python and JavaScript/TypeScript. When engineers install it, they install several <button type="button" class="term" data-term="package" aria-expanded="false">packages</button>, each with its own job.</p>
+  </div>
+
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 720 320" role="img" aria-label="Layers of the LangChain family. Your app sits on top. Below it, the langchain package holds agents and helpers, next to LangGraph, the runtime underneath agents. Below both, langchain-core holds the shared building blocks. At the bottom, provider packages like langchain-openai and langchain-anthropic, langchain-community, and the legacy langchain-classic package.">
+        <rect class="b-app" x="14" y="14" width="692" height="44" rx="10"/>
+        <text class="ttl" x="30" y="42">Your research assistant app</text>
+        <rect class="b-chain" x="14" y="76" width="440" height="66" rx="10"/>
+        <text class="tagtxt t-chain" x="30" y="96">LANGCHAIN</text>
+        <text class="ttl" x="30" y="117">Agents and helpers</text>
+        <text class="sub" x="30" y="134">create_agent · middleware · init_chat_model</text>
+        <rect class="b-graph" x="470" y="76" width="236" height="66" rx="10"/>
+        <text class="tagtxt t-graph" x="486" y="96">LANGGRAPH</text>
+        <text class="ttl" x="486" y="117">The runtime underneath</text>
+        <text class="sub" x="486" y="134">state · checkpoints · loops</text>
+        <rect class="b-chain" x="14" y="160" width="692" height="66" rx="10"/>
+        <text class="tagtxt t-chain" x="30" y="180">LANGCHAIN-CORE</text>
+        <text class="ttl" x="30" y="201">Shared building blocks every other package uses</text>
+        <text class="sub" x="30" y="218">messages · chat models · prompts · tools · retrievers · the | pipe</text>
+        <rect class="b-plain" x="14" y="244" width="130" height="60" rx="9"/>
+        <text class="mono" x="79" y="270" text-anchor="middle">langchain-</text><text class="mono" x="79" y="287" text-anchor="middle">openai</text>
+        <rect class="b-plain" x="154" y="244" width="130" height="60" rx="9"/>
+        <text class="mono" x="219" y="270" text-anchor="middle">langchain-</text><text class="mono" x="219" y="287" text-anchor="middle">anthropic</text>
+        <rect class="b-plain" x="294" y="244" width="130" height="60" rx="9"/>
+        <text class="mono" x="359" y="270" text-anchor="middle">…one per</text><text class="mono" x="359" y="287" text-anchor="middle">provider</text>
+        <rect class="b-plain" x="434" y="244" width="130" height="60" rx="9"/>
+        <text class="mono" x="499" y="270" text-anchor="middle">langchain-</text><text class="mono" x="499" y="287" text-anchor="middle">community</text>
+        <rect class="b-legacy" x="576" y="244" width="130" height="60" rx="9"/>
+        <text class="mono" x="641" y="270" text-anchor="middle">langchain-</text><text class="mono" x="641" y="287" text-anchor="middle">classic</text>
+        <text class="sub" x="641" y="316" text-anchor="middle">legacy, since 1.0</text>
+      </svg>
+    </div>
+    <figcaption>Most code imports from <code>langchain</code> and one or two provider packages. Everything rests on <code>langchain-core</code>. Agents made with <code>langchain</code> run on LangGraph, which Module 4 covers.</figcaption>
+  </figure>
+
+  <div class="grid g3">
+    <div class="box"><span class="tag chain">langchain-core</span><p>The shared base: the standard shapes for messages, models, prompts and tools. It's small and changes slowly, so other packages can depend on it.</p></div>
+    <div class="box"><span class="tag chain">langchain</span><p>The main package. Since version 1.0 it is deliberately slim and centres on agents: <code>create_agent</code>, middleware and helpers like <code>init_chat_model</code>.</p></div>
+    <div class="box"><span class="tag chain">Provider packages</span><p>One per <button type="button" class="term" data-term="provider" aria-expanded="false">model provider</button>, such as <code>langchain-openai</code> or <code>langchain-anthropic</code>. Each is released separately, so a provider's new feature doesn't wait for a LangChain release.</p></div>
+    <div class="box"><span class="tag chain">langchain-community</span><p>Hundreds of <button type="button" class="term" data-term="integration" aria-expanded="false">integrations</button> written and maintained by the community: document loaders, databases, search tools. Quality and upkeep vary from one to the next.</p></div>
+    <div class="box"><span class="tag">langchain-classic</span><p>Where older features moved in 1.0, such as the old chain classes and some retrievers. It keeps old code running, but new code shouldn't start there.</p></div>
+    <div class="box tint"><span class="tag">Same company</span><p class="small">LangChain Inc. also makes LangGraph (open source, the agent runtime) and LangSmith (a paid service for tracing and evals, an alternative to Langfuse).</p></div>
+  </div>
+
+  <div class="callout chain"><b>Version note.</b> LangChain 1.0 came out in October 2025 with a promise of no breaking changes until 2.0. Many tutorials still show older code (versions 0.1 to 0.3), with names that now live in <code>langchain-classic</code> or no longer exist. The names on this page match the LangChain docs as of October 2026. Check which version your team uses.</div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>When engineers say "we use LangChain", ask which packages and which version. The answer shows how modern the code is and how hard upgrades will be.</p></div>
+</section>
+
+<!-- ============ 2. MODELS ============ -->
+<section class="stage" id="models" aria-labelledby="h2s">
+  <div class="stage-head">
+    <p class="eyebrow c-chain"><b>2</b> · Models</p>
+    <h2 id="h2s">One way to talk to every provider</h2>
+    <p>Each model provider has its own <button type="button" class="term" data-term="api" aria-expanded="false">API</button>, with different names for the same ideas. LangChain wraps them all in one interface. Your code talks to the wrapper, and the provider package translates.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="box"><span class="tag chain">One interface</span><p><code>init_chat_model("provider:model")</code> creates a chat model from a name. Every model then has the same methods: <code>invoke</code> for one full reply, <code>stream</code> for a reply that arrives bit by bit, and <code>batch</code> for many questions at once.</p><p class="small muted">In the demo, switching providers changes only this one line.</p></div>
+    <div class="box"><span class="tag chain">Chat messages</span><p>Models read and write a list of <button type="button" class="term" data-term="chat_message" aria-expanded="false">chat messages</button>. Each message has a role. LangChain uses the same four types for every provider.</p></div>
+    <div class="box"><span class="tag chain">Streaming</span><p><button type="button" class="term" data-term="streaming" aria-expanded="false">Streaming</button> shows the answer word by word as the model writes it. The total time is the same, but the user sees progress after about a second instead of a blank screen for several.</p></div>
+    <div class="box"><span class="tag chain">Structured output</span><p><code>with_structured_output(Report)</code> asks the model to reply in your exact <button type="button" class="term" data-term="schema" aria-expanded="false">schema</button> and returns a ready-to-use object. This is <button type="button" class="term" data-term="structured_output" aria-expanded="false">structured output</button>: data your app can check and display, not a paragraph to pick apart.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>The four message types</h3>
+    <dl class="defs">
+      <dt><span class="mtag sys">SystemMessage</span> The rules</dt><dd>Instructions from your team: "You are a research assistant. Cite every claim."</dd>
+      <dt><span class="mtag">HumanMessage</span> The user's turn</dt><dd>"Is remote work better for productivity?"</dd>
+      <dt><span class="mtag ai">AIMessage</span> The model's turn</dt><dd>Either an answer, or a request to use a tool (Section 4).</dd>
+      <dt><span class="mtag tool">ToolMessage</span> A tool's result</dt><dd>What came back when your code ran the tool, such as a list of search results.</dd>
+    </dl>
+  </div>
+
+  <div class="concept">
+    <h3>What it looks like in code</h3>
+    <pre class="code"><span class="c"># Simplified. LangChain 1.x; check names against your version.</span>
+<span class="k">from</span> langchain.chat_models <span class="k">import</span> init_chat_model
+
+model = init_chat_model(<span class="hl">"provider-a:large"</span>)   <span class="c"># real names look like "openai:…" or "anthropic:…"</span>
+
+reply = model.invoke(<span class="s">"What is RAG in AI?"</span>)        <span class="c"># one full AIMessage</span>
+<span class="k">for</span> chunk <span class="k">in</span> model.stream(<span class="s">"What is RAG in AI?"</span>):  <span class="c"># the same reply, piece by piece</span>
+    print(chunk.text, end=<span class="s">""</span>)
+
+<span class="k">class</span> Report(BaseModel):                         <span class="c"># the shape we want back</span>
+    title: str
+    paragraphs: list[str]
+    citations: list[str]
+
+writer = model.with_structured_output(Report)
+report = writer.invoke(messages)                 <span class="c"># a Report object, not free text</span></pre>
+    <p class="code-note">Each call costs <button type="button" class="term" data-term="token" aria-expanded="false">tokens</button>, and providers price them differently. One interface makes it cheap to try a smaller model on a step and measure the difference.</p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>One interface makes switching providers cheap to try. Whenever the app needs data rather than prose, ask for structured output.</p></div>
+</section>
+
+<!-- ============ 3. PROMPTS ============ -->
+<section class="stage" id="prompts" aria-labelledby="h3s">
+  <div class="stage-head">
+    <p class="eyebrow c-chain"><b>3</b> · Prompts</p>
+    <h2 id="h3s">Templates with blanks to fill in</h2>
+    <p>A <button type="button" class="term" data-term="prompt_template" aria-expanded="false">prompt template</button> is a prompt written once, with named blanks like <code>{question}</code>. Each run fills the blanks with that run's data. The result is a list of chat messages ready for the model.</p>
+  </div>
+
+  <div class="grid g3">
+    <div class="box"><span class="tag chain">Templates</span><p>Keep the wording in one place. Changing the rules for every report means editing one template, not hunting through code.</p></div>
+    <div class="box"><span class="tag chain">Messages</span><p><code>ChatPromptTemplate</code> builds a system message and a human message. A placeholder can slot in earlier conversation, when there is one.</p></div>
+    <div class="box"><span class="tag chain">Few-shot examples</span><p><button type="button" class="term" data-term="few_shot" aria-expanded="false">Few-shot examples</button> are sample questions with ideal answers, placed in the prompt. Showing one good report often works better than describing one.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>The research assistant's write prompt</h3>
+    <pre class="code"><span class="c"># Simplified.</span>
+prompt = ChatPromptTemplate.from_messages([
+    (<span class="s">"system"</span>, <span class="s">"You are a research assistant. Use only the notes. Cite each claim as [n]."</span>),
+    (<span class="s">"human"</span>,  <span class="s">"Question: {question}\nNotes:\n{notes}"</span>),
+])
+messages = prompt.invoke({<span class="s">"question"</span>: q, <span class="s">"notes"</span>: notes})   <span class="c"># blanks filled, no AI involved yet</span></pre>
+    <div class="compare">
+      <div class="box"><span class="tag">Without an example</span><pre>System: Write a short report with citations.</pre><p class="small muted">The model guesses what "short" and "citations" mean. Length and format drift between runs.</p></div>
+      <div class="box"><span class="tag ok">With one example (few-shot)</span><pre>Example question: How do index funds work?
+Example report: An index fund copies a market
+index, such as the Nifty 50 [1]. …
+Now answer: {question}</pre><p class="small muted">The model copies the length, tone and citation style it was shown. It costs a few hundred extra tokens per run.</p></div>
+    </div>
+  </div>
+
+  <div class="callout"><b>Where should prompts live?</b> In the code, a prompt change needs a code release. Many teams store prompts in a prompt manager, such as Langfuse (Module 5) or LangSmith, so they can version them, compare them and roll back without a release.</div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Prompts are product copy that the model reads. Version them, review them and test them like any other copy.</p></div>
+</section>
+
+<!-- ============ 4. TOOLS ============ -->
+<section class="stage" id="tools" aria-labelledby="h4s">
+  <div class="stage-head">
+    <p class="eyebrow c-chain"><b>4</b> · Tools and tool calling</p>
+    <h2 id="h4s">How the model asks your code to act</h2>
+    <p>A model can only write text. A <button type="button" class="term" data-term="tool" aria-expanded="false">tool</button> is a function in your code that the model is allowed to request, such as <code>web_search</code>. The model never runs it. It writes a <button type="button" class="term" data-term="tool_call" aria-expanded="false">tool call</button>, your code runs the tool, and the result goes back to the model.</p>
+  </div>
+
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 720 250" role="img" aria-label="Tool calling in five steps. 1, the model replies with a tool call for web_search. 2, your code runs the tool. 3, the tool returns results. 4, your code sends them back as a ToolMessage. 5, with no more tool calls needed, the model writes the final answer.">
+        <defs><marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+        <rect class="b-chain" x="20" y="40" width="170" height="80" rx="10"/>
+        <text class="ttl" x="105" y="76" text-anchor="middle">Model</text>
+        <text class="sub" x="105" y="96" text-anchor="middle">decides what it needs</text>
+        <rect class="b-plain" x="275" y="40" width="170" height="80" rx="10"/>
+        <text class="ttl" x="360" y="76" text-anchor="middle">Your code</text>
+        <text class="sub" x="360" y="96" text-anchor="middle">LangChain runs the loop</text>
+        <rect class="b-hook" x="530" y="40" width="170" height="80" rx="10"/>
+        <text class="ttl" x="615" y="76" text-anchor="middle">web_search</text>
+        <text class="sub" x="615" y="96" text-anchor="middle">the actual tool</text>
+        <line class="edge" x1="192" y1="62" x2="273" y2="62" marker-end="url(#m4)"/>
+        <text class="lbl" x="232" y="54" text-anchor="middle">1 · tool call</text>
+        <line class="edge" x1="447" y1="62" x2="528" y2="62" marker-end="url(#m4)"/>
+        <text class="lbl" x="487" y="54" text-anchor="middle">2 · run it</text>
+        <line class="edge" x1="528" y1="100" x2="447" y2="100" marker-end="url(#m4)"/>
+        <text class="lbl" x="487" y="118" text-anchor="middle">3 · results</text>
+        <line class="edge" x1="273" y1="100" x2="192" y2="100" marker-end="url(#m4)"/>
+        <text class="lbl" x="232" y="118" text-anchor="middle">4 · ToolMessage</text>
+        <line class="edge" x1="105" y1="122" x2="105" y2="176" marker-end="url(#m4)"/>
+        <rect class="b-ok" x="20" y="178" width="250" height="52" rx="10"/>
+        <text class="ttl" x="36" y="202">5 · Final answer</text>
+        <text class="sub" x="36" y="220">no more tool calls, so the loop ends</text>
+        <text class="lbl" x="300" y="200">Steps 1 to 4 can repeat: search, read a page,</text>
+        <text class="lbl" x="300" y="218">search again. That repeating loop is an agent.</text>
+      </svg>
+    </div>
+    <figcaption>This is what Tab 2 of the demo steps through. The model sees each tool's name, description and inputs, and nothing else about it.</figcaption>
+  </figure>
+
+  <div class="concept">
+    <h3>Defining a tool</h3>
+    <pre class="code"><span class="c"># Simplified.</span>
+<span class="k">from</span> langchain.tools <span class="k">import</span> tool
+
+<span class="hl">@tool</span>
+<span class="k">def</span> web_search(query: str) -> str:
+    <span class="s">"""Search the web for credible, recent sources.
+    Use a specific query of 3 to 8 words. Returns titles and URLs."""</span>
+    ...
+
+model_with_tools = model.bind_tools([web_search])
+reply = model_with_tools.invoke(<span class="s">"Is remote work better for productivity?"</span>)
+reply.tool_calls   <span class="c"># [{"name": "web_search", "args": {"query": "remote work productivity research"}, "id": "call_01"}]</span></pre>
+    <p class="code-note"><code>@tool</code> turns a normal function into a tool. The function name becomes the tool's name, the type hints become its inputs, and the text in quotes, called a docstring, becomes the description the model reads.</p>
+  </div>
+
+  <div class="concept">
+    <h3>Writing good tool descriptions</h3>
+    <div class="compare">
+      <div class="box"><span class="tag bad">Vague</span><pre>name: search
+description: Searches.</pre><p class="small muted">The model can't tell when to use it, what to type, or what comes back. It may skip the tool or send a whole paragraph as the query.</p></div>
+      <div class="box"><span class="tag ok">Clear</span><pre>name: web_search
+description: Search the web for credible,
+recent sources. Use a specific query of
+3 to 8 words. Returns titles and URLs.</pre><p class="small muted">It says when to use it, how to phrase the input and what to expect. The model makes better calls.</p></div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>When a tool fails</h3>
+    <div class="grid g3">
+      <div class="box"><span class="tag warn">Tell the model</span><p class="small">Catch the error and send it back as a ToolMessage, such as "timed out, try a narrower query". The model can then adjust instead of the run crashing.</p></div>
+      <div class="box"><span class="tag warn">Retry, with a limit</span><p class="small">Retry briefly for short outages. Cap the number of tool calls, or one bad day for the search provider can burn through budget.</p></div>
+      <div class="box"><span class="tag warn">Fail honestly</span><p class="small">If the tool keeps failing, the assistant should say it couldn't search, not invent an answer from memory.</p></div>
+    </div>
+    <p class="small muted">With agents, ready-made middleware (Section 8) can catch tool errors, retry and enforce limits. Exact class names vary by version.</p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>The model knows a tool only by its name and description. Treat those words as a spec, and decide up front what happens when the tool fails.</p></div>
+</section>
+
+<!-- ============ 5. RETRIEVAL ============ -->
+<section class="stage" id="retrieval" aria-labelledby="h5s">
+  <div class="stage-head">
+    <p class="eyebrow c-chain"><b>5</b> · Retrieval</p>
+    <h2 id="h5s">Letting the model read your documents</h2>
+    <p>Web search finds public pages. To answer from your own documents, such as the team's library of past research reports, you need retrieval. Retrieval plus generation is <button type="button" class="term" data-term="rag" aria-expanded="false">RAG</button>: find the most relevant passages first, then have the model answer using only those.</p>
+  </div>
+
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 740 280" role="img" aria-label="RAG in two phases. Ahead of time: load documents, split them into chunks, turn each chunk into an embedding, and save them in a vector store. At question time: the question is embedded, the retriever finds the closest chunks in the vector store, the chunks go into the prompt, and the model answers with citations.">
+        <defs><marker id="m5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+        <text class="tagtxt t-chain" x="20" y="26">AHEAD OF TIME · INDEXING</text>
+        <rect class="b-chain" x="20" y="38" width="150" height="62" rx="9"/><text class="ttl" x="36" y="64">Load</text><text class="sub" x="36" y="84">PDFs, pages, wikis</text>
+        <rect class="b-chain" x="208" y="38" width="150" height="62" rx="9"/><text class="ttl" x="224" y="64">Split</text><text class="sub" x="224" y="84">into ~1,000-character chunks</text>
+        <rect class="b-chain" x="396" y="38" width="150" height="62" rx="9"/><text class="ttl" x="412" y="64">Embed</text><text class="sub" x="412" y="84">text → list of numbers</text>
+        <rect class="b-chain" x="584" y="38" width="140" height="62" rx="9"/><text class="ttl" x="600" y="64">Store</text><text class="sub" x="600" y="84">vector store</text>
+        <line class="edge" x1="172" y1="69" x2="206" y2="69" marker-end="url(#m5)"/>
+        <line class="edge" x1="360" y1="69" x2="394" y2="69" marker-end="url(#m5)"/>
+        <line class="edge" x1="548" y1="69" x2="582" y2="69" marker-end="url(#m5)"/>
+        <text class="tagtxt t-fuse" x="20" y="150">AT QUESTION TIME</text>
+        <rect class="b-plain" x="20" y="162" width="150" height="62" rx="9"/><text class="ttl" x="36" y="188">Question</text><text class="sub" x="36" y="208">embedded the same way</text>
+        <rect class="b-fuse" x="208" y="162" width="150" height="62" rx="9"/><text class="ttl" x="224" y="188">Retrieve</text><text class="sub" x="224" y="208">closest 4 chunks</text>
+        <rect class="b-fuse" x="396" y="162" width="150" height="62" rx="9"/><text class="ttl" x="412" y="188">Prompt</text><text class="sub" x="412" y="208">question + chunks</text>
+        <rect class="b-ok" x="584" y="162" width="140" height="62" rx="9"/><text class="ttl" x="600" y="188">Answer</text><text class="sub" x="600" y="208">with citations</text>
+        <line class="edge" x1="172" y1="193" x2="206" y2="193" marker-end="url(#m5)"/>
+        <line class="edge" x1="360" y1="193" x2="394" y2="193" marker-end="url(#m5)"/>
+        <line class="edge" x1="548" y1="193" x2="582" y2="193" marker-end="url(#m5)"/>
+        <path class="edge dash" d="M654,102 V130 H283 V160" marker-end="url(#m5)"/>
+        <text class="lbl" x="470" y="124" text-anchor="middle">search by meaning</text>
+        <text class="lbl" x="20" y="258">If the retrieve step picks the wrong chunks, even a perfect model gives a wrong answer.</text>
+      </svg>
+    </div>
+    <figcaption>Indexing happens once, and again whenever documents change. Retrieval happens on every question.</figcaption>
+  </figure>
+
+  <div class="grid g3">
+    <div class="box"><span class="tag chain">Loaders</span><p>A <button type="button" class="term" data-term="document_loader" aria-expanded="false">document loader</button> reads a source, such as a PDF, a web page or a wiki, into plain text plus details like the title and page number.</p></div>
+    <div class="box"><span class="tag chain">Splitters and chunks</span><p>A text splitter cuts long documents into <button type="button" class="term" data-term="chunk" aria-expanded="false">chunks</button>. Too big, and the prompt fills with noise. Too small, and a chunk loses its context.</p></div>
+    <div class="box"><span class="tag chain">Embeddings</span><p>An <button type="button" class="term" data-term="embedding" aria-expanded="false">embedding</button> turns text into numbers that capture its meaning, so "staff turnover" can match "resignations".</p></div>
+    <div class="box"><span class="tag chain">Vector stores</span><p>A <button type="button" class="term" data-term="vector_store" aria-expanded="false">vector store</button> is a database that saves embeddings and finds the closest ones fast. LangChain connects to many of them.</p></div>
+    <div class="box"><span class="tag chain">Retrievers</span><p>A <button type="button" class="term" data-term="retriever" aria-expanded="false">retriever</button> is the standard "give me passages for this question" block. You can swap the store behind it without changing the rest.</p></div>
+    <div class="box tint"><span class="tag">Why bother</span><p class="small">RAG lets the model answer from up-to-date, private sources and cite them. It reduces <button type="button" class="term" data-term="hallucination" aria-expanded="false">hallucinations</button>, but doesn't remove them.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>What it looks like in code</h3>
+    <pre class="code"><span class="c"># Simplified. Loaders and stores come from different packages, depending on the source.</span>
+docs      = PyPDFLoader(<span class="s">"library/hybrid-work-trial.pdf"</span>).load()
+chunks    = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150).split_documents(docs)
+store     = InMemoryVectorStore.from_documents(chunks, embeddings)
+retriever = store.as_retriever(search_kwargs={<span class="s">"k"</span>: 4})
+
+passages  = retriever.invoke(<span class="s">"Does hybrid work affect resignations?"</span>)   <span class="c"># the 4 closest chunks</span></pre>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>When a RAG answer is wrong, first ask what was retrieved. Most problems start there, not in the model.</p></div>
+</section>
+
+<!-- ============ 6. CHAINS ============ -->
+<section class="stage" id="chains" aria-labelledby="h6s">
+  <div class="stage-head">
+    <p class="eyebrow c-chain"><b>6</b> · Chains</p>
+    <h2 id="h6s">Snapping blocks together with |</h2>
+    <p>Every block in <code>langchain-core</code> (prompts, models, parsers, retrievers) is a <button type="button" class="term" data-term="runnable" aria-expanded="false">runnable</button>: it takes an input and returns an output. The <code>|</code> symbol, read as "then", joins runnables into a <button type="button" class="term" data-term="chain" aria-expanded="false">chain</button>. This style is called <button type="button" class="term" data-term="lcel" aria-expanded="false">LCEL</button>.</p>
+  </div>
+
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 740 250" role="img" aria-label="Three chain patterns. Sequence: prompt, then model, then parser. Parallel: one input goes to two steps at the same time, and the results are combined. Fallback: the primary model fails, so the backup model runs instead.">
+        <defs><marker id="m6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+        <text class="ttl" x="20" y="28">Sequence</text>
+        <text class="sub" x="20" y="46">a | b | c</text>
+        <rect class="b-chain" x="20" y="62" width="160" height="38" rx="8"/><text class="mono" x="100" y="86" text-anchor="middle">prompt</text>
+        <rect class="b-chain" x="20" y="124" width="160" height="38" rx="8"/><text class="mono" x="100" y="148" text-anchor="middle">model</text>
+        <rect class="b-chain" x="20" y="186" width="160" height="38" rx="8"/><text class="mono" x="100" y="210" text-anchor="middle">parser</text>
+        <line class="edge" x1="100" y1="100" x2="100" y2="122" marker-end="url(#m6)"/>
+        <line class="edge" x1="100" y1="162" x2="100" y2="184" marker-end="url(#m6)"/>
+        <line x1="225" y1="16" x2="225" y2="234" stroke="var(--line)" stroke-width="1.5"/>
+        <text class="ttl" x="255" y="28">Parallel</text>
+        <text class="sub" x="255" y="46">RunnableParallel(a=…, b=…)</text>
+        <rect class="b-plain" x="315" y="62" width="120" height="38" rx="8"/><text class="mono" x="375" y="86" text-anchor="middle">notes</text>
+        <rect class="b-chain" x="255" y="124" width="112" height="38" rx="8"/><text class="mono" x="311" y="148" text-anchor="middle">summary</text>
+        <rect class="b-chain" x="383" y="124" width="112" height="38" rx="8"/><text class="mono" x="439" y="148" text-anchor="middle">key quotes</text>
+        <rect class="b-plain" x="315" y="186" width="120" height="38" rx="8"/><text class="mono" x="375" y="210" text-anchor="middle">combined</text>
+        <line class="edge" x1="350" y1="100" x2="318" y2="122" marker-end="url(#m6)"/>
+        <line class="edge" x1="400" y1="100" x2="432" y2="122" marker-end="url(#m6)"/>
+        <line class="edge" x1="318" y1="162" x2="350" y2="184" marker-end="url(#m6)"/>
+        <line class="edge" x1="432" y1="162" x2="400" y2="184" marker-end="url(#m6)"/>
+        <line x1="520" y1="16" x2="520" y2="234" stroke="var(--line)" stroke-width="1.5"/>
+        <text class="ttl" x="550" y="28">Fallback</text>
+        <text class="sub" x="550" y="46">a.with_fallbacks([b])</text>
+        <rect class="b-bad" x="550" y="62" width="170" height="38" rx="8"/><text class="mono t-bad" x="635" y="86" text-anchor="middle">model A: error</text>
+        <rect class="b-ok" x="550" y="150" width="170" height="38" rx="8"/><text class="mono" x="635" y="174" text-anchor="middle">model B: works</text>
+        <line class="edge" x1="635" y1="100" x2="635" y2="148" marker-end="url(#m6)"/>
+        <text class="lbl" x="643" y="130">only if A fails</text>
+        <text class="sub" x="550" y="214">The user never sees the error.</text>
+      </svg>
+    </div>
+    <figcaption>Sequence is the demo's write chain. Parallel saves time when two steps don't depend on each other. A fallback is a backup plan for when a block fails.</figcaption>
+  </figure>
+
+  <div class="concept">
+    <h3>What it looks like in code</h3>
+    <pre class="code"><span class="c"># Simplified.</span>
+write_report = prompt | model | parser                        <span class="c"># one after another</span>
+
+extract = RunnableParallel(summary=summarise, quotes=find_quotes)  <span class="c"># both at the same time</span>
+
+safe_model = model_a.with_fallbacks([model_b])                <span class="c"># if A fails, try B</span>
+safe_chain = write_report.with_fallbacks([fix_and_retry])     <span class="c"># the demo's "bad output format" fix</span></pre>
+    <p class="code-note">Running two steps in <button type="button" class="term" data-term="parallel" aria-expanded="false">parallel</button> cuts <button type="button" class="term" data-term="latency" aria-expanded="false">latency</button>: two 2-second steps take about 2 seconds instead of 4.</p>
+  </div>
+
+  <div class="callout"><b>Chains in LangChain 1.0.</b> The <code>|</code> pipe still lives in <code>langchain-core</code> and suits fixed, predictable pipelines like our write step. The old ready-made chain classes, such as <code>LLMChain</code>, moved to <code>langchain-classic</code>. For anything that loops or decides its own next step, the docs now point to agents (Section 8) or LangGraph (Module 4).</div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Chains suit fixed, predictable steps. Fallbacks and parallel steps are cheap wins for reliability and speed.</p></div>
+</section>
+
+<!-- ============ 7. MEMORY ============ -->
+<section class="stage" id="memory" aria-labelledby="h7s">
+  <div class="stage-head">
+    <p class="eyebrow c-chain"><b>7</b> · Memory today</p>
+    <h2 id="h7s">Memory now means saved state</h2>
+    <p>A model remembers nothing between calls. "Memory" means your code saves the conversation and sends the relevant parts back each time. How LangChain does this has changed, so older tutorials can mislead.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="box"><span class="tag">Before 1.0: legacy</span><h4>Memory classes</h4><p class="small">Classes like <code>ConversationBufferMemory</code> kept chat history inside a chain. They were deprecated before 1.0, didn't work well with tool calling, and now live only in <code>langchain-classic</code>.</p></div>
+    <div class="box"><span class="tag chain">Now</span><h4>State plus a checkpointer</h4><p class="small">An agent's <button type="button" class="term" data-term="state" aria-expanded="false">state</button>, mainly its message list, is saved by a LangGraph <button type="button" class="term" data-term="checkpointer" aria-expanded="false">checkpointer</button> after every step. Each conversation has a <button type="button" class="term" data-term="thread" aria-expanded="false">thread</button> ID. Same ID, same memory.</p></div>
+  </div>
+
+  <div class="grid g3">
+    <div class="box"><span class="tag chain">Short-term</span><p class="small">Memory within one conversation. "Make it shorter" works because the earlier report is still in the thread.</p></div>
+    <div class="box"><span class="tag chain">Long-term</span><p class="small">Facts kept across conversations, such as "this user prefers UK sources". It is stored separately and deliberately, not by saving every chat.</p></div>
+    <div class="box"><span class="tag chain">Keeping it small</span><p class="small">Long threads overflow the model's <button type="button" class="term" data-term="context_window" aria-expanded="false">context window</button> and cost more on every turn. Summarisation middleware condenses older messages.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>What it looks like in code</h3>
+    <pre class="code"><span class="c"># Simplified. In development, memory is saved in RAM; in production, in a database such as Postgres.</span>
+agent = create_agent(model, tools=[web_search], checkpointer=InMemorySaver())
+
+config = {<span class="s">"configurable"</span>: {<span class="s">"thread_id"</span>: <span class="s">"user-42-chat-7"</span>}}
+agent.invoke({<span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"What is RAG in AI?"</span>}]}, config)
+agent.invoke({<span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Shorter, please."</span>}]}, config)  <span class="c"># remembers the first question</span></pre>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Memory is a product decision. Decide what the assistant remembers, for how long, and who can see it.</p></div>
+</section>
+
+<!-- ============ 8. AGENTS ============ -->
+<section class="stage" id="agents" aria-labelledby="h8s">
+  <div class="stage-head">
+    <p class="eyebrow c-chain"><b>8</b> · Agents</p>
+    <h2 id="h8s">create_agent and middleware</h2>
+    <p>An <button type="button" class="term" data-term="agent" aria-expanded="false">agent</button> is the tool-calling loop from Section 4, repeated until the model stops asking for tools. In LangChain 1.0, <code>create_agent</code> builds that loop for you. It runs on LangGraph, so it gets saved state, streaming and human approval without extra work.</p>
+  </div>
+
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 720 270" role="img" aria-label="The agent loop with middleware. The run starts, passes a before_model hook, calls the model, passes an after_model hook. If the model asked for tools, the call passes a wrap_tool_call hook, the tools run, and the loop goes back to before_model. If not, the run ends with the answer.">
+        <defs><marker id="m8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+        <rect class="b-plain" x="14" y="50" width="76" height="40" rx="20"/><text class="mono" x="52" y="75" text-anchor="middle">start</text>
+        <rect class="b-hook" x="116" y="54" width="112" height="32" rx="7"/><text class="mono t-warn" x="172" y="75" text-anchor="middle">before_model</text>
+        <rect class="b-chain" x="254" y="44" width="120" height="52" rx="10"/><text class="ttl" x="314" y="75" text-anchor="middle">Model</text>
+        <rect class="b-hook" x="400" y="54" width="104" height="32" rx="7"/><text class="mono t-warn" x="452" y="75" text-anchor="middle">after_model</text>
+        <rect class="b-plain" x="530" y="44" width="176" height="52" rx="10"/><text class="ttl" x="618" y="67" text-anchor="middle">Tool calls?</text><text class="sub" x="618" y="85" text-anchor="middle">did the model ask for any</text>
+        <line class="edge" x1="90" y1="70" x2="114" y2="70" marker-end="url(#m8)"/>
+        <line class="edge" x1="228" y1="70" x2="252" y2="70" marker-end="url(#m8)"/>
+        <line class="edge" x1="374" y1="70" x2="398" y2="70" marker-end="url(#m8)"/>
+        <line class="edge" x1="504" y1="70" x2="528" y2="70" marker-end="url(#m8)"/>
+        <line class="edge" x1="618" y1="96" x2="618" y2="148" marker-end="url(#m8)"/>
+        <text class="lbl" x="626" y="128">yes</text>
+        <rect class="b-hook" x="560" y="150" width="116" height="32" rx="7"/><text class="mono t-warn" x="618" y="171" text-anchor="middle">wrap_tool_call</text>
+        <rect class="b-hook" x="400" y="140" width="116" height="52" rx="10" style="fill:var(--surface)"/><text class="ttl" x="458" y="165" text-anchor="middle">Tools</text><text class="sub" x="458" y="182" text-anchor="middle">web_search, …</text>
+        <line class="edge" x1="558" y1="166" x2="518" y2="166" marker-end="url(#m8)"/>
+        <path class="edge" d="M400,166 H172 V88" marker-end="url(#m8)"/>
+        <text class="lbl" x="290" y="158" text-anchor="middle">results go back into the loop</text>
+        <path class="edge" d="M706,70 H714 V236 H640" marker-end="url(#m8)"/>
+        <text class="lbl" x="706" y="210" text-anchor="end">no</text>
+        <rect class="b-ok" x="470" y="216" width="168" height="40" rx="20"/><text class="mono" x="554" y="241" text-anchor="middle">end · answer</text>
+        <rect class="b-hook" x="14" y="222" width="18" height="18" rx="4"/><text class="lbl" x="40" y="236">middleware hook: your code runs here</text>
+      </svg>
+    </div>
+    <figcaption>Middleware hooks are fixed points in the loop where your code can look at, change or block what happens. There are also hooks at the very start and end of a run, and one that wraps each model call.</figcaption>
+  </figure>
+
+  <div class="concept">
+    <h3>Middleware, explained simply</h3>
+    <p><button type="button" class="term" data-term="middleware" aria-expanded="false">Middleware</button> works like checkpoints at an airport. Passengers (messages and tool calls) move through the same route every time, and at each checkpoint a rule can inspect them, change them or stop them. You add a rule without rebuilding the airport.</p>
+    <div class="grid g3">
+      <div class="box"><span class="tag warn">Limits</span><p class="small">Call-limit middleware caps model calls and tool calls per run, so a confused agent can't loop forever.</p></div>
+      <div class="box"><span class="tag warn">Human approval</span><p class="small">Human-in-the-loop middleware pauses before chosen tools run, such as "send email", until a person approves, edits or rejects.</p></div>
+      <div class="box"><span class="tag warn">Privacy</span><p class="small">PII middleware finds <button type="button" class="term" data-term="pii" aria-expanded="false">personal data</button>, like emails or card numbers, and masks or blocks it before it reaches the model.</p></div>
+      <div class="box"><span class="tag warn">Long conversations</span><p class="small">Summarisation middleware condenses older messages when the history gets long.</p></div>
+      <div class="box"><span class="tag warn">Resilience</span><p class="small">Retry and fallback middleware re-runs failed model or tool calls, or switches to a backup model.</p></div>
+      <div class="box tint"><span class="tag">Your own rules</span><p class="small">Engineers can write custom middleware for the same hooks, for example to log every tool call or block certain topics.</p></div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>The research assistant as an agent</h3>
+    <pre class="code"><span class="c"># Simplified. Middleware names and options vary by version; check the docs.</span>
+<span class="k">from</span> langchain.agents <span class="k">import</span> create_agent
+
+agent = <span class="hl">create_agent</span>(
+    model=<span class="s">"provider-a:large"</span>,
+    tools=[web_search, fetch_page],
+    system_prompt=<span class="s">"You are a research assistant. Cite every claim as [n]."</span>,
+    response_format=Report,                       <span class="c"># structured final answer (Section 2)</span>
+    middleware=[
+        ModelCallLimitMiddleware(run_limit=8),    <span class="c"># stop runaway loops</span>
+        SummarizationMiddleware(...),             <span class="c"># shrink long histories</span>
+        HumanInTheLoopMiddleware(...),            <span class="c"># approve chosen tool calls</span>
+    ],
+)
+result = agent.invoke({<span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}]})</pre>
+    <p class="code-note"><code>create_agent</code> replaced an older LangGraph helper, <code>create_react_agent</code>. If your flow needs fixed steps, branches or custom checks, such as module 2's grade-and-rewrite loop, engineers build a custom graph in LangGraph instead (Module 4).</p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>create_agent gives you a working agent loop in a few lines. Middleware is where the guardrails go: limits, approvals and privacy.</p></div>
+</section>
+
+<!-- ============ 9. TRADE-OFFS ============ -->
+<section class="stage" id="tradeoffs" aria-labelledby="h9s">
+  <div class="stage-head">
+    <p class="eyebrow c-chain"><b>9</b> · Strengths, weak spots, alternatives</p>
+    <h2 id="h9s">When LangChain helps, and when it gets in the way</h2>
+    <p>LangChain is popular, but it isn't the only way to build. Use this section to ask better questions, not to pick a winner.</p>
+  </div>
+
+  <div class="pros-cons">
+    <div class="box"><h4><span class="tag ok">Strengths</span></h4><ul class="clean">
+      <li>One interface for many providers, so switching or mixing models is cheap</li>
+      <li>A huge catalogue of ready-made integrations: loaders, vector stores, tools</li>
+      <li>Standard building blocks that many engineers already know</li>
+      <li>Agents run on LangGraph, so you can grow into custom flows without a rewrite</li>
+      <li>Since 1.0, a promise of no breaking changes until 2.0</li>
+    </ul></div>
+    <div class="box"><h4><span class="tag bad">Weak spots</span></h4><ul class="clean">
+      <li>Layers of <button type="button" class="term" data-term="abstraction" aria-expanded="false">abstraction</button>: when something breaks, the error can be hard to trace</li>
+      <li>A history of big changes, so many tutorials and answers online are out of date</li>
+      <li>Community integrations vary in quality and upkeep</li>
+      <li>Overkill for one or two model calls</li>
+      <li>More <button type="button" class="term" data-term="dependency" aria-expanded="false">dependencies</button> to keep updated and secure</li>
+    </ul></div>
+  </div>
+
+  <div class="concept">
+    <h3>Alternatives your engineers may mention</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Option</th><th>Best when…</th><th>Trade-off</th></tr></thead>
+        <tbody>
+          <tr><td>The provider's own <button type="button" class="term" data-term="sdk" aria-expanded="false">SDK</button></td><td>You use one provider, the flow is simple, and you want full control and the newest features on day one.</td><td>You write your own glue code. Switching providers later means rewriting the calls.</td></tr>
+          <tr><td>LlamaIndex</td><td>The product is mostly about your documents: parsing, indexing and RAG over many sources.</td><td>Different building blocks to learn. It overlaps with LangChain, and some teams use both.</td></tr>
+          <tr><td>Other agent SDKs</td><td>You want a lighter agent toolkit, often from a model provider, such as the OpenAI Agents SDK, the Claude Agent SDK or Google's ADK.</td><td>Often tuned for one provider's models and features. Fewer ready-made integrations.</td></tr>
+          <tr><td>LangGraph on its own</td><td>You need full control of the flow: branches, loops, approvals, long-running jobs.</td><td>More to design up front. Many teams still use LangChain models and tools inside it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">This space changes quickly. Treat these as examples, not a ranking, and check each project's current docs.</p>
+  </div>
+
+  <div class="concept">
+    <h3>Questions to ask your engineering team</h3>
+    <div class="grid g2">
+      <div class="box"><h4>Do we need it?</h4><ul class="clean">
+        <li>How many model calls and providers does this feature really need?</li>
+        <li>Which LangChain parts are we using, and could we do without them?</li>
+      </ul></div>
+      <div class="box"><h4>Will it last?</h4><ul class="clean">
+        <li>Which version are we on? Is any code still on <code>langchain-classic</code>?</li>
+        <li>Which community integrations do we rely on, and who maintains them?</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>LangChain is a good default when you need many providers or integrations. For one provider and a simple flow, the provider's own SDK may be simpler.</p></div>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="hcs">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="hcs">One-page cheat sheet</h2>
+  </div>
+  <div class="sheet">
+    <div class="one-liners">
+      <div style="--c:var(--chain)"><b>What it is</b>An open-source family of packages with standard building blocks for LLM apps. Python and JavaScript, MIT licence.</div>
+      <div style="--c:var(--graph)"><b>What runs underneath</b>Agents built with create_agent run on LangGraph, which saves state and handles loops.</div>
+      <div style="--c:var(--fuse)"><b>What it doesn't do</b>Show you what happened in production. For that you need tracing, such as Langfuse or LangSmith.</div>
+    </div>
+    <div class="sheet-grid">
+      <div class="blk2">
+        <h3>The building blocks</h3>
+        <ul>
+          <li><strong>Models:</strong> one interface, chat messages, streaming, structured output</li>
+          <li><strong>Prompts:</strong> templates with blanks, few-shot examples</li>
+          <li><strong>Tools:</strong> functions the model can request</li>
+          <li><strong>Retrieval:</strong> load, split, embed, store, retrieve</li>
+          <li><strong>Chains:</strong> fixed steps joined with <code>|</code></li>
+          <li><strong>Memory:</strong> state saved by a checkpointer, per thread</li>
+          <li><strong>Agents:</strong> the tool loop, plus middleware</li>
+        </ul>
+      </div>
+      <div class="blk2">
+        <h3>Names you'll hear in code</h3>
+        <ul>
+          <li><code>init_chat_model</code>: make a model from a name</li>
+          <li><code>with_structured_output</code>: reply in my schema</li>
+          <li><code>@tool</code>, <code>bind_tools</code>: define and attach tools</li>
+          <li><code>ChatPromptTemplate</code>: a prompt with blanks</li>
+          <li><code>with_fallbacks</code>: a backup if a block fails</li>
+          <li><code>create_agent</code>, middleware: the agent loop and its guardrails</li>
+          <li><code>langchain-classic</code>: legacy code from before 1.0</li>
+        </ul>
+      </div>
+      <div class="blk2">
+        <h3>PM takeaways</h3>
+        <ol>
+          <li>Ask which packages and which version.</li>
+          <li>Ask for structured output when the app needs data.</li>
+          <li>Prompts are product copy: version and test them.</li>
+          <li>Tool descriptions are specs. Plan for tool failure.</li>
+          <li>For a wrong RAG answer, check retrieval first.</li>
+          <li>Fallbacks and parallel steps are cheap wins.</li>
+          <li>Memory is a product decision.</li>
+          <li>Put guardrails in middleware.</li>
+          <li>For one provider and a simple flow, the SDK may be enough.</li>
+        </ol>
+      </div>
+      <div class="blk2">
+        <h3>Numbers to ask for</h3>
+        <ul>
+          <li>Cost per run, and per step, for each model</li>
+          <li>How often parsing fails and a fallback runs</li>
+          <li>Tool error rate, and retries per run</li>
+          <li>Model calls per agent run, and the cap</li>
+          <li>Retrieval quality: how often the right passage is in the top 4</li>
+        </ul>
+      </div>
+    </div>
+    <div class="blk2">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="hmk">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="hmk">3 common mistakes with LangChain</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake">
+      <span class="num">1</span>
+      <h3>Building from outdated tutorials</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>New code uses <code>LLMChain</code>, <code>ConversationBufferMemory</code> or other pre-1.0 names copied from old blog posts. It works for now, but sits on legacy code that new features will skip.</dd>
+        <dt>Fix</dt><dd>Start from the current docs. Agree on a version, pin it, and plan a time to move any <code>langchain-classic</code> code to <code>create_agent</code> and checkpointers.</dd>
+      </dl>
+    </article>
+    <article class="mistake">
+      <span class="num">2</span>
+      <h3>Vague tools with no limits</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>Tools have one-word descriptions, errors crash the run, and nothing caps the number of calls. The agent picks the wrong tool, or loops on a failing one.</dd>
+        <dt>Fix</dt><dd>Write each description as a spec. Send errors back to the model as ToolMessages, and set call limits with middleware. Test the failure path, as in Tab 2 of the demo.</dd>
+      </dl>
+    </article>
+    <article class="mistake">
+      <span class="num">3</span>
+      <h3>Trusting free-text output</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>The app asks for "JSON, please" and reads the reply with hand-written parsing. One chatty reply or missing comma breaks the screen for a user.</dd>
+        <dt>Fix</dt><dd>Use <code>with_structured_output</code> with a schema, add a fallback or retry for the rare failure, and track how often it happens, as in Tab 1 of the demo.</dd>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<div class="pager">
+  <div class="next-module">
+    <span class="eyebrow">Previous · Module 2</span>
+    <a href="langchain-langgraph-langfuse.html" data-site-link>← LangChain, LangGraph &amp; Langfuse</a>
+  </div>
+  <div class="next-module is-next">
+    <span class="eyebrow">Next · Module 4</span>
+    <a href="langgraph.html" data-site-link>LangGraph in depth →</a>
+  </div>
+</div>
+
+<footer>
+  <p>The demo is a scripted simulation. No model, search engine or LangChain code runs, and the example web addresses are made up. Provider names, timings, token counts and prices are illustrative.</p>
+  <p>The code snippets are simplified to show the idea. Names match the LangChain 1.x docs as of October 2026, but real code varies by version. LangChain, LangGraph, LangSmith and Langfuse are the names of their respective projects. This page is an independent explainer and isn't affiliated with them.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+  framework:{t:"Framework",d:"A ready-made set of code and conventions that developers build on, so they don't start from scratch."},
+  open_source:{t:"Open source",d:"Software whose code is public and free to use and change under its licence. You can run it yourself."},
+  llm:{t:"LLM (large language model)",d:"An AI system trained on huge amounts of text that reads and writes language. Claude and ChatGPT are built on LLMs."},
+  mit:{t:"MIT licence",d:"A short, permissive open-source licence. Companies can use and change the code, including in paid products, as long as they keep the copyright notice."},
+  package:{t:"Package",d:"A bundle of code that developers install with one command, such as langchain-openai. Each package has its own version number."},
+  provider:{t:"Model provider",d:"A company that offers AI models through an API, such as OpenAI, Anthropic or Google. In the demo they're called provider-a, b and c."},
+  integration:{t:"Integration",d:"Ready-made code that connects to another service, such as a search engine, database or file store."},
+  api:{t:"API",d:"A way for one piece of software to talk to another. Your code sends a request to the provider's API and gets a reply."},
+  sdk:{t:"SDK",d:"Software development kit: a provider's own official code library for calling its API."},
+  chat_message:{t:"Chat message",d:"One turn in a conversation with a model, with a role: system (rules), human (user), AI (model) or tool (a tool's result)."},
+  streaming:{t:"Streaming",d:"Sending the model's reply piece by piece as it's written, so the user sees words appear instead of waiting for the whole answer."},
+  schema:{t:"Schema",d:"A description of the exact shape of some data: which fields, and what type each one is. For example, title is text and citations is a list."},
+  structured_output:{t:"Structured output",d:"A model reply that follows a schema, so code can use it directly. For example, a report with separate title, paragraphs and citations fields."},
+  json:{t:"JSON",d:"A common text format for data, with fields in curly brackets, like {\"title\": \"…\"}. One missing comma makes it unreadable to code."},
+  token:{t:"Token",d:"A chunk of text, roughly ¾ of an English word. Models are priced per token read (input) and written (output)."},
+  prompt_template:{t:"Prompt template",d:"A reusable prompt with blanks, like {question}, that get filled in each time it's used."},
+  few_shot:{t:"Few-shot examples",d:"A few sample inputs with ideal outputs, included in the prompt to show the model what good looks like."},
+  tool:{t:"Tool",d:"A function in your code that the model may ask to use, such as web search. The model requests it; your code runs it."},
+  tool_call:{t:"Tool call",d:"A structured request from the model to run a tool, with the tool's name and the inputs to use, like web_search({\"query\": \"…\"})."},
+  output_parser:{t:"Output parser",d:"A block that turns the model's text reply into data your code can use, and raises an error if the text doesn't fit."},
+  fallback:{t:"Fallback",d:"A backup plan that runs only if the main step fails, such as a second model or a retry with extra instructions."},
+  rag:{t:"RAG (retrieval-augmented generation)",d:"Finding the most relevant passages from your documents first, then having the model answer using only those passages."},
+  document_loader:{t:"Document loader",d:"A block that reads a source, such as a PDF, web page or wiki, into plain text plus details like title and page number."},
+  chunk:{t:"Chunk",d:"A small piece of a longer document, often a few paragraphs, that can be searched and added to a prompt on its own."},
+  embedding:{t:"Embedding",d:"A list of numbers that captures the meaning of a piece of text. Texts with similar meanings get similar numbers."},
+  vector_store:{t:"Vector store",d:"A database built to save embeddings and quickly find the ones closest in meaning to a question."},
+  retriever:{t:"Retriever",d:"A component that returns the most relevant passages from your documents for a question."},
+  hallucination:{t:"Hallucination",d:"When a model states something false or made up, with confidence."},
+  runnable:{t:"Runnable",d:"LangChain's standard block: anything that takes an input and returns an output, such as a prompt, model or parser."},
+  chain:{t:"Chain",d:"A fixed sequence of steps where each step's output feeds the next. It always runs in the same order."},
+  lcel:{t:"LCEL",d:"LangChain Expression Language: the style of joining blocks with the | symbol, as in prompt | model | parser."},
+  parallel:{t:"Parallel",d:"Running steps at the same time instead of one after another, so the total wait is shorter."},
+  latency:{t:"Latency",d:"How long the user waits, from asking to getting the result."},
+  state:{t:"State",d:"The data an agent carries between steps, mainly the message list. Every step can read and update it."},
+  checkpointer:{t:"Checkpointer",d:"A LangGraph component that saves the state after each step, in memory or in a database, so a conversation or run can continue later."},
+  thread:{t:"Thread",d:"One conversation, identified by a thread ID. Calls with the same ID share memory; different IDs are kept apart."},
+  context_window:{t:"Context window",d:"The most text a model can read in one call, counted in tokens. Older messages must be trimmed or summarised to fit."},
+  agent:{t:"AI agent",d:"Software that uses an AI model to decide its own next steps toward a goal, using tools, until the job is done."},
+  middleware:{t:"Middleware",d:"Code that runs at fixed points in the agent loop, such as before each model call, to check, change or stop what happens."},
+  pii:{t:"PII (personal data)",d:"Personally identifiable information: anything that identifies a person, such as a name, email, phone or account number."},
+  abstraction:{t:"Abstraction",d:"A layer that hides details behind a simpler interface. Helpful until you need to see what's underneath."},
+  dependency:{t:"Dependency",d:"Outside code your product relies on. Each one needs updating, and can break or change."}
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  let left = Math.max(window.scrollX + 16, Math.min(r.left + window.scrollX, window.scrollX + vw - pw - 16));
+  pop.style.left = left + "px"; pop.style.top = (r.bottom + window.scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g=>"<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function effTheme(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function syncTheme(){ const t = effTheme(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const saved = load("guides.theme"); if(saved==="dark"||saved==="light") root.setAttribute("data-theme", saved);
+syncTheme();
+themeBtn.addEventListener("click", () => { const n = effTheme()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); syncTheme(); });
+if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncTheme);
+
+/* ---------- Nav ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")], bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, scrollY / h * 100) : 0) + "%";
+  let cur = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) cur = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === cur));
+  // scroll only the tab strip; scrollIntoView would cancel a smooth page scroll in progress
+  if(cur && cur !== lastActive){
+    lastActive = cur;
+    const strip = cur.parentElement, l = cur.offsetLeft - strip.offsetLeft, r = l + cur.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+addEventListener("scroll", onScroll, {passive:true}); onScroll();
+
+/* ---------- Scripted data ---------- */
+// Illustrative $ per 1M tokens, speed and token-count differences per provider.
+const PROV = {
+  a:{name:"provider-a/large", code:"provider-a:large", pin:3,    pout:15,   ms:3000, mul:1.00},
+  b:{name:"provider-b/large", code:"provider-b:large", pin:2.5,  pout:10,   ms:2600, mul:1.06},
+  c:{name:"provider-c/small", code:"provider-c:small", pin:0.25, pout:1.25, ms:1100, mul:0.96}
+};
+const Q = {
+  remote:{
+    question:"Is remote work better for productivity?",
+    title:"Remote work and productivity: it depends on the work",
+    queries:["remote work productivity research","remote work productivity randomised study"],
+    good:[
+      {title:"Does working from home work? Evidence from a randomised experiment",url:"https://econ-journal.example/wfh-experiment"},
+      {title:"Hybrid working improves retention without hurting performance",url:"https://science-weekly.example/hybrid-trial"},
+      {title:"The effects of remote work on collaboration among information workers",url:"https://behaviour-research.example/remote-collaboration"}
+    ],
+    notes:["Fully remote: performance up ~13% for individual, measurable work [1]","Hybrid (2 days home): performance unchanged, resignations down a third [2]","Remote work makes cross-team collaboration more siloed [3]"],
+    paras:["It depends on the type of work. For focused, individual tasks, working from home raised output by 13% in a nine-month trial [1].","Hybrid work (two home days a week) left performance reviews unchanged over two years and cut resignations by a third [2].","The main cost is collaboration: fully remote teams connected less across groups, which may slow new ideas [3]."]
+  },
+  index:{
+    question:"How do index funds work?",
+    title:"How index funds work",
+    queries:["how do index funds work","index fund expense ratio tracking error"],
+    good:[
+      {title:"Index funds explained: how passive investing works",url:"https://investor-education.example/index-funds"},
+      {title:"Scorecard: active funds vs their benchmarks",url:"https://index-research.example/active-vs-index"},
+      {title:"What is tracking error, and why does it matter?",url:"https://fund-basics.example/tracking-error"}
+    ],
+    notes:["Copies an index (e.g. Nifty 50) in the same proportions; no stock picking [1]","Low fees; most active large-cap funds trail their index over 10+ years [2]","Compare funds on expense ratio and tracking error [3]"],
+    paras:["An index fund copies a market index, such as the Nifty 50, instead of trying to beat it [1].","Because no one picks shares, fees stay low, and over 10+ years most active large-cap funds trail their index after fees [2].","When comparing funds on the same index, look at the expense ratio and the tracking error [3]."]
+  },
+  rag:{
+    question:"What is RAG in AI?",
+    title:"RAG: letting AI look things up before it answers",
+    queries:["retrieval augmented generation explained","retrieval augmented generation original paper"],
+    good:[
+      {title:"Retrieval-augmented generation for knowledge-intensive tasks",url:"https://ml-papers.example/rag-2020"},
+      {title:"RAG explained for product teams",url:"https://ai-guides.example/rag-for-product"},
+      {title:"Why RAG systems still get things wrong",url:"https://ml-engineering.example/rag-failures"}
+    ],
+    notes:["Introduced in 2020: retrieve passages, then generate [1]","Chunk and index docs, retrieve relevant chunks, answer from them [2]","Most failures come from retrieval; reduces but doesn't remove made-up answers [3]"],
+    paras:["RAG (retrieval-augmented generation) lets an AI model look things up before answering [1].","Documents are split into chunks and indexed. For each question, the most relevant chunks are added to the prompt [2].","Most bad answers come from bad retrieval, so RAG reduces made-up answers but doesn't remove them [3]."]
+  }
+};
+const SYSTEM = "You are a research assistant. Write a short report that answers the question using only the notes. Cite each claim as [n]. Reply only with JSON: {\"title\": str, \"paragraphs\": [str], \"citations\": [{\"n\": int, \"url\": str}]}";
+const TEMPLATE = "System: "+SYSTEM+"\n\nHuman: Question: {question}\nNotes:\n{notes}";
+const PARSE_ERR = "OutputParserException: Invalid json output.\nThe reply starts with \"Sure! Here is the report you asked for:\" instead of \"{\",\nand a \",\" is missing between paragraphs 1 and 2.";
+const TOOL_ERR = "Error: web_search timed out after 5 s (TimeoutError). Try again with a narrower, more specific query.";
+
+function notesText(q){ return q.notes.map(n=>"• "+n).join("\n")+"\nSources:\n"+q.good.map((r,i)=>"["+(i+1)+"] "+r.url).join("\n"); }
+function reportObj(q){ return {title:q.title, paragraphs:q.paras, citations:q.good.map((r,i)=>({n:i+1, url:r.url}))}; }
+function goodJSON(q){ return JSON.stringify(reportObj(q), null, 2); }
+function brokenJSON(q){ return "Sure! Here is the report you asked for:\n" + goodJSON(q).replace(/",\n    "/, '"\n    "'); }
+function resultsText(q){ return q.good.map((r,i)=>(i+1)+". "+r.title+"\n   "+r.url).join("\n"); }
+
+/* ---------- Blocks (write chain) ---------- */
+const BLOCKS = {
+  input:{name:"Input", kind:"a dictionary of values", desc:"What the earlier read step handed over: the user's question and the notes taken from 3 sources. The chain receives this and passes it to the first block."},
+  prompt:{name:"PromptTemplate", kind:"ChatPromptTemplate", desc:"Fills the template's blanks, {question} and {notes}, with this run's values and turns the result into 2 chat messages. Plain text work: no AI, no cost."},
+  model:{name:"ChatModel", kind:"", desc:"Sends the messages to the model provider and returns its reply as one AIMessage. The only block that costs money and takes real time."},
+  parser:{name:"OutputParser", kind:"JsonOutputParser", desc:"Reads the model's text and turns it into structured data your app can use: a title, a list of paragraphs and a list of citations. If the text isn't valid JSON, it raises an error."},
+  fallback:{name:"fix_and_retry", kind:"the backup chain, via .with_fallbacks()", desc:"Runs only if the main chain raises an error. It sends the broken reply and the error back to the model and asks for valid JSON only, then parses again."},
+  output:{name:"Report", kind:"structured output", desc:"The final result of the chain: a Report object. The app can render the title, paragraphs and citations separately, and check every [n] has a source."}
+};
+
+/* ---------- Run engine ---------- */
+let mode = "write", qid = "remote", prov = "a";
+let run = {};
+
+function P(){ return PROV[prov]; }
+function costOf(tin, tout){ const p = P(); return (tin*p.pin + tout*p.pout)/1e6; }
+function seqFor(){
+  if(mode === "write") return $("failFormat").checked ? ["prompt","model","parser","fallback","output"] : ["prompt","model","parser","output"];
+  return $("failTool").checked ? ["human","call1","tool1err","call2","tool2","final"] : ["human","call1","tool1","final"];
+}
+
+function newRun(pre){
+  clearTimeout(run.timer);
+  run = {seq:seqFor(), idx:0, step:0, done:false, playing:false, timer:null,
+    ran:new Set(), errs:new Set(), fixed:new Set(), active:null, activeCls:"", sel:"input", io:{},
+    tok:0, cost:0, ms:0, msgs:0, messages:[], extra:{cost:0, ms:0}, actor:null, actorCls:"", bumped:false, narr:null};
+  const q = Q[qid];
+  run.io.input = {in:null, out:{question:q.question, notes:q.notes}};
+  run.narr = mode === "write"
+    ? {title:"Ready to run", text:"Press <strong>Next step</strong> to send the question and notes through the chain. Data moves left to right, one block at a time. Click any block to see exactly what went in and what came out."}
+    : {title:"Ready to run", text:"Press <strong>Next step</strong> to start. Watch the message list on the right grow: each step adds one message, and every model call re-reads the whole list."};
+  setPlaying(false);
+  for(let i = 0; i < (pre || 0); i++) step(true);
+  renderAll();
+}
+
+function addTok(tin, tout, ms){
+  const c = costOf(tin, tout);
+  run.tok += tin + tout; run.cost += c; run.ms += ms; run.bumped = true;
+  return c;
+}
+
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const secs = ms => (ms/1000).toFixed(1)+" s";
+const usd = v => "$"+v.toFixed(4);
+
+const WRITE = {
+  prompt(){
+    const q = Q[qid];
+    const filled = "System: "+SYSTEM+"\n\nHuman: Question: "+q.question+"\nNotes:\n"+notesText(q);
+    run.io.prompt = {in:"Template:\n"+TEMPLATE+"\n\nValues:\nquestion = \""+q.question+"\"\nnotes = (3 notes and 3 sources from the read step)", out:filled};
+    run.msgs = 2; run.ms += 2;
+    return {blk:"prompt", title:"PromptTemplate fills in the blanks",
+      text:"The template has two blanks, <code>{question}</code> and <code>{notes}</code>. LangChain fills them with this run's values and produces 2 chat messages: a system message with the rules, and a human message with the task.",
+      plain:"Like a mail merge. The letter is written once, and each run drops in a new name and address. No AI is involved yet, so it's instant and free."};
+  },
+  model(){
+    const q = Q[qid], p = P(), bad = $("failFormat").checked;
+    const tin = Math.round(640*p.mul), tout = Math.round(290*p.mul);
+    const c = addTok(tin, tout, p.ms);
+    run.msgs = 3;
+    run.io.model = {in:"[SystemMessage] "+SYSTEM+"\n\n[HumanMessage] Question: "+q.question+"\nNotes: (3 notes, 3 sources)", out:(bad ? brokenJSON(q) : goodJSON(q)), meta:p.name+" · "+fmt(tin)+" in → "+fmt(tout)+" out tokens · "+usd(c)+" · "+secs(p.ms)};
+    return {blk:"model", title:"ChatModel calls "+p.name,
+      text: bad
+        ? "The model reads the 2 messages and replies with one AIMessage. Look closely at the reply in the inspector: it starts with a chatty sentence, and a comma is missing between two paragraphs. Nothing has failed yet, because the model can't tell its output is broken."
+        : "The model reads the 2 messages and replies with one AIMessage. We asked for JSON, so the reply is text shaped like a data object. This is the only block that costs money: "+fmt(tin)+" tokens in, "+fmt(tout)+" out, "+usd(c)+".",
+      plain: bad ? "The model wrote a good report, but wrapped it badly. To a person it looks fine. To code that expects exact JSON, it's unreadable."
+                 : "The model is the writer. Everything else in the chain is preparation and tidying up."};
+  },
+  parser(){
+    const q = Q[qid], bad = $("failFormat").checked;
+    if(bad){
+      run.errs.add("parser");
+      run.io.parser = {in:brokenJSON(q), out:PARSE_ERR, err:true};
+      return {blk:"parser", cls:"err", title:"OutputParser fails: bad output format",
+        text:"The parser expected clean <code>JSON</code> and got a chatty sentence plus a missing comma. It raises an <code>OutputParserException</code>. Without a backup plan, this error would reach the user as a broken screen.",
+        plain:"The parser is a strict form-checker. One missing comma and it refuses the whole form."};
+    }
+    run.io.parser = {in:goodJSON(q), out:reportObj(q)};
+    return {blk:"parser", title:"OutputParser turns text into data",
+      text:"The parser reads the model's text and builds a structured object: a <code>title</code>, a list of <code>paragraphs</code> and a list of <code>citations</code>. The app can now show each part in its place, or check that every [n] has a source.",
+      plain:"Text in, data out. Your app no longer has to guess where the title ends and the citations begin."};
+  },
+  fallback(){
+    const q = Q[qid], p = P();
+    const tin = Math.round(1010*p.mul), tout = Math.round(290*p.mul);
+    const c = addTok(tin, tout, p.ms);
+    run.extra = {cost:c, ms:p.ms};
+    run.msgs = 5; run.fixed.add("fallback");
+    run.io.fallback = {in:"[HumanMessage] Your last reply could not be read as JSON.\n"+PARSE_ERR.split("\n")[0]+"\nReturn only the corrected JSON object, with no other text.\n\nYour last reply:\n"+brokenJSON(q), out:reportObj(q), meta:"1 extra model call · "+fmt(tin)+" in → "+fmt(tout)+" out tokens · "+usd(c)+" · "+secs(p.ms)};
+    return {blk:"fallback", cls:"fixed", title:"The fallback fixes it",
+      text:"Because the chain was wrapped with <code>.with_fallbacks([fix_and_retry])</code>, the error never reaches the user. The backup chain sends the broken reply and the error message back to the model with one instruction: return only valid JSON. The second reply parses cleanly. It cost 1 extra call: "+usd(c)+" and "+secs(p.ms)+".",
+      plain:"Like a form returned with \"missing comma on line 5, please fix\". The model corrects it, and the user just sees a report that took a few seconds longer."};
+  },
+  output(){
+    const q = Q[qid];
+    run.io.output = {in:"(parsed Report object)", out:reportObj(q)};
+    return {blk:"output", cls:"done", end:true, title:"Done: the report is ready",
+      text:"The chain returns a Report object. Below is how the app renders it.", plain:null};
+  }
+};
+
+function msg(role, label, body, meta, bad){ run.messages.push({role, label, body, meta, bad:!!bad}); run.msgs = run.messages.length; run.newMsg = run.messages.length - 1; }
+
+const TOOL = {
+  human(){
+    const q = Q[qid];
+    msg("h", "HumanMessage", q.question, "from the user");
+    run.actor = "actUser";
+    return {chip:"user", title:"The question goes in as a HumanMessage",
+      text:"Your code sends the question to the model, along with the list of tools it may use. For each tool the model sees only a name, a description and the inputs it takes, as in the grey box above.",
+      plain:"Like briefing a new assistant: here's the question, and here's the one gadget you're allowed to ask me to use."};
+  },
+  call1(){
+    const q = Q[qid], p = P();
+    const tin = Math.round(380*p.mul), tout = Math.round(28*p.mul), ms = Math.round(p.ms*0.3);
+    const c = addTok(tin, tout, ms);
+    msg("ai", "AIMessage", 'content: ""\ntool_calls: [{\n  "name": "web_search",\n  "args": {"query": "'+q.queries[0]+'"},\n  "id": "call_01"\n}]', p.name+" · "+fmt(tin)+" → "+fmt(tout)+" tok · "+usd(c));
+    run.actor = "actModel";
+    return {chip:"model", title:"The model asks for a tool",
+      text:"The model can't search the web itself. Instead of an answer, it replies with a <strong>tool call</strong>: the tool's name and the input to use. The AIMessage has no text, only the request.",
+      plain:"The assistant says: \"Please search for <em>"+esc(q.queries[0])+"</em> and tell me what you find.\""};
+  },
+  tool1(){
+    const q = Q[qid];
+    run.ms += 900; run.bumped = true;
+    msg("tool", "ToolMessage", 'tool_call_id: "call_01"\ncontent:\n'+resultsText(q), "web_search · 0.9 s");
+    run.actor = "actTool";
+    return {chip:"web_search", title:"Your code runs the tool",
+      text:"LangChain finds <code>web_search</code>, runs it with the model's query, and wraps the result in a ToolMessage. The <code>tool_call_id</code> links the result to the request, so the model knows which answer belongs to which question.",
+      plain:"You did the errand and handed back the results, labelled with the request they answer."};
+  },
+  tool1err(){
+    run.ms += 5000; run.bumped = true;
+    msg("tool", "ToolMessage · error", 'tool_call_id: "call_01"\nstatus: "error"\ncontent: "'+TOOL_ERR+'"', "web_search · 5.0 s · timed out", true);
+    run.actor = "actTool"; run.actorCls = "err";
+    return {chip:"web_search", cls:"err", title:"The tool times out",
+      text:"The search provider didn't reply within 5 seconds. Your code catches the error and sends it back to the model as a ToolMessage marked as an error, instead of crashing the run. The message says what went wrong and what to try.",
+      plain:"Instead of a crash, the assistant gets a note: \"The search didn't work. Try a narrower query.\""};
+  },
+  call2(){
+    const q = Q[qid], p = P();
+    const tin = Math.round(470*p.mul), tout = Math.round(30*p.mul), ms = Math.round(p.ms*0.3);
+    const c = addTok(tin, tout, ms);
+    msg("ai", "AIMessage", 'content: ""\ntool_calls: [{\n  "name": "web_search",\n  "args": {"query": "'+q.queries[1]+'"},\n  "id": "call_02"\n}]', p.name+" · "+fmt(tin)+" → "+fmt(tout)+" tok · "+usd(c));
+    run.actor = "actModel";
+    return {chip:"model", title:"The model retries with a narrower query",
+      text:"The model reads the error in the message list and asks for the tool again, this time with a narrower query. A clear error message, written for the model, is what makes a sensible retry possible.",
+      plain:"\"OK, let me try a more specific search: <em>"+esc(q.queries[1])+"</em>.\""};
+  },
+  tool2(){
+    const q = Q[qid];
+    run.ms += 900; run.bumped = true;
+    msg("tool", "ToolMessage", 'tool_call_id: "call_02"\ncontent:\n'+resultsText(q), "web_search · 0.9 s");
+    run.actor = "actTool"; run.actorCls = "ok";
+    return {chip:"web_search", cls:"fixed", title:"The retry works",
+      text:"The narrower search comes back in under a second. The result goes into the message list as a new ToolMessage, linked to <code>call_02</code>.",
+      plain:"Second errand, done. The run recovered without anyone stepping in."};
+  },
+  final(){
+    const q = Q[qid], p = P(), fail = $("failTool").checked;
+    const tin = Math.round((fail ? 1040 : 930)*p.mul), tout = Math.round(260*p.mul), ms = Math.round(p.ms*0.9);
+    const c = addTok(tin, tout, ms);
+    msg("ai", "AIMessage", q.paras.join("\n\n")+"\n\nSources:\n"+q.good.map((r,i)=>"["+(i+1)+"] "+r.url).join("\n"), p.name+" · "+fmt(tin)+" → "+fmt(tout)+" tok · "+usd(c));
+    run.actor = "actModel"; run.actorCls = "ok";
+    return {chip:"model", cls:"done", end:true, title:"The model writes the final answer",
+      text:"With search results in the message list, the model has what it needs. This time it replies with text, not a tool call. That's the signal the loop is finished.",
+      plain:null};
+  }
+};
+
+function step(silent){
+  if(run.done) return;
+  const id = run.seq[run.idx];
+  run.bumped = false; run.newMsg = -1; run.actorCls = "";
+  const out = (mode === "write" ? WRITE : TOOL)[id]();
+  run.idx++; run.step++;
+  if(mode === "write"){
+    run.ran.add(out.blk); run.active = out.blk; run.activeCls = out.cls || ""; run.sel = out.blk;
+    if(out.blk === "prompt") run.ran.add("input");
+  }
+  run.narr = Object.assign({node: mode === "write" ? BLOCKS[out.blk].name : out.chip}, out);
+  if(out.end || run.idx >= run.seq.length){ run.done = true; }
+  if(!silent){ renderAll(); if(run.done) setPlaying(false); }
+}
+
+/* ---------- Rendering ---------- */
+function renderAll(){
+  const w = mode === "write";
+  $("stripWrite").hidden = !w; $("stripTool").hidden = w;
+  $("provRow").hidden = !w; $("provBox").hidden = !w;
+  $("failFormatLbl").hidden = !w; $("failToolLbl").hidden = w;
+  $("inspector").hidden = !w; $("msgList").hidden = w;
+  $("sideHead").innerHTML = w ? "Block inspector <span>click any block above</span>" : "Message list <span>what the model re-reads on every call</span>";
+  renderProvider(); renderNarr(); renderCounters();
+  if(w){ renderPipe(); renderInspector(); } else { renderActors(); renderMsgs(); }
+  updateControls();
+}
+
+function renderProvider(){
+  const p = P();
+  $("provCode").innerHTML = '<span class="c"># Simplified. The only line that changes:</span>\nmodel = init_chat_model(<span class="hl">"'+esc(p.code)+'"</span>)';
+  const tin = Math.round(640*p.mul), tout = Math.round(290*p.mul), c = (tin*p.pin + tout*p.pout)/1e6;
+  $("provStats").innerHTML = "Per report, illustrative: <b>"+fmt(tin)+"</b> tokens in · <b>"+fmt(tout)+"</b> out · <b>"+usd(c)+"</b> · <b>"+secs(p.ms)+"</b>"+
+    (prov === "c" ? ". Cheapest and fastest, but small models may write weaker reports: compare them with an eval before switching." : prov === "b" ? ". It splits the same text into slightly more tokens." : ".");
+  $("blkModelKind").textContent = p.name;
+  $("actModelKind").textContent = p.name+" · answer, or ask for a tool";
+  $("chainCode").innerHTML = "write_report = prompt | model | parser"+($("failFormat").checked ? '<span class="hl">.with_fallbacks([fix_and_retry])</span>' : "");
+}
+
+function cite(p){ return esc(p).replace(/\[(\d)\]/g,'<sup class="cite">[$1]</sup>'); }
+function reportHTML(q){
+  return '<div class="report"><h4>'+esc(q.title)+"</h4>"+q.paras.map(p=>"<p>"+cite(p)+"</p>").join("")+'<ol class="srcs">'+q.good.map(r=>"<li>"+esc(r.title)+' <span class="url">'+esc(r.url)+"</span></li>").join("")+"</ol></div>";
+}
+function renderNarr(){
+  const n = run.narr, el = $("narr");
+  let html = '<div class="narr-h"><span class="stepno">STEP '+String(run.step).padStart(2,"0")+" of "+String(run.seq.length).padStart(2,"0")+"</span>";
+  if(n.node) html += '<span class="nodechip '+(n.cls||"")+'">'+esc(n.node)+"</span>";
+  html += '<span class="narr-t">'+esc(n.title)+"</span></div><p>"+n.text+"</p>";
+  if(n.plain) html += '<div class="plain"><b>In plain English:</b> '+n.plain+"</div>";
+  if(run.done){ html += reportHTML(Q[qid]) + lessonHTML(); }
+  el.innerHTML = html;
+}
+function lessonHTML(){
+  let h, p, btns;
+  if(mode === "write"){
+    if($("failFormat").checked){
+      h = "What to notice: the fallback";
+      p = "The broken reply cost 1 extra model call ("+usd(run.extra.cost)+", "+secs(run.extra.ms)+"), but the user still got a report. In new code, <code>with_structured_output</code> makes this rarer, because the provider is asked to return data in your exact schema. Keep the fallback anyway, and count how often it runs.";
+    } else {
+      h = "What to notice: three blocks, one pipe";
+      p = "Each block has one job, and you can inspect what goes in and out of each. This run cost "+usd(run.cost)+". Switch the provider above: only one line of code changes, but cost and speed do.";
+    }
+    btns = '<button type="button" class="btn btn-sm" id="tryFormat" data-try="format">Try: bad output format</button>'+
+      '<button type="button" class="btn btn-sm" id="tryCheap" data-try="cheap">Try: provider-c/small</button>'+
+      '<button type="button" class="btn btn-sm" id="tryWriteOk" data-try="writeok">Everything works</button>'+
+      '<button type="button" class="btn btn-sm" id="tryToolTab" data-try="tooltab">Next: Tool calling →</button>';
+  } else {
+    if($("failTool").checked){
+      h = "What to notice: the error became a message";
+      p = "The model saw the timeout, changed its query and recovered. In an agent built with <code>create_agent</code>, middleware can catch tool errors and retry for you, and a tool-call limit stops it from retrying forever.";
+    } else {
+      h = "What to notice: the message list is the run's memory";
+      p = "Every model call re-reads the whole list, which is why the final call reads more tokens than the first. An agent is this same loop, repeated until the model stops asking for tools.";
+    }
+    btns = '<button type="button" class="btn btn-sm" id="tryToolErr" data-try="toolerr">Try: tool error</button>'+
+      '<button type="button" class="btn btn-sm" id="tryToolOk" data-try="toolok">Everything works</button>'+
+      '<button type="button" class="btn btn-sm" id="tryWriteTab" data-try="writetab">← Back to Write chain</button>';
+  }
+  return '<div class="lesson"><strong>'+h+"</strong><p>"+p+'</p><div class="btns">'+btns+"</div></div>";
+}
+
+function renderCounters(){
+  const set = (id, v) => { const e = $(id); if(e.textContent !== v){ e.textContent = v; if(run.bumped){ const d = e.parentElement; d.classList.remove("bump"); void d.offsetWidth; d.classList.add("bump"); } } };
+  set("cMsgs", String(run.msgs)); set("cTok", fmt(run.tok)); set("cCost", usd(run.cost)); set("cTime", secs(run.ms));
+}
+
+function renderPipe(){
+  const fail = $("failFormat").checked;
+  document.querySelectorAll("#pipe .blk").forEach(b => {
+    const id = b.dataset.blk, io = id === "input" || id === "output";
+    const ran = run.ran.has(id), err = run.errs.has(id), fixed = run.fixed.has(id), act = run.active === id;
+    b.classList.toggle("ran", ran && !err && !fixed);
+    b.classList.toggle("active", act && !err);
+    b.classList.toggle("err", err);
+    b.classList.toggle("fixed", fixed);
+    if(id === "fallback"){ b.classList.toggle("skip", !fail); b.classList.toggle("armed", fail && !fixed); }
+    b.setAttribute("aria-pressed", run.sel === id ? "true" : "false");
+    const s = b.querySelector(".bs");
+    if(id === "fallback") s.textContent = fixed ? "fallback · fixed it" : fail ? "fallback · armed, runs only on error" : (run.done ? "fallback · not needed" : "fallback · only runs if a block raises an error");
+    else if(!io) s.textContent = err ? "error" : act ? "just ran" : ran ? "done" : "not run";
+    else s.textContent = id === "input" ? "input" : (ran ? "output · ready" : "output");
+  });
+}
+
+function renderInspector(){
+  const id = run.sel, B = BLOCKS[id], io = run.io[id];
+  const show = v => v == null ? "" : (typeof v === "string" ? v : JSON.stringify(v, null, 2));
+  let html = '<div class="insp-h"><strong>'+esc(B.name)+'</strong><span class="tag chain">'+esc(id === "model" ? P().name : B.kind)+"</span></div>";
+  html += '<p class="desc">'+esc(B.desc)+"</p>";
+  if(!io){
+    html += '<pre class="none">'+(id === "fallback" && !$("failFormat").checked ? "This block only runs if the chain raises an error. Switch on \"Failure: bad output format\" to see it work." : "This block hasn't run yet. Press Next step.")+"</pre>";
+  } else {
+    if(io.in != null) html += '<span class="io-l">Input</span><pre>'+esc(show(io.in))+"</pre>";
+    html += '<span class="io-l">Output'+(io.err ? " · error" : "")+'</span><pre'+(io.err ? ' class="err"' : "")+">"+esc(show(io.out))+"</pre>";
+    if(io.meta) html += '<p class="small muted mono">'+esc(io.meta)+"</p>";
+  }
+  $("inspector").innerHTML = html;
+}
+
+function renderActors(){
+  ["actUser","actModel","actTool"].forEach(a => {
+    const e = $(a), on = run.actor === a;
+    e.classList.toggle("active", on && !run.actorCls);
+    e.classList.toggle("err", on && run.actorCls === "err");
+    e.classList.toggle("ok", on && run.actorCls === "ok");
+  });
+}
+
+function renderMsgs(){
+  const el = $("msgList");
+  if(!run.messages.length){ el.innerHTML = '<p class="empty">No messages yet. Press Next step.</p>'; return; }
+  el.innerHTML = run.messages.map((m,i) => '<div class="msg '+m.role+(m.bad ? " bad" : "")+(i === run.newMsg ? " new" : "")+'"><div class="msg-h"><span class="mrole">'+(i+1)+". "+esc(m.label)+'</span><span class="mmeta">'+esc(m.meta)+"</span></div><pre>"+esc(m.body)+"</pre></div>").join("");
+  el.scrollTop = el.scrollHeight;
+}
+
+function updateControls(){
+  $("btnNext").disabled = run.done;
+  $("btnPlay").textContent = run.playing ? "⏸ Pause" : (run.done ? "▶ Replay" : "▶ Autoplay");
+  $("btnPlay").setAttribute("aria-pressed", run.playing ? "true" : "false");
+}
+function setPlaying(v){
+  run.playing = v;
+  clearTimeout(run.timer);
+  if(v) schedule();
+  if($("btnPlay")) updateControls();
+}
+function schedule(){
+  clearTimeout(run.timer);
+  if(!run.playing) return;
+  if(run.done){ setPlaying(false); return; }
+  run.timer = setTimeout(() => { step(); schedule(); }, 1800);
+}
+function togglePlay(){
+  if(run.playing){ setPlaying(false); return; }
+  if(run.done) newRun(0);
+  step(); if(!run.done) setPlaying(true);
+}
+function next(){ step(); if(run.playing) schedule(); }
+
+function setMode(m, pre){
+  mode = m;
+  $("tabWrite").setAttribute("aria-selected", m === "write" ? "true" : "false");
+  $("tabTool").setAttribute("aria-selected", m === "tool" ? "true" : "false");
+  newRun(pre);
+}
+
+/* ---------- Wiring ---------- */
+$("btnNext").addEventListener("click", next);
+$("btnPlay").addEventListener("click", togglePlay);
+$("btnReset").addEventListener("click", () => newRun(0));
+$("tabWrite").addEventListener("click", () => { if(mode !== "write") setMode("write", 2); });
+$("tabTool").addEventListener("click", () => { if(mode !== "tool") setMode("tool", 2); });
+$("failFormat").addEventListener("change", () => newRun(2));
+$("failTool").addEventListener("change", () => newRun(2));
+document.querySelectorAll(".chip[data-q]").forEach(c => c.addEventListener("click", () => {
+  qid = c.dataset.q;
+  document.querySelectorAll(".chip[data-q]").forEach(x => x.setAttribute("aria-pressed", x === c ? "true" : "false"));
+  newRun(2);
+}));
+function setProv(k){
+  prov = k;
+  document.querySelectorAll(".chip[data-prov]").forEach(x => x.setAttribute("aria-pressed", x.dataset.prov === k ? "true" : "false"));
+}
+document.querySelectorAll(".chip[data-prov]").forEach(c => c.addEventListener("click", () => { setProv(c.dataset.prov); newRun(2); }));
+$("pipe").addEventListener("click", e => {
+  const b = e.target.closest("[data-blk]"); if(!b) return;
+  run.sel = b.dataset.blk; renderPipe(); renderInspector();
+});
+$("narr").addEventListener("click", e => {
+  const t = e.target.closest("[data-try]"); if(!t) return;
+  const k = t.dataset.try;
+  if(k === "format"){ $("failFormat").checked = true; newRun(0); togglePlay(); }
+  else if(k === "cheap"){ $("failFormat").checked = false; setProv("c"); newRun(0); togglePlay(); }
+  else if(k === "writeok"){ $("failFormat").checked = false; setProv("a"); newRun(0); togglePlay(); }
+  else if(k === "toolerr"){ $("failTool").checked = true; newRun(0); togglePlay(); }
+  else if(k === "toolok"){ $("failTool").checked = false; newRun(0); togglePlay(); }
+  else if(k === "tooltab") setMode("tool", 2);
+  else if(k === "writetab") setMode("write", 2);
+});
+document.addEventListener("keydown", e => {
+  if(e.target.closest && e.target.closest("input,textarea,select")) return;
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(e.key === "n" || e.key === "N") next();
+  else if(e.key === "p" || e.key === "P") togglePlay();
+  else if(e.key === "Escape") hideTerm();
+});
+
+/* Open in a working state: the first two steps already run */
+newRun(2);
+})();
+</script>
+
+</body>
+</html>

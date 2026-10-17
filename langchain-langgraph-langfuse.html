@@ -92,6 +92,8 @@ a{color:var(--accent)}
 .home-link:hover{color:var(--accent);border-color:var(--accent)}
 .next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
 .next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.deeper{justify-self:start;display:inline-flex;gap:8px;align-items:baseline;font-weight:700;text-decoration:none;border:1.5px solid currentColor;border-radius:999px;padding:6px 14px}
+.deeper span{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
 .stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
 .stages::-webkit-scrollbar{display:none}
 .stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
@@ -612,6 +614,8 @@ report = write_report.invoke({<span class="s">"question"</span>: q, <span class=
     </ul></div>
   </div>
 
+  <a class="deeper c-chain" href="langchain.html" data-site-link><span>Go deeper</span>Module 3 · LangChain in depth →</a>
+
   <div class="takeaway"><span class="k">PM takeaway</span><p>LangChain speeds up building the parts. Ask whether you need the speed or whether the parts are simple enough to write directly.</p></div>
 </section>
 
@@ -705,6 +709,8 @@ app = graph.compile(checkpointer=saver, interrupt_before=[<span class="s">"human
     <p class="small muted">In recent versions, LangChain's own "create an agent" helper runs on LangGraph underneath. Teams often start there and drop down to a custom graph when they need more control.</p>
   </div>
 
+  <a class="deeper c-graph" href="langgraph.html" data-site-link><span>Go deeper</span>Module 4 · LangGraph in depth →</a>
+
   <div class="takeaway"><span class="k">PM takeaway</span><p>If your agent needs to loop, branch, retry or wait for a person, it needs a graph. LangGraph is one well-used way to build one.</p></div>
 </section>
 
@@ -765,6 +771,8 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
 <span class="k">def</span> research(question): ...</pre>
     <p class="code-note">A <button type="button" class="term" data-term="callback" aria-expanded="false">callback</button> handler is a listener that LangChain notifies at every step, so Langfuse can record it.</p>
   </div>
+
+  <a class="deeper c-fuse" href="langfuse.html" data-site-link><span>Go deeper</span>Module 5 · Langfuse in depth →</a>
 
   <div class="takeaway"><span class="k">PM takeaway</span><p>Without tracing you're guessing about quality, cost and speed. Langfuse gives you the evidence, whichever framework you use.</p></div>
 </section>
@@ -947,8 +955,8 @@ app.invoke({<span class="s">"question"</span>: q}, config={<span class="s">"call
 </section>
 
 <div class="next-module">
-  <span class="eyebrow">Previous · Module 1</span>
-  <a href="how-ai-agents-work.html" data-site-link>← How AI agents work</a>
+  <a href="how-ai-agents-work.html" data-site-link>← Module 1 · How AI agents work</a>
+  <a href="langchain.html" data-site-link>Module 3 · LangChain in depth →</a>
 </div>
 
 <footer>

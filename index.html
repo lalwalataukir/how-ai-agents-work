@@ -89,6 +89,14 @@ a{color:var(--accent)}
 .meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
 .cta{justify-self:start;font-weight:700;font-size:.95rem;color:var(--accent-ink);background:var(--accent);padding:9px 16px;border-radius:8px}
 .module .hint{font-size:.88rem;color:var(--muted)}
+.deep{display:grid;gap:14px;padding-top:40px}
+.deep-head{display:grid;gap:6px}
+.deep-head h2{font-size:clamp(1.4rem,3vw,1.75rem)}
+.deep-head p{color:var(--muted);max-width:62ch}
+.modules.three{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.modules.three .module{padding:20px}
+.modules.three .num{font-size:2.4rem}
+.modules.three h2{font-size:1.3rem}
 
 .how{padding-block:48px 8px;display:grid;gap:16px}
 .how h2{font-size:1.4rem}
@@ -110,7 +118,7 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
   <div class="hero">
     <p class="eyebrow">Interactive guides for product managers</p>
     <h1>Understand AI agents well enough to make good product calls</h1>
-    <p class="lede">Two short modules, written for PMs rather than engineers. Both follow the same example: a <strong>research assistant</strong> that takes a question, searches the web, reads the results and writes a short report. Each module has a hands-on demo you can click through.</p>
+    <p class="lede">Five modules, written for PMs rather than engineers. Start with how agents work and the tools at a glance, then go deeper on each tool. They all follow the same example: a <strong>research assistant</strong> that takes a question, searches the web, reads the results and writes a short report. Each module has a hands-on demo you can click through.</p>
   </div>
 
   <div class="modules">
@@ -132,7 +140,7 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
     <article class="module">
       <span class="num">2</span>
       <h2><a href="langchain-langgraph-langfuse.html">LangChain, LangGraph &amp; Langfuse</a></h2>
-      <p class="sum">Three tools engineers mention together, and the different job each one does.</p>
+      <p class="sum">The three tools at a glance: what each one does and how they fit together.</p>
       <div class="chips"><span class="chip c-chain">build</span><span class="chip c-plan">orchestrate</span><span class="chip c-obs">observe</span></div>
       <ul>
         <li>What each tool is, in plain language and a kitchen analogy</li>
@@ -145,6 +153,40 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
       <p class="hint">Builds on module 1. If agents are new to you, start there.</p>
     </article>
   </div>
+
+  <section class="deep" aria-labelledby="deeph">
+    <div class="deep-head">
+      <p class="eyebrow">Deep dives</p>
+      <h2 id="deeph">One module per tool</h2>
+      <p>Each one goes further than module 2, with its own hands-on demo. They're best read after module 2.</p>
+    </div>
+    <div class="modules three">
+      <article class="module">
+        <span class="num">3</span>
+        <h2><a href="langchain.html">LangChain in depth</a></h2>
+        <div class="chips"><span class="chip c-chain">build</span></div>
+        <p class="sum">Models, prompts, tools, retrieval, chains and agents: the building blocks, and where they feel heavy.</p>
+        <div class="meta"><span>about 25 min</span><span>chain workbench demo</span></div>
+        <span class="cta" aria-hidden="true">Start module 3 →</span>
+      </article>
+      <article class="module">
+        <span class="num">4</span>
+        <h2><a href="langgraph.html">LangGraph in depth</a></h2>
+        <div class="chips"><span class="chip c-plan">orchestrate</span></div>
+        <p class="sum">State, branches, retries, checkpoints, human approval and time travel: agents that pause, crash and recover.</p>
+        <div class="meta"><span>about 25 min</span><span>crash, resume and fork demo</span></div>
+        <span class="cta" aria-hidden="true">Start module 4 →</span>
+      </article>
+      <article class="module">
+        <span class="num">5</span>
+        <h2><a href="langfuse.html">Langfuse in depth</a></h2>
+        <div class="chips"><span class="chip c-obs">observe</span></div>
+        <p class="sum">Traces, cost and latency, prompt versions and evals: how to find out why an agent went wrong.</p>
+        <div class="meta"><span>about 25 min</span><span>debug-a-complaint demo</span></div>
+        <span class="cta" aria-hidden="true">Start module 5 →</span>
+      </article>
+    </div>
+  </section>
 
   <section class="how" aria-labelledby="howh">
     <h2 id="howh">How to use these guides</h2>

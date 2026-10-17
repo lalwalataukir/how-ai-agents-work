@@ -1,0 +1,1736 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>Langfuse in depth</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module 5 of the agent field guide. Same tokens and building blocks as module 2,
+   with Langfuse teal as the lead colour. A "debug a complaint" demo near the top, then one section
+   per Langfuse feature, ending in a cheat sheet and common mistakes. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E8ECF1; --ink:#131C27; --muted:#55616F; --line:#D5DCE4;
+  --accent:#08716D; --accent-ink:#FFFFFF;
+  --chain:#2445C4; --chain-soft:#E2E8FB;
+  --graph:#6A44C0; --graph-soft:#EEE9FA;
+  --fuse:#08716D; --fuse-soft:#DCF1EF;
+  --ok:#2A7639; --ok-soft:#E0F0E3;
+  --warn:#9C5800; --warn-soft:#FBEEDA;
+  --bad:#B42318; --bad-soft:#FCE7E4;
+  --code-bg:#ECEFF4;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+    --accent:#62D3C8; --accent-ink:#0D131A;
+    --chain:#8BA3FF; --chain-soft:#1D2A4F;
+    --graph:#BBA2FF; --graph-soft:#2A2245;
+    --fuse:#62D3C8; --fuse-soft:#123533;
+    --ok:#82D893; --ok-soft:#163520;
+    --warn:#F1B45E; --warn-soft:#3A2B15;
+    --bad:#FF8F84; --bad-soft:#3E1D1A;
+    --code-bg:#101821;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+  --accent:#62D3C8; --accent-ink:#0D131A;
+  --chain:#8BA3FF; --chain-soft:#1D2A4F;
+  --graph:#BBA2FF; --graph-soft:#2A2245;
+  --fuse:#62D3C8; --fuse-soft:#123533;
+  --ok:#82D893; --ok-soft:#163520;
+  --warn:#F1B45E; --warn-soft:#3A2B15;
+  --bad:#FF8F84; --bad-soft:#3E1D1A;
+  --code-bg:#101821;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.3rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.c-chain{color:var(--chain)} .c-graph{color:var(--graph)} .c-fuse{color:var(--fuse)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1160px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.next-module .nm-item{display:grid;gap:2px}
+.next-module .nm-item.r{text-align:right;justify-items:end}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:700px){.brand{display:none}}
+
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:64ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.trio{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-family:var(--font-mono);font-size:.8rem;padding:4px 11px;border-radius:999px;border:1.5px solid currentColor;font-weight:500}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop[hidden]{display:none}
+#termPop strong{font-family:var(--font-display)}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:26px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{font-weight:500}
+.stage-head p{max-width:66ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:70ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.chain{background:var(--chain-soft);color:var(--chain)}
+.tag.graph{background:var(--graph-soft);color:var(--graph)}
+.tag.fuse{background:var(--fuse-soft);color:var(--fuse)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--radius);padding:14px 16px;max-width:80ch}
+.callout.fuse{background:var(--fuse-soft);border-color:transparent}
+.callout b{font-family:var(--font-display)}
+.takeaway{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;border-top:2px solid var(--ink);padding-top:12px;max-width:86ch}
+.takeaway .k{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.takeaway p{font-family:var(--font-display);font-weight:700;font-size:1.12rem;line-height:1.35}
+@media (max-width:520px){.takeaway{grid-template-columns:1fr;gap:4px}}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.good{color:var(--ok);font-weight:700}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;overflow-x:auto;font-family:var(--font-mono);font-size:.82rem;line-height:1.65;white-space:pre}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--graph)}
+pre.code .s{color:var(--fuse)}
+.code-note{font-size:.85rem;color:var(--muted)}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+.diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+.diagram svg{display:block;width:100%;height:auto;min-width:560px;max-width:780px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:74ch}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px;fill:var(--ink)}
+svg .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px}
+svg .tagtxt{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em}
+svg .mono{font-family:var(--font-mono);font-size:11.5px;fill:var(--ink)}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .ah{fill:var(--muted)}
+svg .b-app{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:6 5}
+svg .b-fuse{fill:var(--fuse-soft);stroke:var(--fuse);stroke-width:1.5}
+svg .b-plain{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+svg .b-ok{fill:var(--ok-soft);stroke:var(--ok);stroke-width:1.5}
+svg .t-chain{fill:var(--chain)} svg .t-graph{fill:var(--graph)} svg .t-fuse{fill:var(--fuse)} svg .t-bad{fill:var(--bad)} svg .t-warn{fill:var(--warn)} svg .t-ok{fill:var(--ok)} svg .t-muted{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--warn)}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.row .lbl{font-size:.85rem;color:var(--muted)}
+.chip{font:inherit;font-size:.85rem;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);max-width:100%}
+.row label{display:flex;gap:6px;align-items:center;font-size:.9rem;flex-wrap:wrap}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 13px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-sm{padding:4px 10px;font-size:.85rem}
+.spacer{flex:1}
+
+.dtabs{display:flex;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.dtabs button{flex:1;font:inherit;font-size:.95rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:11px 8px;color:var(--muted);cursor:pointer}
+.dtabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.dpane[hidden]{display:none}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+
+/* Tab 1: traces */
+.t1-top{padding:14px 16px;display:grid;gap:12px;border-bottom:1px solid var(--line);grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr))}
+.ticket{background:var(--surface-2);border-radius:var(--radius);padding:12px 14px;display:grid;gap:4px;border-left:4px solid var(--bad);align-content:start}
+.ticket .from{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-word}
+.ticket .msg{font-weight:700;font-size:1.02rem}
+.hintbox{background:var(--fuse-soft);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;align-content:start}
+.hintbox .hk{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--fuse)}
+.hintbox p{font-size:.95rem}
+.filters{padding:10px 16px;border-bottom:1px solid var(--line)}
+.filters .count{font-size:.85rem;color:var(--muted)}
+.t1-body{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-areas:"table find" "trace trace"}
+.p-table{grid-area:table;border-right:1px solid var(--line);min-width:0}
+.p-find{grid-area:find;min-width:0}
+.p-tv{grid-area:trace;border-top:1px solid var(--line);min-width:0}
+@media (max-width:899px){
+  .t1-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"table" "trace" "find"}
+  .p-table{border-right:0}
+  .p-find{border-top:1px solid var(--line)}
+}
+.tt-wrap{overflow-x:auto}
+table.tt{min-width:800px;font-size:.86rem}
+table.tt th,table.tt td{padding:8px 10px;vertical-align:middle}
+table.tt td:first-child{font-weight:400}
+table.tt td:nth-child(3){min-width:230px}
+table.tt tbody tr{cursor:pointer}
+table.tt tbody tr:hover td{background:var(--surface-2)}
+table.tt tbody tr.open td{background:var(--fuse-soft)}
+.sort{font:inherit;font-weight:700;background:none;border:0;color:inherit;cursor:pointer;padding:0;display:inline-flex;gap:4px;align-items:baseline;white-space:nowrap}
+.sort .arr{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);min-width:.8em}
+th.num,td.num{text-align:right}
+td.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:.8rem;white-space:nowrap}
+.when,.usr{white-space:nowrap;font-family:var(--font-mono);font-size:.76rem}
+.qbtn{font:inherit;background:none;border:0;padding:0;color:var(--accent);text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.ttag{font-family:var(--font-mono);font-size:.68rem;padding:1px 6px;border-radius:999px;background:var(--surface-2);color:var(--muted);margin:1px 3px 1px 0;display:inline-block;white-space:nowrap}
+.sc{font-family:var(--font-mono);font-weight:500;padding:1px 6px;border-radius:4px}
+.sc.lo{background:var(--bad-soft);color:var(--bad)}
+.sc.hi{background:var(--ok-soft);color:var(--ok)}
+.man{font-family:var(--font-mono);font-size:.68rem;color:var(--fuse);margin-left:4px}
+.slow{color:var(--bad);font-weight:500}
+.find-list{list-style:none;margin:0;padding:12px 16px;display:grid;gap:10px}
+.find-list li{border:1.5px dashed var(--line);border-radius:var(--radius);padding:10px 12px;font-size:.88rem;display:grid;gap:4px;color:var(--muted)}
+.find-list li.got{border-style:solid;border-color:var(--fuse);background:var(--fuse-soft);color:var(--ink)}
+.find-list li b{font-family:var(--font-display);font-size:.95rem;color:var(--ink)}
+.find-list .st{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase}
+.find-list li.got .st{color:var(--fuse)}
+.find-foot{padding:0 16px 14px;display:grid;gap:8px;font-size:.88rem}
+
+/* trace view (rows reused from module 2) */
+.tv-empty{padding:18px 16px;color:var(--muted);font-size:.92rem}
+.tv-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+.tv-head h3{font-size:1rem;min-width:0;overflow-wrap:anywhere}
+.tv-body{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.tv-left{border-right:1px solid var(--line);min-width:0}
+.tv-right{min-width:0;display:flex;flex-direction:column}
+@media (max-width:899px){.tv-body{grid-template-columns:minmax(0,1fr)}.tv-left{border-right:0;border-bottom:1px solid var(--line)}}
+.trace-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.trace-sum div{background:var(--surface);padding:8px 10px;display:grid;min-width:0}
+.trace-sum .v{font-family:var(--font-mono);font-size:.95rem;font-variant-numeric:tabular-nums;font-weight:500}
+.trace-sum .k{font-size:.72rem;color:var(--muted)}
+@media (max-width:420px){.trace-sum .v{font-size:.8rem}}
+.trace-meta{padding:8px 16px;font-family:var(--font-mono);font-size:.72rem;color:var(--muted);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px 14px}
+.trace-list{overflow:auto;max-height:520px;padding:6px 0}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:5px 16px;cursor:pointer;border-left:3px solid transparent;width:100%;text-align:left;background:none;border-top:0;border-right:0;border-bottom:0;font:inherit;color:inherit}
+.tr:hover{background:var(--surface-2)}
+.tr.sel{background:var(--surface-2);border-left-color:var(--fuse)}
+.tr.new{animation:pop .5s ease-out}
+@keyframes pop{from{background:var(--fuse-soft)}to{background:transparent}}
+.tr .nm{display:flex;gap:6px;align-items:center;min-width:0;font-size:.84rem}
+.tr .nm span.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono);font-size:.8rem}
+.tr .dur{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+.tr .bar{grid-column:1 / -1;height:6px;background:var(--surface-2);border-radius:3px;position:relative}
+.tr .bar i{position:absolute;top:0;bottom:0;border-radius:3px;background:var(--fuse);min-width:2px}
+.tr .bar i.gen{background:var(--chain)}
+.tr .bar i.tool{background:var(--warn)}
+.tr .bar i.err{background:var(--bad)}
+.tr .bar i.ev{background:var(--muted);width:3px!important}
+.tr .meta{grid-column:1 / -1;font-family:var(--font-mono);font-size:.7rem;color:var(--muted)}
+.ty{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.05em;padding:1px 5px;border-radius:4px;flex:none;font-weight:500}
+.ty-TRACE{background:var(--ink);color:var(--bg)}
+.ty-SPAN{background:var(--fuse-soft);color:var(--fuse)}
+.ty-GENERATION{background:var(--chain-soft);color:var(--chain)}
+.ty-TOOL{background:var(--warn-soft);color:var(--warn)}
+.ty-EVENT{background:var(--surface-2);color:var(--muted)}
+.ty-SCORE{background:var(--ok-soft);color:var(--ok)}
+.ty-AGENT,.ty-CHAIN,.ty-RETRIEVER,.ty-EVALUATOR,.ty-EMBEDDING,.ty-GUARDRAIL{background:var(--graph-soft);color:var(--graph)}
+.lvl-err{color:var(--bad);font-family:var(--font-mono);font-size:.62rem;font-weight:500}
+.trace-detail{padding:12px 16px;font-size:.82rem;display:grid;gap:6px;background:var(--code-bg);flex:1;align-content:start}
+.trace-detail .dl{display:grid;grid-template-columns:90px minmax(0,1fr);gap:4px 10px}
+.trace-detail .dl div:nth-child(odd){color:var(--muted);font-family:var(--font-mono);font-size:.72rem;padding-top:2px}
+.trace-detail pre{margin:0;font-family:var(--font-mono);font-size:.74rem;white-space:pre-wrap;word-break:break-word}
+.found-note{border-left:3px solid var(--bad);background:var(--bad-soft);padding:8px 10px;border-radius:6px;font-family:var(--font-body);font-size:.86rem}
+.found-note.slow{border-color:var(--warn);background:var(--warn-soft)}
+.found-note.info{border-color:var(--fuse);background:var(--fuse-soft)}
+.cmp{padding:10px 16px;border-bottom:1px solid var(--line);display:grid;gap:8px;font-size:.88rem}
+.cmp:empty{display:none}
+.scoreform{padding:12px 16px;display:grid;gap:8px;border-top:1px solid var(--line)}
+.scoreform h4{font-size:.95rem}
+textarea{font:inherit;font-size:.9rem;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;resize:vertical;min-height:60px}
+.okmsg{font-size:.85rem;color:var(--ok)}
+
+/* Tab 2: prompts and evals */
+.t2{padding:16px;display:grid;gap:22px}
+.t2 h3{font-size:1.08rem}
+.t2-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));align-items:start}
+.t2 .blk{display:grid;gap:10px;min-width:0}
+.ver-list{display:grid;gap:6px}
+.ver{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:.88rem;background:var(--surface)}
+.ver .vn{font-family:var(--font-mono);font-weight:500}
+.ver .vnote{color:var(--muted);flex:1 1 180px;min-width:0}
+.lab{font-family:var(--font-mono);font-size:.7rem;padding:1px 7px;border-radius:999px;font-weight:500}
+.lab.production{background:var(--ok-soft);color:var(--ok)}
+.lab.staging{background:var(--warn-soft);color:var(--warn)}
+.diff{font-family:var(--font-mono);font-size:.78rem;line-height:1.6;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:8px 0;overflow-x:auto}
+.diff div{padding:1px 12px 1px 30px;white-space:pre-wrap;word-break:break-word;text-indent:-18px}
+.diff .add{background:var(--ok-soft);color:var(--ok)}
+.diff .del{background:var(--bad-soft);color:var(--bad);text-decoration:line-through;text-decoration-thickness:1px}
+.diff .add::before{content:"+ "}
+.diff .del::before{content:"− "}
+.diff .same::before{content:"  "}
+.diff-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
+.metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}
+.metric{background:var(--surface-2);border-radius:var(--radius);padding:10px 12px;display:grid;gap:2px}
+.metric .k{font-size:.8rem;color:var(--muted)}
+.metric .v{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+.metric .d{font-size:.8rem;font-weight:700}
+.d.up{color:var(--ok)} .d.down{color:var(--bad)} .d.cost{color:var(--warn)}
+table.ex{font-size:.84rem;min-width:700px}
+table.ex th,table.ex td{padding:7px 10px}
+table.ex td:first-child{font-weight:400}
+table.ex tr.avg td{font-weight:700;background:var(--surface-2)}
+table.ex .better{color:var(--ok);font-weight:700}
+table.ex .worse{color:var(--bad);font-weight:700}
+.progressline{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.progressline i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+ol.hist{margin:0;padding-left:1.3em;display:grid;gap:4px;font-size:.88rem}
+ol.hist .w{font-family:var(--font-mono);font-size:.74rem;color:var(--muted)}
+.fetchbox{background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;font-family:var(--font-mono);font-size:.78rem;display:grid;gap:4px;overflow-x:auto}
+.fetchbox .res{color:var(--fuse);font-weight:500}
+
+/* static figures */
+.tree{font-family:var(--font-mono);font-size:.8rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:4px;overflow-x:auto}
+.tree div{white-space:nowrap}
+.tree .d1{padding-left:18px}.tree .d2{padding-left:36px}
+.tree .m{color:var(--muted)}
+.lat-strip{display:grid;gap:3px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.lat-row{display:grid;grid-template-columns:70px minmax(0,1fr) 52px;gap:8px;align-items:center;font-family:var(--font-mono);font-size:.7rem;color:var(--muted)}
+.lat-row i{display:block;height:8px;border-radius:3px;background:var(--line)}
+.lat-row.p50 i{background:var(--fuse)}
+.lat-row.p95 i{background:var(--bad)}
+.lat-row.p50,.lat-row.p95{color:var(--ink);font-weight:500}
+.loop{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));counter-reset:lp}
+.loop li{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--fuse);border-radius:var(--radius);padding:12px 14px;font-size:.9rem;display:grid;gap:4px;counter-increment:lp}
+.loop li::before{content:counter(lp);font-family:var(--font-display);font-weight:800;font-size:1.3rem;color:var(--fuse);line-height:1}
+.loop b{font-family:var(--font-display)}
+
+/* Cheat sheet */
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:22px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.one-liners{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.one-liners div{border-left:4px solid var(--c);padding:4px 0 4px 12px}
+.one-liners b{font-family:var(--font-display);font-size:1.1rem;color:var(--c);display:block}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px;display:grid;gap:8px}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="./" data-site-link>← All modules</a>
+    <a class="brand" href="#top">Langfuse in depth</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#what" data-nav="what"><span class="n">1</span>What it is</a>
+      <a href="#model" data-nav="model"><span class="n">2</span>Data model</a>
+      <a href="#ingest" data-nav="ingest"><span class="n">3</span>Data in</a>
+      <a href="#cost" data-nav="cost"><span class="n">4</span>Cost</a>
+      <a href="#latency" data-nav="latency"><span class="n">5</span>Latency</a>
+      <a href="#prompts" data-nav="prompts"><span class="n">6</span>Prompts</a>
+      <a href="#evals" data-nav="evals"><span class="n">7</span>Evals</a>
+      <a href="#dash" data-nav="dash"><span class="n">8</span>Dashboards</a>
+      <a href="#privacy" data-nav="privacy"><span class="n">9</span>Privacy</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+      <a href="#mistakes" data-nav="mistakes">Mistakes</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module 5 · Langfuse in depth · about 25 minutes</p>
+  <h1>Langfuse in depth: find out what your AI app actually did</h1>
+  <p class="lede">Module 2 introduced Langfuse as the "camera and receipts" for an AI app. This module opens it up. We'll keep the same example, a <strong>research assistant</strong> that takes a question, searches the web, reads the results and writes a short cited report, and use Langfuse to debug a real-feeling customer complaint.</p>
+  <div class="trio"><span class="pill c-fuse">Tracing</span><span class="pill c-fuse">Cost and latency</span><span class="pill c-fuse">Prompt management</span><span class="pill c-fuse">Evaluation</span></div>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="observability" aria-expanded="false">observability</button>, are technical terms. Tap one for a plain-English definition.</p>
+</div>
+
+<!-- ============ DEMO ============ -->
+<section class="stage" id="demo" aria-labelledby="hdemo">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="hdemo">Debug a complaint</h2>
+    <p>A customer says a report was wrong and slow. Use a Langfuse-style screen to find the run, work out what went wrong, then test and ship a fix. Hints guide you, and every step has a "Show me" button.</p>
+  </div>
+
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation:</b><span>not the real Langfuse app; traces, users, prices and timings are scripted and illustrative.</span></div>
+
+    <div class="dtabs" role="tablist" aria-label="Demo screens">
+      <button type="button" role="tab" id="dtabTraces" aria-controls="paneTraces" aria-selected="true">1 · Traces</button>
+      <button type="button" role="tab" id="dtabPrompts" aria-controls="panePrompts" aria-selected="false" tabindex="-1">2 · Prompts and evals</button>
+    </div>
+
+    <!-- Tab 1 -->
+    <div class="dpane" id="paneTraces" role="tabpanel" aria-labelledby="dtabTraces">
+      <div class="t1-top">
+        <div class="ticket">
+          <span class="from">Support ticket #4821 · from priya@acme.example · Thursday</span>
+          <p class="msg">"Tuesday's index-fund report cited a dodgy source and took ages."</p>
+        </div>
+        <div class="hintbox" aria-live="polite">
+          <span class="hk" id="hintStep">Hint · step 1 of 6</span>
+          <p id="hintText"></p>
+          <div><button type="button" class="btn btn-sm" id="hintDo">Show me</button></div>
+        </div>
+      </div>
+
+      <div class="filters">
+        <div class="row">
+          <label for="fUser">User
+            <select id="fUser"><option value="">All users</option></select>
+          </label>
+          <label for="fTag">Tag
+            <select id="fTag"><option value="">All tags</option></select>
+          </label>
+          <button type="button" class="chip" id="fLow" aria-pressed="false">score &lt; 0.5</button>
+          <button type="button" class="chip" id="fSlow" aria-pressed="false">latency &gt; 20 s</button>
+          <button type="button" class="btn btn-sm" id="fClear">Clear filters</button>
+          <span class="spacer"></span>
+          <span class="count" id="fCount" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <div class="t1-body">
+        <div class="p-table">
+          <div class="panel-h">Traces <span>one row per run · click a question to open it · click a column name to sort</span></div>
+          <div class="tt-wrap">
+            <table class="tt">
+              <thead><tr>
+                <th aria-sort="descending" data-col="ts"><button type="button" class="sort" id="sort-ts" data-sort="ts">Time <span class="arr"></span></button></th>
+                <th aria-sort="none" data-col="user"><button type="button" class="sort" id="sort-user" data-sort="user">User <span class="arr"></span></button></th>
+                <th>Question</th>
+                <th>Tags</th>
+                <th class="num" aria-sort="none" data-col="lat"><button type="button" class="sort" id="sort-lat" data-sort="lat">Latency <span class="arr"></span></button></th>
+                <th class="num" aria-sort="none" data-col="tok"><button type="button" class="sort" id="sort-tok" data-sort="tok">Tokens <span class="arr"></span></button></th>
+                <th class="num" aria-sort="none" data-col="cost"><button type="button" class="sort" id="sort-cost" data-sort="cost">Cost <span class="arr"></span></button></th>
+                <th class="num" aria-sort="none" data-col="score"><button type="button" class="sort" id="sort-score" data-sort="score">Score <span class="arr"></span></button></th>
+              </tr></thead>
+              <tbody id="ttBody"></tbody>
+            </table>
+          </div>
+          <p class="small muted" style="padding:8px 16px 12px">Score = <code>citation_accuracy</code> from an automatic judge, 0 to 1.</p>
+        </div>
+
+        <aside class="p-find" aria-labelledby="findH">
+          <div class="panel-h"><span style="font:inherit;color:inherit" id="findH">What you found</span> <span id="findCount">0 of 3</span></div>
+          <ul class="find-list" id="findList"></ul>
+          <div class="find-foot" id="findFoot"></div>
+        </aside>
+
+        <div class="p-tv" id="tv">
+          <div class="tv-empty" id="tvEmpty">No trace open. Click a question in the table to open its trace here.</div>
+          <div id="tvMain" hidden>
+            <div class="tv-head">
+              <span class="ty ty-TRACE">TRACE</span>
+              <h3 id="tvTitle"></h3>
+              <span class="spacer"></span>
+              <button type="button" class="btn btn-sm" id="btnCompare">Compare with average</button>
+              <button type="button" class="btn btn-sm" id="btnCloseTrace">Close</button>
+            </div>
+            <div class="cmp" id="compareOut" aria-live="polite"></div>
+            <div class="tv-body">
+              <div class="tv-left">
+                <div class="trace-sum">
+                  <div><span class="v" id="tLat">0.0 s</span><span class="k">latency</span></div>
+                  <div><span class="v" id="tTok">0</span><span class="k">tokens</span></div>
+                  <div><span class="v" id="tCost">$0.0000</span><span class="k">cost</span></div>
+                  <div><span class="v" id="tObs">0</span><span class="k">observations</span></div>
+                </div>
+                <div class="trace-meta" id="traceMeta"></div>
+                <div class="trace-list" id="traceList"></div>
+              </div>
+              <div class="tv-right">
+                <div class="trace-detail" id="traceDetail" aria-live="polite"></div>
+                <div class="scoreform">
+                  <h4>Add a score or comment to this trace</h4>
+                  <div class="row">
+                    <label for="scoreName">Score
+                      <select id="scoreName">
+                        <option value="source_quality">source_quality</option>
+                        <option value="user_complaint">user_complaint</option>
+                        <option value="needs_review">needs_review</option>
+                      </select>
+                    </label>
+                    <label for="scoreValue">Value
+                      <select id="scoreValue">
+                        <option value="0">0 (bad)</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1">1 (good)</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label for="scoreComment" class="small muted">Comment (optional)</label>
+                  <textarea id="scoreComment" placeholder="e.g. Grader let a promotional source through. 18 s PDF fetch."></textarea>
+                  <div class="row"><button type="button" class="btn btn-primary btn-sm" id="btnAddScore">Add score</button><span class="okmsg" id="scoreMsg" aria-live="polite"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2 -->
+    <div class="dpane" id="panePrompts" role="tabpanel" aria-labelledby="dtabPrompts" hidden>
+      <div class="t2">
+        <div class="t2-grid">
+          <div class="blk">
+            <h3>Prompt <code>research-report</code></h3>
+            <p class="small muted">The write step fetches this prompt from Langfuse by its <strong>production</strong> label. Version 4 is a fix for Priya's problem, waiting on the <strong>staging</strong> label.</p>
+            <div class="ver-list" id="verList"></div>
+          </div>
+          <div class="blk">
+            <h3>What the app gets right now</h3>
+            <div class="fetchbox" id="fetchBox"></div>
+            <p class="small muted">Moving a label changes which version this line returns. No code release is needed. Apps pick up the change once their cached copy refreshes.</p>
+          </div>
+        </div>
+
+        <div class="blk">
+          <h3>Diff: v3 (production) → v4 (staging)</h3>
+          <div class="diff" id="diffBox" aria-label="Differences between version 3 and version 4"></div>
+          <div class="diff-legend"><span><span class="lab production">+</span> added in v4</span><span><span class="lab" style="background:var(--bad-soft);color:var(--bad)">−</span> removed from v3</span></div>
+        </div>
+
+        <div class="blk">
+          <div class="row">
+            <h3>Experiment on dataset <code>research-questions</code> (10 items)</h3>
+            <span class="spacer"></span>
+            <button type="button" class="btn btn-primary" id="btnRunExp">Run experiment: v3 vs v4</button>
+          </div>
+          <p class="small muted">Each item is a saved question with notes on what a good answer cites. Item 1 was added from Priya's ticket. Both versions answer every item, then evaluators score the answers: a code check for citation accuracy, an LLM judge for clarity, and the cost.</p>
+          <div class="progressline" aria-hidden="true"><i id="expBar"></i></div>
+          <div class="metrics" id="expMetrics"></div>
+          <div class="tablewrap" id="expTableWrap" hidden>
+            <table class="ex">
+              <thead><tr><th>#</th><th>Question</th><th class="num">Citation v3</th><th class="num">Citation v4</th><th class="num">Clarity v3</th><th class="num">Clarity v4</th><th class="num">Cost v3</th><th class="num">Cost v4</th></tr></thead>
+              <tbody id="expBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="t2-grid">
+          <div class="blk">
+            <h3>Release</h3>
+            <div class="row">
+              <button type="button" class="btn btn-primary" id="btnPromote" disabled>Promote v4 to production</button>
+              <button type="button" class="btn" id="btnRollback" disabled>Roll back to v3</button>
+            </div>
+            <p class="small muted" id="releaseNote" aria-live="polite">Run the experiment first. Many teams require an eval before a prompt reaches production.</p>
+          </div>
+          <div class="blk">
+            <h3>Label history</h3>
+            <ol class="hist" id="labelHist" reversed></ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. WHAT IT IS ============ -->
+<section class="stage" id="what" aria-labelledby="h1s">
+  <div class="stage-head">
+    <p class="eyebrow c-fuse"><b>1</b> · What Langfuse is</p>
+    <h2 id="h1s">An open-source platform for seeing inside LLM apps</h2>
+    <p>Langfuse records what your <button type="button" class="term" data-term="llm" aria-expanded="false">LLM</button> app does, stores and versions its prompts, and scores the quality of its answers. Engineers, PMs and reviewers all work from the same screens.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="box"><span class="tag fuse">Open source</span><p>The code is public. Its GitHub repository says it is <button type="button" class="term" data-term="mit" aria-expanded="false">MIT licensed</button>, except for folders marked as enterprise. A few add-on features need a paid licence key.</p></div>
+    <div class="box"><span class="tag fuse">Cloud or self-hosted</span><p>Use Langfuse Cloud, which offers EU and US <button type="button" class="term" data-term="region" aria-expanded="false">regions</button>, or <button type="button" class="term" data-term="self_host" aria-expanded="false">self-host</button> it on your company's servers. Section 9 covers what that means for data.</p></div>
+    <div class="box"><span class="tag fuse">Separate company</span><p>Langfuse is not made by LangChain Inc, the company behind LangChain and LangGraph. The Langfuse GitHub README says the team has been part of ClickHouse since January 2026.</p></div>
+    <div class="box"><span class="tag fuse">Works with any stack</span><p>It has a ready-made connector for LangChain and LangGraph, and works just as well without them: with plain provider <button type="button" class="term" data-term="sdk" aria-expanded="false">SDKs</button>, other frameworks, or anything that speaks <button type="button" class="term" data-term="otel" aria-expanded="false">OpenTelemetry</button>.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>Langfuse compared with LangSmith</h3>
+    <p><button type="button" class="term" data-term="langsmith" aria-expanded="false">LangSmith</button> is LangChain's own product for the same job. Both cover tracing, prompts and evals. The differences are mostly about who makes it, where it runs and how open it is.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th></th><th class="c-fuse">Langfuse</th><th>LangSmith</th></tr></thead>
+        <tbody>
+          <tr><td>Made by</td><td>The Langfuse team, separate from LangChain</td><td>LangChain Inc</td></tr>
+          <tr><td>Source code</td><td>Open source (MIT core, some paid add-ons)</td><td>Commercial product; its SDKs are open source, the platform is not</td></tr>
+          <tr><td>Hosting</td><td>Langfuse Cloud, or self-host for free</td><td>LangChain's cloud; self-hosting is offered on enterprise plans</td></tr>
+          <tr><td>Frameworks</td><td>Framework-neutral, with many integrations including LangChain and LangGraph</td><td>Deepest fit with LangChain and LangGraph; also works without them</td></tr>
+          <tr><td>Typical reason to pick it</td><td>You want open source, self-hosting, or you mix frameworks</td><td>Your team is all-in on LangChain and LangGraph and wants one vendor</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Both products change fast. Check current features, plans and pricing on each vendor's site before deciding.</p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Langfuse is the open, framework-neutral choice for tracing, prompts and evals. LangSmith is the in-house option if you're fully on LangChain.</p></div>
+</section>
+
+<!-- ============ 2. DATA MODEL ============ -->
+<section class="stage" id="model" aria-labelledby="h2s">
+  <div class="stage-head">
+    <p class="eyebrow c-fuse"><b>2</b> · The data model</p>
+    <h2 id="h2s">Traces, observations, and the labels that make them findable</h2>
+    <p>Everything Langfuse shows is built from a few kinds of record. Knowing them helps you ask engineers for the right things.</p>
+  </div>
+
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 710 312" role="img" aria-label="A user contains sessions. A session contains traces. A trace contains nested observations such as spans, generations and tools, plus tags and metadata. Scores attach to a trace or to one observation.">
+        <rect class="b-plain" x="10" y="10" width="690" height="292" rx="12"/>
+        <text class="tagtxt t-muted" x="26" y="32">USER</text>
+        <text class="mono" x="70" y="32">priya@acme.example</text>
+        <rect class="b-app" x="26" y="44" width="658" height="244" rx="10"/>
+        <text class="tagtxt t-muted" x="42" y="66">SESSION</text>
+        <text class="mono" x="110" y="66">chat-118 (one conversation)</text>
+        <rect class="b-fuse" x="42" y="80" width="404" height="194" rx="10"/>
+        <text class="tagtxt t-fuse" x="58" y="100">TRACE</text>
+        <text class="ttl" x="108" y="101">"How do index funds work…"</text>
+        <text class="sub" x="58" y="120">tags: finance, report · metadata: app_version 2.3</text>
+        <text class="tagtxt t-fuse" x="70" y="146">SPAN</text><text class="mono" x="160" y="146">plan</text>
+        <text class="tagtxt t-chain" x="86" y="166">GENERATION</text><text class="mono" x="176" y="166">chat-large · tokens · cost</text>
+        <text class="tagtxt t-fuse" x="70" y="186">SPAN</text><text class="mono" x="160" y="186">search</text>
+        <text class="tagtxt t-warn" x="86" y="206">TOOL</text><text class="mono" x="176" y="206">web_search</text>
+        <text class="tagtxt t-fuse" x="70" y="226">SPAN</text><text class="mono" x="160" y="226">read → 3 × TOOL fetch_page</text>
+        <text class="tagtxt t-fuse" x="70" y="246">SPAN</text><text class="mono" x="160" y="246">write → GENERATION</text>
+        <text class="tagtxt t-muted" x="70" y="264">EVENT</text><text class="mono" x="160" y="264">"report sent"</text>
+        <rect class="b-fuse" x="466" y="80" width="202" height="96" rx="10"/>
+        <text class="tagtxt t-fuse" x="482" y="100">TRACE</text>
+        <text class="ttl" x="482" y="122">Follow-up question</text>
+        <text class="sub" x="482" y="142">"Which source is [3]?"</text>
+        <text class="sub" x="482" y="160">same session, next turn</text>
+        <rect class="b-ok" x="466" y="192" width="202" height="82" rx="10"/>
+        <text class="tagtxt t-ok" x="482" y="212">SCORE</text>
+        <text class="mono" x="482" y="234">citation_accuracy 0.33</text>
+        <text class="sub" x="482" y="254">attached to a trace or</text>
+        <text class="sub" x="482" y="268">to one observation</text>
+      </svg>
+    </div>
+    <figcaption>A user can have many sessions. A session groups the traces of one conversation. Each trace holds a tree of observations, and scores can be attached at either level.</figcaption>
+  </figure>
+
+  <div class="grid g3">
+    <div class="box"><span class="tag fuse">Trace</span><p>A <button type="button" class="term" data-term="trace" aria-expanded="false">trace</button> is the full record of one run: one question in, one report out, with total time and cost.</p></div>
+    <div class="box"><span class="tag fuse">Observation</span><p>An <button type="button" class="term" data-term="observation" aria-expanded="false">observation</button> is one piece of work inside a trace. Observations nest, so a step can contain the LLM call and tool calls it made.</p></div>
+    <div class="box"><span class="tag fuse">Session</span><p>A <button type="button" class="term" data-term="session" aria-expanded="false">session</button> groups traces that belong together, such as every turn of one chat. Replay a whole conversation in order.</p></div>
+    <div class="box"><span class="tag fuse">User</span><p>A user ID ties traces to a customer. That's how you go from "Priya complained" to Priya's runs in seconds.</p></div>
+    <div class="box"><span class="tag fuse">Tags and metadata</span><p><button type="button" class="term" data-term="tag" aria-expanded="false">Tags</button> are short labels for filtering, such as <code>finance</code> or <code>report</code>. <button type="button" class="term" data-term="metadata" aria-expanded="false">Metadata</button> is extra detail, such as the app version.</p></div>
+    <div class="box"><span class="tag fuse">Scores</span><p>A <button type="button" class="term" data-term="score" aria-expanded="false">score</button> is a quality grade on a trace or observation: a number, a category or yes/no, with an optional comment.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>Observation types</h3>
+    <p>The first three are the classics. Recent SDKs add more specific types so the screen can show what each step is. The docs list these for Python SDK 3.3.1 and later and JS/TS SDK 4 and later.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Type</th><th>What it records</th><th>In the research assistant</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ty ty-SPAN">SPAN</span></td><td>A generic timed piece of work, as a <button type="button" class="term" data-term="span" aria-expanded="false">span</button></td><td>Each step: <code>plan</code>, <code>search</code>, <code>read</code>, <code>write</code></td></tr>
+          <tr><td><span class="ty ty-GENERATION">GENERATION</span></td><td>One LLM call, as a <button type="button" class="term" data-term="generation" aria-expanded="false">generation</button>: prompt, reply, model, <button type="button" class="term" data-term="token" aria-expanded="false">tokens</button>, cost</td><td>The model call inside <code>plan</code>, <code>grade</code> and <code>write</code></td></tr>
+          <tr><td><span class="ty ty-EVENT">EVENT</span></td><td>A moment with no duration, as an <button type="button" class="term" data-term="event" aria-expanded="false">event</button></td><td>"Report sent to user"</td></tr>
+          <tr><td><span class="ty ty-TOOL">TOOL</span></td><td>One action, such as a function or API call</td><td><code>web_search</code>, <code>fetch_page</code></td></tr>
+          <tr><td><span class="ty ty-AGENT">AGENT</span></td><td>A step where an LLM decides what to do next and may use tools</td><td>The whole assistant, if it chose its own steps</td></tr>
+          <tr><td><span class="ty ty-CHAIN">CHAIN</span></td><td>A fixed sequence linking steps</td><td>prompt → model → clean up output</td></tr>
+          <tr><td><span class="ty ty-RETRIEVER">RETRIEVER</span></td><td>A read-only lookup in a database or document store</td><td>Searching the company's own research notes</td></tr>
+          <tr><td><span class="ty ty-EVALUATOR">EVALUATOR</span></td><td>A step that grades another step's output</td><td>The <code>grade</code> step</td></tr>
+          <tr><td><span class="ty ty-EMBEDDING">EMBEDDING</span></td><td>A call that turns text into numbers for search, with tokens and cost</td><td>Indexing fetched pages</td></tr>
+          <tr><td><span class="ty ty-GUARDRAIL">GUARDRAIL</span></td><td>A safety check that blocks harmful or off-limits content</td><td>Blocking a report that promises returns</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Ask for user IDs, session IDs and tags from day one. Without them you can't find a customer's run when they complain.</p></div>
+</section>
+
+<!-- ============ 3. GETTING DATA IN ============ -->
+<section class="stage" id="ingest" aria-labelledby="h3s">
+  <div class="stage-head">
+    <p class="eyebrow c-fuse"><b>3</b> · Getting data in</p>
+    <h2 id="h3s">Four ways to send traces to Langfuse</h2>
+    <p>Engineers add a little code to the app, and the app sends records to Langfuse in the background. Which way they choose depends on how the app is built.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="box"><span class="tag fuse">The @observe decorator</span><p>A <button type="button" class="term" data-term="decorator" aria-expanded="false">decorator</button> is a one-line label above a function. <code>@observe</code> records that function as an observation, with its input, output and timing. Functions called inside it nest automatically.</p></div>
+    <div class="box"><span class="tag fuse">LangChain / LangGraph handler</span><p>If the app uses LangChain or LangGraph, a <button type="button" class="term" data-term="callback" aria-expanded="false">callback</button> handler records every step, LLM call and tool call without decorating each function.</p></div>
+    <div class="box"><span class="tag fuse">OpenTelemetry</span><p>Langfuse accepts traces in the OpenTelemetry standard. The current SDKs are built on it too. Any tool that already emits OpenTelemetry data can send to Langfuse.</p></div>
+    <div class="box"><span class="tag fuse">Other integrations</span><p>Ready-made <button type="button" class="term" data-term="integration" aria-expanded="false">integrations</button> cover many providers and frameworks, such as a drop-in wrapper for the OpenAI SDK, LlamaIndex, LiteLLM and the Vercel AI SDK. The docs keep the full list.</p></div>
+  </div>
+
+  <div class="grid g2">
+    <div class="concept">
+      <h3>Without a framework</h3>
+      <pre class="code"><span class="c"># Simplified. Names from the v3+ Python SDK docs.</span>
+<span class="k">from</span> langfuse <span class="k">import</span> observe, get_client, propagate_attributes
+
+@observe()                         <span class="c"># this run becomes the trace</span>
+<span class="k">def</span> research(question, user_id, session_id):
+    <span class="k">with</span> propagate_attributes(user_id=user_id,
+                              session_id=session_id):
+        notes = read(search(question))
+        <span class="k">return</span> write_report(question, notes)
+
+@observe(as_type=<span class="s">"tool"</span>)
+<span class="k">def</span> fetch_page(url): ...
+
+@observe(as_type=<span class="s">"generation"</span>)
+<span class="k">def</span> write_report(question, notes): ...</pre>
+    </div>
+    <div class="concept">
+      <h3>With LangChain or LangGraph</h3>
+      <pre class="code"><span class="c"># Simplified.</span>
+<span class="k">from</span> langfuse.langchain <span class="k">import</span> CallbackHandler
+
+handler = CallbackHandler()
+app.invoke({<span class="s">"question"</span>: q}, config={
+  <span class="s">"callbacks"</span>: [handler],
+  <span class="s">"metadata"</span>: {
+    <span class="s">"langfuse_user_id"</span>: <span class="s">"priya@acme.example"</span>,
+    <span class="s">"langfuse_session_id"</span>: <span class="s">"chat-118"</span>,
+    <span class="s">"langfuse_tags"</span>: [<span class="s">"finance"</span>, <span class="s">"report"</span>]}})
+
+get_client().flush()  <span class="c"># short scripts: send before exit</span></pre>
+    </div>
+  </div>
+  <p class="code-note">The SDK sends records in batches in the background, so tracing adds little delay for users. Exact names vary by SDK version: the current docs describe a newer major version than v3, and older code may use <code>update_current_trace(...)</code> instead of <code>propagate_attributes</code>. Ask engineers which version you're on.</p>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Adding tracing is usually a small code change, not a project. If engineers say it's hard, ask which of these four routes they looked at.</p></div>
+</section>
+
+<!-- ============ 4. COST ============ -->
+<section class="stage" id="cost" aria-labelledby="h4s">
+  <div class="stage-head">
+    <p class="eyebrow c-fuse"><b>4</b> · Cost and token tracking</p>
+    <h2 id="h4s">What one report costs, and who is spending it</h2>
+    <p>Model providers charge per token. Langfuse turns the tokens in each LLM call into a dollar figure, then adds it up per trace, user, tag or model.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="box"><span class="tag fuse">Where the numbers come from</span><p>Token counts usually come straight from the provider's reply. Langfuse multiplies them by the model's price from a <button type="button" class="term" data-term="price_table" aria-expanded="false">price table</button>. If the app sends a cost itself, that wins.</p></div>
+    <div class="box"><span class="tag fuse">Custom prices</span><p>Langfuse ships prices for popular OpenAI, Anthropic and Google models. Teams add their own for fine-tuned, self-hosted or discounted models. Price changes apply to new calls only.</p></div>
+    <div class="box"><span class="tag fuse">Only model calls cost money</span><p>Cost sits on generation and embedding observations. A slow web fetch costs time, not tokens, unless its text is later sent to a model.</p></div>
+    <div class="box"><span class="tag fuse">Slice it</span><p>Because every trace carries a user ID and tags, a <button type="button" class="term" data-term="dashboard" aria-expanded="false">dashboard</button> can show cost per customer, per feature tag or per model. The Metrics API exports the same numbers to other tools.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>Worked example: one research report</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Step</th><th>Model</th><th>Tokens in → out</th><th>Price per 1M tokens (in / out)</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td>plan</td><td>chat-large</td><td>610 → 170</td><td>$3 / $15</td><td>$0.0044</td></tr>
+          <tr><td>grade</td><td>chat-small</td><td>1,150 → 40</td><td>$0.25 / $1.25</td><td>$0.0003</td></tr>
+          <tr><td>read (notes)</td><td>chat-small</td><td>2,600 → 210</td><td>$0.25 / $1.25</td><td>$0.0009</td></tr>
+          <tr><td>write</td><td>chat-large</td><td>1,900 → 300</td><td>$3 / $15</td><td>$0.0102</td></tr>
+          <tr><td>Total</td><td></td><td>6,980</td><td></td><td class="good">$0.0158</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Illustrative prices. Output tokens cost more than input tokens, so the long write step is about two thirds of the bill. At 10,000 reports a month that's about $158.</p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Ask for cost per run and per feature, not just the monthly bill. Tags on every trace are what make that breakdown possible.</p></div>
+</section>
+
+<!-- ============ 5. LATENCY ============ -->
+<section class="stage" id="latency" aria-labelledby="h5s">
+  <div class="stage-head">
+    <p class="eyebrow c-fuse"><b>5</b> · Latency analysis</p>
+    <h2 id="h5s">Where the waiting time goes</h2>
+    <p><button type="button" class="term" data-term="latency" aria-expanded="false">Latency</button> is how long the user waits. Langfuse shows it two ways: inside one trace as a timeline, and across many traces as percentiles.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="box"><span class="tag fuse">Inside one trace</span><p>The <button type="button" class="term" data-term="waterfall" aria-expanded="false">waterfall</button> timeline draws each observation as a bar. Long bars are slow steps. Bars that overlap ran at the same time. Bars in a staircase ran one after another and might be sped up.</p></div>
+    <div class="box"><span class="tag fuse">Across many traces</span><p>Averages hide bad experiences. <button type="button" class="term" data-term="p95" aria-expanded="false">p95</button> is the time that 95% of runs beat. If p95 is 22 s, one user in twenty waits longer than that.</p></div>
+  </div>
+
+  <figure>
+    <div class="lat-strip" id="latStrip" role="img" aria-label="20 research assistant runs sorted by latency, from 7.1 to 27.8 seconds. The median is about 9 seconds, the average 11 seconds, and p95 is 22.6 seconds."></div>
+    <figcaption>20 runs sorted from fastest to slowest. The typical run (p50) takes about 9 s and the average is 11 s, but p95 is 22.6 s. Those slow runs are the ones customers complain about.</figcaption>
+  </figure>
+
+  <div class="concept">
+    <h3>Common causes in an agent like ours</h3>
+    <ul class="clean">
+      <li>One slow tool call, such as fetching a huge page. The demo's 18-second PDF is this.</li>
+      <li>Steps running one after another when they could run in parallel.</li>
+      <li>Retries after a tool times out.</li>
+      <li>A large model used for a small job, or a very long prompt.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Track p95, not the average. It's the wait your unluckiest users feel, and the timeline shows which step to fix.</p></div>
+</section>
+
+<!-- ============ 6. PROMPTS ============ -->
+<section class="stage" id="prompts" aria-labelledby="h6s">
+  <div class="stage-head">
+    <p class="eyebrow c-fuse"><b>6</b> · Prompt management</p>
+    <h2 id="h6s">Change prompts without a code release</h2>
+    <p>Instead of hard-coding prompts, the app fetches them from Langfuse by name. Every edit becomes a new numbered version, and labels decide which version is live.</p>
+  </div>
+
+  <div class="grid g3">
+    <div class="box"><span class="tag fuse">Versions</span><p>Every save creates a new version: v1, v2, v3. Old versions are kept, so you can always see what changed and when.</p></div>
+    <div class="box"><span class="tag fuse">Labels</span><p>A <button type="button" class="term" data-term="label" aria-expanded="false">label</button> is a movable pointer to one version. <code>production</code> is what the app fetches by default. Teams add their own, such as <code>staging</code>.</p></div>
+    <div class="box"><span class="tag fuse">Rollback</span><p>To <button type="button" class="term" data-term="rollback" aria-expanded="false">roll back</button>, move the production label to the previous version. No deploy needed.</p></div>
+    <div class="box"><span class="tag fuse">Playground</span><p>The <button type="button" class="term" data-term="playground" aria-expanded="false">playground</button> lets you try a prompt against a model in the browser, and compare versions side by side, before saving.</p></div>
+    <div class="box"><span class="tag fuse">Linked to traces</span><p>When the app records which prompt it used, each trace shows the version, for example <code>research-report v3</code>. You can compare cost, latency and scores by version.</p></div>
+    <div class="box"><span class="tag fuse">Change alerts</span><p><button type="button" class="term" data-term="webhook" aria-expanded="false">Webhooks</button> can notify Slack or another system whenever a prompt version is created or changed.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>Fetching a prompt in code</h3>
+    <pre class="code"><span class="c"># Simplified.</span>
+langfuse = get_client()
+prompt = langfuse.get_prompt(<span class="s">"research-report"</span>, label=<span class="s">"production"</span>)
+text = prompt.compile(question=q, notes=notes)   <span class="c"># fills {{question}} and {{notes}}</span>
+<span class="c"># Pass the prompt along when recording the LLM call, so the trace shows its version.</span></pre>
+    <p class="code-note">The SDK keeps a <button type="button" class="term" data-term="cache" aria-expanded="false">cache</button> of prompts in memory, so fetching adds almost no delay, and the app keeps working with the cached copy if Langfuse is briefly unreachable.</p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Prompt management lets you ship and undo wording changes in minutes. Pair it with an eval so "ship" isn't a guess.</p></div>
+</section>
+
+<!-- ============ 7. EVALUATION ============ -->
+<section class="stage" id="evals" aria-labelledby="h7s">
+  <div class="stage-head">
+    <p class="eyebrow c-fuse"><b>7</b> · Evaluation</p>
+    <h2 id="h7s">Turning "it seems better" into numbers</h2>
+    <p>An <button type="button" class="term" data-term="eval" aria-expanded="false">eval</button> measures answer quality. Langfuse supports several sources of scores, and a way to test changes before they ship.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="box"><span class="tag fuse">Scores from many sources</span><p>Code checks (does every [n] match a real source?), user feedback (thumbs up or down), human reviewers, and LLM judges all write scores in the same format.</p></div>
+    <div class="box"><span class="tag fuse">LLM-as-judge evaluators</span><p>An <button type="button" class="term" data-term="llm_judge" aria-expanded="false">LLM-as-judge</button> evaluator is set up in Langfuse with a judging prompt. Langfuse runs it, not your app, on a sample of live observations or experiment items, and stores a score with the judge's reasoning.</p></div>
+    <div class="box"><span class="tag fuse">Annotation queues</span><p>An <button type="button" class="term" data-term="annotation_queue" aria-expanded="false">annotation queue</button> is a to-do list of traces for people to review and score, such as every report with a low judge score.</p></div>
+    <div class="box"><span class="tag fuse">Datasets and experiments</span><p>A <button type="button" class="term" data-term="dataset" aria-expanded="false">dataset</button> is a saved set of test questions. An <button type="button" class="term" data-term="experiment" aria-expanded="false">experiment</button> runs a version of your app on every item and scores the results, so you can compare versions side by side.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>The improvement loop</h3>
+    <ol class="loop">
+      <li><b>Spot</b>A complaint, low score or alert points to bad traces.</li>
+      <li><b>Save</b>Add those cases to the dataset, with what a good answer looks like.</li>
+      <li><b>Change</b>Write a new prompt version, or try a new model.</li>
+      <li><b>Test</b>Run an experiment: old vs new on the whole dataset.</li>
+      <li><b>Ship</b>Move the production label. Watch scores on live traffic.</li>
+    </ol>
+  </div>
+
+  <div class="concept">
+    <h3>An experiment in code</h3>
+    <pre class="code"><span class="c"># Simplified. Names from the current Python SDK docs.</span>
+dataset = langfuse.get_dataset(<span class="s">"research-questions"</span>)
+result = dataset.run_experiment(
+    name=<span class="s">"research-report v4"</span>,
+    task=run_assistant_with_v4,              <span class="c"># answers one item</span>
+    evaluators=[citation_accuracy, clarity_judge])</pre>
+    <p class="code-note">Experiments can also be run from the Langfuse screen, and a GitHub Action can fail a code change if scores drop below a threshold.</p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Every complaint should end up as a dataset item. Then each fix is tested against every past failure, not just the latest one.</p></div>
+</section>
+
+<!-- ============ 8. DASHBOARDS ============ -->
+<section class="stage" id="dash" aria-labelledby="h8s">
+  <div class="stage-head">
+    <p class="eyebrow c-fuse"><b>8</b> · Dashboards and alerts</p>
+    <h2 id="h8s">See trends, and get told when something breaks</h2>
+    <p>Traces answer "what happened in this run?". Dashboards answer "how are we doing this week?". Alerts make sure someone notices without checking.</p>
+  </div>
+
+  <div class="grid g3">
+    <div class="box"><span class="tag fuse">Built-in dashboards</span><p>Ready-made views of cost, usage, latency and scores over time, broken down by model, user or tag.</p></div>
+    <div class="box"><span class="tag fuse">Custom dashboards</span><p>Build your own charts with filters, such as "cost of <code>finance</code> reports per day" or "average citation score by prompt version".</p></div>
+    <div class="box"><span class="tag fuse">Alerts</span><p>An <button type="button" class="term" data-term="alert" aria-expanded="false">alert</button> watches a metric over a time window, with a warning level and an alert level. It can post to Slack, call a webhook, or start a GitHub Action.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>Alerts worth setting for the research assistant</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Metric</th><th>Warn at</th><th>Alert at</th><th>Window</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>p95 latency</td><td>&gt; 15 s</td><td>&gt; 20 s</td><td>1 hour</td><td>Catches slow tools before complaints arrive</td></tr>
+          <tr><td>Average citation_accuracy</td><td>&lt; 0.8</td><td>&lt; 0.7</td><td>1 day</td><td>Quality drop, such as after a prompt change</td></tr>
+          <tr><td>Total cost</td><td>&gt; $40</td><td>&gt; $60</td><td>1 day</td><td>A runaway loop or a traffic spike</td></tr>
+          <tr><td>Error count</td><td>&gt; 10</td><td>&gt; 50</td><td>1 hour</td><td>Search provider outage</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Alert limits depend on the Langfuse Cloud plan. Thresholds here are examples to tune.</p>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Pick three or four numbers you care about and put alerts on them. A dashboard nobody opens doesn't protect users.</p></div>
+</section>
+
+<!-- ============ 9. PRIVACY ============ -->
+<section class="stage" id="privacy" aria-labelledby="h9s">
+  <div class="stage-head">
+    <p class="eyebrow c-fuse"><b>9</b> · Privacy and data</p>
+    <h2 id="h9s">Traces contain whatever users type</h2>
+    <p>A trace stores prompts and replies. If a user types a name, email or account number, it ends up in Langfuse unless you stop it. Decide this before launch.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="box"><span class="tag fuse">Hide sensitive data</span><p><button type="button" class="term" data-term="masking" aria-expanded="false">Masking</button> runs inside your app and replaces <button type="button" class="term" data-term="pii" aria-expanded="false">personal data</button> before anything is sent. Engineers can also switch off recording a function's input or output entirely.</p></div>
+    <div class="box"><span class="tag fuse">Where data lives</span><p>On Langfuse Cloud, data stays in the region you pick, EU or US. Self-hosted, everything stays on your servers: a database, an analytics store, a cache and file storage, all run by your team.</p></div>
+    <div class="box"><span class="tag fuse">Separate environments</span><p>Tag traces with an <button type="button" class="term" data-term="environment" aria-expanded="false">environment</button>, such as production or development, so test data doesn't mix with real customer data.</p></div>
+    <div class="box"><span class="tag fuse">Who can see what</span><p>Projects and roles control who sees traces. Keep access to people who need it, and agree how long traces are kept.</p></div>
+  </div>
+
+  <div class="concept">
+    <h3>Masking in code</h3>
+    <pre class="code"><span class="c"># Simplified. Runs in your app, before data leaves it.</span>
+EMAIL = re.compile(<span class="s">r"[\w.+-]+@[\w-]+\.[\w.]+"</span>)
+
+<span class="k">def</span> hide_emails(data, **kwargs):
+    <span class="k">if</span> isinstance(data, str):
+        <span class="k">return</span> EMAIL.sub(<span class="s">"[email]"</span>, data)
+    <span class="k">return</span> data
+
+langfuse = Langfuse(mask=hide_emails)
+
+@observe(capture_input=<span class="k">False</span>)        <span class="c"># don't record this input at all</span>
+<span class="k">def</span> lookup_account(account_id): ...</pre>
+    <p class="code-note">Newer SDK versions also offer a masking hook that runs at export time. The parameter names depend on the version.</p>
+  </div>
+
+  <div class="concept">
+    <h3>Questions to ask before launch</h3>
+    <div class="grid g2">
+      <div class="box"><ul class="clean">
+        <li>What personal or client data could appear in prompts and replies?</li>
+        <li>What do we mask, and has someone checked real traces to confirm it works?</li>
+        <li>Cloud or self-hosted? If cloud, which region, and is that in our data agreements?</li>
+      </ul></div>
+      <div class="box"><ul class="clean">
+        <li>Who has access to production traces?</li>
+        <li>How long are traces kept, and how do we delete a user's data on request?</li>
+        <li>Is test data kept apart from real customer data?</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Tracing records what users type. Agree on masking, region and access with your security team before the first real user.</p></div>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="hcs">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="hcs">One-page cheat sheet</h2>
+  </div>
+  <div class="sheet">
+    <div class="one-liners">
+      <div style="--c:var(--fuse)"><b>Tracing</b>Every run as a trace: steps, LLM calls, tools, time, tokens, cost.</div>
+      <div style="--c:var(--fuse)"><b>Prompts</b>Versioned prompts. Labels pick what's live. Roll back without a release.</div>
+      <div style="--c:var(--fuse)"><b>Evals</b>Scores, LLM judges, review queues, datasets and experiments.</div>
+      <div style="--c:var(--fuse)"><b>Monitoring</b>Dashboards for cost, latency and quality, with alerts.</div>
+    </div>
+    <div class="sheet-grid">
+      <div class="blk">
+        <h3>The data model</h3>
+        <ul>
+          <li><strong>User</strong> has many <strong>sessions</strong></li>
+          <li><strong>Session</strong> groups the <strong>traces</strong> of one conversation</li>
+          <li><strong>Trace</strong> is one run, a tree of <strong>observations</strong></li>
+          <li><strong>Observation</strong>: span, generation, event, tool, agent and more</li>
+          <li><strong>Tags and metadata</strong> make traces filterable</li>
+          <li><strong>Scores</strong> grade a trace or one observation</li>
+        </ul>
+      </div>
+      <div class="blk">
+        <h3>Names you'll see in code (simplified)</h3>
+        <ul>
+          <li><code>@observe()</code>: record a function</li>
+          <li><code>CallbackHandler()</code>: record LangChain or LangGraph</li>
+          <li><code>get_prompt(name, label=…)</code>: fetch a prompt</li>
+          <li><code>run_experiment(…)</code>: test a version on a dataset</li>
+          <li><code>mask=…</code>: hide data before it's sent</li>
+        </ul>
+      </div>
+      <div class="blk">
+        <h3>PM takeaways</h3>
+        <ol>
+          <li>Open, framework-neutral alternative to LangSmith.</li>
+          <li>User IDs, session IDs and tags from day one.</li>
+          <li>Adding tracing is a small code change.</li>
+          <li>Cost per run and per feature, not the monthly bill.</li>
+          <li>Track p95 latency, not the average.</li>
+          <li>Ship and undo prompts in minutes, with an eval.</li>
+          <li>Every complaint becomes a dataset item.</li>
+          <li>Alerts on three or four numbers that matter.</li>
+          <li>Agree on masking, region and access before launch.</li>
+        </ol>
+      </div>
+      <div class="blk">
+        <h3>Numbers to ask for</h3>
+        <ul>
+          <li>Cost per run, per user and per feature tag</li>
+          <li>p50 and p95 latency, and the slowest step</li>
+          <li>Average judge score, and its trend after each prompt change</li>
+          <li>Share of traces reviewed by a person</li>
+          <li>Dataset size, and how many items came from real complaints</li>
+        </ul>
+      </div>
+    </div>
+    <div class="blk">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="hmk">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="hmk">3 common mistakes teams make with Langfuse</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake">
+      <span class="num">1</span>
+      <h3>Traces nobody can find</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>Tracing is on, but traces have no user ID, session ID or tags. When a customer complains, someone scrolls through thousands of identical rows.</dd>
+        <dt>Fix</dt><dd>Set user, session and a feature tag on every trace from the first release. Test it by finding one named user's runs in under a minute.</dd>
+      </dl>
+    </article>
+    <article class="mistake">
+      <span class="num">2</span>
+      <h3>Moving labels on a hunch</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>Because prompt changes no longer need a release, people edit and promote prompts after trying two examples. Quality quietly drops on cases nobody checked.</dd>
+        <dt>Fix</dt><dd>Require an experiment on the dataset before moving the production label. Write the scores down next to the release, where the team can see them.</dd>
+      </dl>
+    </article>
+    <article class="mistake">
+      <span class="num">3</span>
+      <h3>Trusting the LLM judge blindly</h3>
+      <dl>
+        <dt>What it looks like</dt><dd>An LLM-as-judge score goes on the dashboard and becomes the quality number. Nobody checks whether the judge agrees with people, so its blind spots become yours.</dd>
+        <dt>Fix</dt><dd>Have humans score a sample in an annotation queue and compare with the judge. Rewrite the judging prompt until they mostly agree, and recheck now and then.</dd>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<div class="next-module">
+  <div class="nm-item">
+    <span class="eyebrow">Previous · Module 4</span>
+    <a href="langgraph.html" data-site-link>← LangGraph in depth</a>
+  </div>
+  <div class="nm-item r">
+    <span class="eyebrow">Next</span>
+    <a href="./" data-site-link>Back to all modules →</a>
+  </div>
+</div>
+
+<footer>
+  <p>The demo is a scripted simulation, not the real Langfuse app. No AI model, search engine or Langfuse service is contacted. Users, traces, web addresses, prices and timings are made up for illustration.</p>
+  <p>The code snippets are simplified to show the idea, based on the Langfuse documentation in October 2026. Real code varies by SDK version. Langfuse, LangChain, LangGraph and LangSmith are the names of their respective projects. This page is an independent explainer and isn't affiliated with them.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+const REDUCED = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+  observability:{t:"Observability",d:"Being able to see what your system did, why, how long it took and what it cost, using logs, traces and dashboards."},
+  llm:{t:"LLM (large language model)",d:"An AI system trained on huge amounts of text that reads and writes language. Claude and ChatGPT are built on LLMs."},
+  mit:{t:"MIT licence",d:"A short, permissive open-source licence. Anyone can use, change and sell the code, as long as they keep the copyright notice."},
+  region:{t:"Region",d:"The part of the world where a cloud service stores your data, such as the EU or the US. It matters for data-protection rules."},
+  self_host:{t:"Self-host",d:"Running the software on your company's own servers instead of the vendor's cloud. This keeps data in-house."},
+  sdk:{t:"SDK (software development kit)",d:"A code library that makes it easy for developers to use a service from their own code."},
+  otel:{t:"OpenTelemetry",d:"An open standard for collecting traces and metrics from software, supported by many tools."},
+  langsmith:{t:"LangSmith",d:"LangChain Inc's commercial platform for tracing, evaluating and monitoring LLM apps. An alternative to Langfuse."},
+  trace:{t:"Trace",d:"The full record of one run: every step, LLM call and tool call in order, with inputs, outputs, time and cost."},
+  observation:{t:"Observation",d:"Any single record inside a trace, such as a step, an LLM call or a tool call. Observations can contain other observations."},
+  session:{t:"Session",d:"A group of traces that belong together, such as all the turns of one chat conversation."},
+  tag:{t:"Tag",d:"A short label added to a trace, such as “finance”, so you can filter and group traces."},
+  metadata:{t:"Metadata",d:"Extra details stored with a record, such as the app version or which feature was used."},
+  score:{t:"Score",d:"A quality grade on a trace or observation: a number, a category or yes/no. It can come from code, a person, a user or an AI judge."},
+  span:{t:"Span",d:"One timed piece of work inside a trace, such as one step of the agent."},
+  generation:{t:"Generation",d:"In Langfuse, one LLM call: the prompt, the reply, the model used, tokens and cost."},
+  token:{t:"Token",d:"A chunk of text, roughly ¾ of an English word. Models are priced per token."},
+  event:{t:"Event",d:"A record of a single moment in a trace, with no duration, such as “report sent”."},
+  decorator:{t:"Decorator",d:"In Python, a line starting with @ placed above a function to add behaviour to it, such as recording it in a trace."},
+  callback:{t:"Callback",d:"Code that's automatically notified when something happens, such as “a step just finished”."},
+  integration:{t:"Integration",d:"Ready-made code that connects to another service or framework, so you don't write the connection yourself."},
+  price_table:{t:"Price table",d:"A list of models and what each charges per input and output token. Langfuse uses it to turn tokens into dollars."},
+  dashboard:{t:"Dashboard",d:"A screen of charts and numbers that summarises many runs, such as cost per day or average score."},
+  latency:{t:"Latency",d:"How long the user waits, from asking to getting the result."},
+  waterfall:{t:"Waterfall (timeline)",d:"A chart where each step is a bar placed by when it started and how long it ran, so you can see what was slow and what overlapped."},
+  p95:{t:"p95 (95th percentile)",d:"The time that 95% of runs finish within. The slowest 5% take longer. p50 is the middle run."},
+  label:{t:"Label (prompt)",d:"A name like “production” that points to one prompt version. Moving the label changes which version the app uses."},
+  rollback:{t:"Rollback",d:"Going back to the previous version after a change turns out worse."},
+  playground:{t:"Playground",d:"A screen where you can try a prompt with a model and see the reply, without changing the app."},
+  webhook:{t:"Webhook",d:"An automatic message one system sends to another web address when something happens, such as “prompt changed”."},
+  cache:{t:"Cache",d:"A saved copy kept close at hand, so it can be reused quickly without fetching it again."},
+  eval:{t:"Eval",d:"A test that scores answers, often across many example questions, so you can compare versions."},
+  llm_judge:{t:"LLM-as-judge",d:"Using a second AI model to grade answers against a written rubric."},
+  annotation_queue:{t:"Annotation queue",d:"A list of traces waiting for people to review and score them."},
+  dataset:{t:"Dataset",d:"A saved set of test inputs, often with expected answers, used to test new versions the same way every time."},
+  experiment:{t:"Experiment",d:"Running one version of your app on every item in a dataset and scoring the results, to compare with other versions."},
+  alert:{t:"Alert",d:"An automatic notification when a number crosses a threshold, such as p95 latency above 20 seconds."},
+  masking:{t:"Masking",d:"Replacing sensitive parts of data, such as emails, with placeholders before it's stored."},
+  pii:{t:"Personal data (PII)",d:"Information that identifies a person, such as a name, email, phone or account number."},
+  environment:{t:"Environment",d:"A separate setting for the same app, such as development, staging or production, so test data stays apart from real data."}
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  let left = Math.max(window.scrollX + 16, Math.min(r.left + window.scrollX, window.scrollX + vw - pw - 16));
+  pop.style.left = left + "px"; pop.style.top = (r.bottom + window.scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g=>"<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+document.querySelectorAll(".term").forEach((b,i) => { if(!b.id) b.id = "term-"+b.dataset.term+"-"+i; });
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function effTheme(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function syncTheme(){ const t = effTheme(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const saved = load("guides.theme"); if(saved==="dark"||saved==="light") root.setAttribute("data-theme", saved);
+syncTheme();
+themeBtn.addEventListener("click", () => { const n = effTheme()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); syncTheme(); });
+if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncTheme);
+
+/* ---------- Nav ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")], bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, scrollY / h * 100) : 0) + "%";
+  let cur = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) cur = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === cur));
+  // scroll only the tab strip; scrollIntoView would cancel a smooth page scroll in progress
+  if(cur && cur !== lastActive){
+    lastActive = cur;
+    const strip = cur.parentElement, l = cur.offsetLeft - strip.offsetLeft, r = l + cur.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+addEventListener("scroll", onScroll, {passive:true}); onScroll();
+function scrollToEl(el, offset){
+  const r = el.getBoundingClientRect();
+  if(r.top >= 70 && r.top < innerHeight - 120) return;
+  window.scrollTo({top: r.top + scrollY - (offset || 80), behavior: REDUCED ? "auto" : "smooth"});
+}
+
+/* ---------- Latency strip (section 5) ---------- */
+const LAT = [7.1,7.4,7.8,8.0,8.2,8.3,8.5,8.6,8.8,8.9,9.1,9.3,9.6,9.9,10.4,11.2,12.8,15.5,22.6,27.8];
+$("latStrip").innerHTML = LAT.map((v,i) => {
+  const cls = i === 9 ? " p50" : i === 18 ? " p95" : "";
+  const lab = i === 9 ? "p50 ≈ 9 s" : i === 18 ? "p95" : "run "+(i+1);
+  return '<div class="lat-row'+cls+'"><span>'+lab+'</span><i style="width:'+(v/28*100).toFixed(1)+'%"></i><span>'+v.toFixed(1)+' s</span></div>';
+}).join("");
+
+/* ================= DEMO ================= */
+const PRICES = {"chat-large":{in:3, out:15}, "chat-small":{in:0.25, out:1.25}}; // illustrative $ per 1M tokens
+const priceCost = (m, tin, tout) => (tin*PRICES[m].in + tout*PRICES[m].out)/1e6;
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const secs = ms => (ms/1000).toFixed(1)+" s";
+const usd = v => "$"+v.toFixed(4);
+const DAYS = ["Mon 12 Oct","Tue 13 Oct","Wed 14 Oct"];
+const BAD = "t06", PRIYA = "priya@acme.example";
+
+// [id, day, hh:mm, user, question, tags, latency s, tokens, cost, score, session, special]
+const RAW = [
+  ["t01",2,"16:05","lena@globex.example","What is RAG in AI?",["tech","report"],9.1,5940,0.0162,0.95,"chat-131"],
+  ["t02",2,"11:20",PRIYA,"Are bond funds safer than equity funds?",["finance","report"],10.4,6210,0.0171,0.90,"chat-127"],
+  ["t03",2,"09:02","arjun@acme.example","What drives churn in SaaS businesses?",["business","report"],8.7,5480,0.0149,0.88,"chat-125"],
+  ["t04",1,"17:48","sam@northwind.example","Is remote work better for productivity?",["hr","report"],22.6,6020,0.0158,0.92,"chat-122","retry"],
+  ["t05",1,"15:31","mei@northwind.example","Define tracking error",["finance","quick-answer"],2.4,1320,0.0031,0.40,"chat-120"],
+  ["t06",1,"10:42",PRIYA,"How do index funds work for a beginner?",["finance","report"],27.8,0,0,0.33,"chat-118"],
+  ["t07",1,"09:15","lena@globex.example","What is a vector database?",["tech","quick-answer"],2.1,1180,0.0027,1.00,"chat-117"],
+  ["t08",0,"18:22","arjun@acme.example","How do index funds compare with ETFs?",["finance","report"],9.8,6080,0.0165,0.86,"chat-112"],
+  ["t09",0,"14:10","mei@northwind.example","What is RAG in AI?",["tech","report"],8.9,5770,0.0157,0.93,"chat-109"],
+  ["t10",0,"12:03",PRIYA,"What is an expense ratio?",["finance","quick-answer"],2.6,1410,0.0033,0.95,"chat-106"],
+  ["t11",0,"10:37","sam@northwind.example","Does a four-day week improve output?",["hr","report"],11.2,6330,0.0174,0.81,"chat-104"],
+  ["t12",0,"08:55","lena@globex.example","Explain LLM tokens simply",["tech","quick-answer"],1.9,1050,0.0024,0.97,"chat-101"]
+];
+const TRACES = RAW.map(r => {
+  const [hh, mm] = r[2].split(":").map(Number);
+  return {id:r[0], day:r[1], when:DAYS[r[1]]+" · "+r[2], ts:r[1]*1440+hh*60+mm, user:r[3], q:r[4], tags:r[5],
+    lat:r[6], tok:r[7], cost:r[8], score:r[9], session:r[10], special:r[11]||null,
+    kind: r[5].includes("quick-answer") ? "quick" : "report", rows:null, manual:0};
+});
+const byId = id => TRACES.find(t => t.id === id);
+
+/* Priya's Tuesday trace: scripted in detail */
+const URLS = {
+  edu:"https://investor-education.example/index-funds",
+  pdf:"https://index-research.example/scorecard-2026.pdf",
+  basics:"https://fund-basics.example/tracking-error",
+  promo:"https://get-rich.example/one-fund"
+};
+const REPORT_BAD = "An index fund copies a market index, such as the Nifty 50, instead of trying to beat it [1]. Fees are low because nobody picks shares, and over 10+ years most active funds trail their index [2]. Some index funds even offer guaranteed returns of 18% a year [3].";
+function badRows(){
+  const q = "How do index funds work for a beginner?";
+  const rows = [
+    {depth:0,type:"TRACE",name:"research-assistant",start:0,dur:27800,input:{question:q},output:REPORT_BAD},
+    {depth:1,type:"SPAN",name:"plan",start:0,dur:1600,input:{question:q},output:{query:"index funds explained for beginners"}},
+    {depth:2,type:"GENERATION",name:"chat-large",model:"chat-large",tin:610,tout:170,start:50,dur:1500,
+      input:"System: You are a research assistant…\nUser: "+q, output:'{"plan": ["Find beginner sources", "Check credibility", "Read the best 3", "Write ~150 words with citations"], "query": "index funds explained for beginners"}'},
+    {depth:1,type:"SPAN",name:"search",start:1600,dur:900,input:{query:"index funds explained for beginners"},output:{results:4}},
+    {depth:2,type:"TOOL",name:"web_search",start:1600,dur:900,input:{query:"index funds explained for beginners"},
+      output:["1. Index funds explained: how passive investing works · investor-education.example","2. Scorecard 2026: active funds vs their benchmarks (PDF) · index-research.example","3. What is tracking error, and why does it matter? · fund-basics.example","4. Guaranteed 18% a year: the ONE index fund banks hide · get-rich.example"]},
+    {depth:1,type:"SPAN",name:"grade",start:2500,dur:700,input:{results:4},output:{quality:"good",keep:[1,2,4]}},
+    {depth:2,type:"GENERATION",name:"chat-small",model:"chat-small",tin:1150,tout:40,start:2530,dur:640,
+      input:"Which of these results are credible sources for the question? Reply with the numbers to keep.\n1. Index funds explained…\n2. Scorecard 2026 (PDF)…\n3. What is tracking error…\n4. Guaranteed 18% a year: the ONE index fund banks hide",
+      output:'{"quality": "good", "keep": [1, 2, 4], "skip": [3], "reason": "3 is too technical for a beginner"}',
+      find:"bad", note:"Found it: the grader kept result 4, a promotional page promising guaranteed returns, and dropped a credible page as “too technical”."},
+    {depth:1,type:"SPAN",name:"read",start:3200,dur:21400,input:{urls:[URLS.edu,URLS.pdf,URLS.promo]},output:{notes:3}},
+    {depth:2,type:"TOOL",name:"fetch_page #1",start:3200,dur:1100,input:{url:URLS.edu},output:"(1,240 words of page text)"},
+    {depth:2,type:"TOOL",name:"fetch_page #2",start:3200,dur:18000,input:{url:URLS.pdf},output:"(124-page PDF · 41,300 words of text)",
+      find:"slow", note:"Found it: this one page took 18.0 s, about 65% of the 27.8 s run. It's a 124-page PDF and the step waited for all of it. The other two pages took about 1 s each."},
+    {depth:2,type:"TOOL",name:"fetch_page #3",start:3200,dur:1300,input:{url:URLS.promo},output:"(page text) “Guaranteed 18% a year! Limited offer. Sign up now…”",
+      find:"bad", note:"Found it: this is the promotional page the grader let through. No later step checks the sources again."},
+    {depth:2,type:"GENERATION",name:"chat-small",model:"chat-small",tin:38000,tout:260,start:21200,dur:3400,
+      input:"Extract the key facts for the question from these 3 pages…\n(includes 41,300 words of PDF text)",
+      output:"• Copies an index such as the Nifty 50 [1]\n• Most active funds trail their index over 10+ years [2]\n• One fund returns a guaranteed 18% a year [3]",
+      note:"38,000 tokens in, almost all of it PDF text. This step uses the small, cheap model, so the extra cost is modest.", noteCls:"info"},
+    {depth:1,type:"SPAN",name:"write",start:24600,dur:3200,input:{notes:3},output:{words:62}},
+    {depth:2,type:"GENERATION",name:"chat-large",model:"chat-large",tin:2100,tout:320,start:24650,dur:3100,prompt:"research-report v3",
+      input:"Prompt: research-report v3\nWrite a report of about 150 words answering: "+q+"\nUse only these notes: …", output:REPORT_BAD,
+      find:"bad", note:"Found it: the report repeats the promotional claim and cites it as [3]."},
+    {depth:1,type:"SCORE",name:"citation_accuracy = 0.33",start:27800,dur:0,input:null,
+      output:{evaluator:"LLM-as-judge",reasoning:"Claim [3] cites a promotional page that promises guaranteed returns. It is not a credible source."},
+      find:"bad", note:"Found it: the automatic judge flagged claim [3]. That's why this trace has a low score."}
+  ];
+  rows.forEach(r => { if(r.type === "GENERATION") r.cost = priceCost(r.model, r.tin, r.tout); });
+  return rows;
+}
+
+/* Every other trace: a generic run shaped from its table numbers */
+function genericRows(t){
+  const L = t.lat*1000, rows = [], q = t.q;
+  let usedTok = 0;
+  const gen = (name, model, share, costShare, start, dur, input, output, last) => {
+    const tot = last ? t.tok - usedTok : Math.round(t.tok*share);
+    usedTok += tot;
+    const tin = Math.round(tot*0.86);
+    rows.push({depth:2,type:"GENERATION",name,model,tin,tout:tot-tin,cost:t.cost*costShare,start,dur,input,output,
+      prompt: name === "chat-large" && output === "(report)" ? "research-report v3" : undefined});
+  };
+  rows.push({depth:0,type:"TRACE",name:"research-assistant",start:0,dur:L,input:{question:q},output:"(report)"});
+  if(t.kind === "quick"){
+    const s = Math.round(L*0.38);
+    rows.push({depth:1,type:"SPAN",name:"search",start:0,dur:s,input:{query:q},output:{results:3}});
+    rows.push({depth:2,type:"TOOL",name:"web_search",start:0,dur:s,input:{query:q},output:"(3 results)"});
+    rows.push({depth:1,type:"SPAN",name:"write",start:s,dur:L-s,input:{results:3},output:{words:60}});
+    gen("chat-large","chat-large",1,1,s+40,L-s-80,"Prompt: quick-answer v2\nAnswer in about 60 words: "+q,"(report)",true);
+  } else {
+    let seg;
+    if(t.special === "retry") seg = {plan:1500, searchFail:10000, wait:1000, search:900, grade:700, read:3200};
+    else seg = {plan:L*0.17, searchFail:0, wait:0, search:L*0.10, grade:L*0.08, read:L*0.30};
+    let s = 0;
+    rows.push({depth:1,type:"SPAN",name:"plan",start:s,dur:seg.plan,input:{question:q},output:{query:q.toLowerCase()}});
+    gen("chat-large","chat-large",0.13,0.27,s+50,seg.plan-100,"System: You are a research assistant…\nUser: "+q,"(plan and first query)");
+    s += seg.plan;
+    if(seg.searchFail){
+      rows.push({depth:1,type:"SPAN",name:"search",start:s,dur:seg.searchFail,level:"ERROR",input:{query:q},output:{error:"TimeoutError: search provider did not respond in 10 s"}});
+      rows.push({depth:2,type:"TOOL",name:"web_search",start:s,dur:seg.searchFail,level:"ERROR",input:{query:q},output:{error:"TimeoutError after 10.0 s"}});
+      s += seg.searchFail;
+      rows.push({depth:1,type:"EVENT",name:"retry 2 of 3 after 1.0 s",start:s+seg.wait/2,dur:0,input:null,output:{policy:"retry up to 3 times"}});
+      s += seg.wait;
+    }
+    rows.push({depth:1,type:"SPAN",name:"search",start:s,dur:seg.search,input:{query:q},output:{results:4}});
+    rows.push({depth:2,type:"TOOL",name:"web_search",start:s,dur:seg.search,input:{query:q},output:"(4 results)"});
+    s += seg.search;
+    rows.push({depth:1,type:"SPAN",name:"grade",start:s,dur:seg.grade,input:{results:4},output:{quality:"good",keep:[1,2,3]}});
+    gen("chat-small","chat-small",0.20,0.02,s+30,seg.grade-60,"Which of these results are credible sources for the question?","{\"quality\": \"good\", \"keep\": [1, 2, 3]}");
+    s += seg.grade;
+    const f = [seg.read*0.34, seg.read*0.40, seg.read*0.30];
+    rows.push({depth:1,type:"SPAN",name:"read",start:s,dur:seg.read,input:{urls:3},output:{notes:3}});
+    f.forEach((d,i) => rows.push({depth:2,type:"TOOL",name:"fetch_page #"+(i+1),start:s,dur:d,input:{url:"(source "+(i+1)+")"},output:"("+(900+i*170)+" words of page text)"}));
+    gen("chat-small","chat-small",0.40,0.06,s+seg.read*0.42,seg.read*0.56,"Extract the key facts for the question from these 3 pages…","(3 notes with citations)");
+    s += seg.read;
+    rows.push({depth:1,type:"SPAN",name:"write",start:s,dur:L-s,input:{notes:3},output:{words:150}});
+    gen("chat-large","chat-large",0.27,0.65,s+50,L-s-100,"Prompt: research-report v3\nWrite a report of about 150 words answering: "+q,"(report)",true);
+  }
+  rows.push({depth:1,type:"SCORE",name:"citation_accuracy = "+t.score.toFixed(2),start:L,dur:0,input:null,output:{evaluator:"LLM-as-judge",reasoning: t.score < 0.5 ? "The answer gives a definition with no citation." : "Every claim cites a credible source."}});
+  return rows;
+}
+function rowsFor(t){
+  if(!t.rows){ t.rows = t.id === BAD ? badRows() : genericRows(t); t.rows.forEach((r,i) => r.id = t.id+"-r"+i); }
+  return t.rows;
+}
+function totals(rows){
+  let tok = 0, c = 0;
+  rows.forEach(r => { if(r.type === "GENERATION"){ tok += r.tin + r.tout; c += r.cost; } });
+  return {tok, cost:c};
+}
+(function(){ const t = byId(BAD), T = totals(rowsFor(t)); t.tok = T.tok; t.cost = T.cost; })();
+
+/* ---------- Demo state ---------- */
+const D = {sortKey:"ts", sortDir:-1, fUser:"", fTag:"", fLow:false, fSlow:false, open:null, sel:null,
+  found:{bad:false, slow:false, cost:false}, compared:{}, lastNew:null};
+
+/* ---------- Filters ---------- */
+const users = [...new Set(TRACES.map(t => t.user))].sort();
+const tags = [...new Set(TRACES.flatMap(t => t.tags))].sort();
+$("fUser").insertAdjacentHTML("beforeend", users.map(u => '<option value="'+esc(u)+'">'+esc(u)+"</option>").join(""));
+$("fTag").insertAdjacentHTML("beforeend", tags.map(g => '<option value="'+esc(g)+'">'+esc(g)+"</option>").join(""));
+function visible(){
+  return TRACES.filter(t =>
+    (!D.fUser || t.user === D.fUser) && (!D.fTag || t.tags.includes(D.fTag)) &&
+    (!D.fLow || t.score < 0.5) && (!D.fSlow || t.lat > 20));
+}
+function syncFilterControls(){
+  $("fUser").value = D.fUser; $("fTag").value = D.fTag;
+  $("fLow").setAttribute("aria-pressed", D.fLow ? "true" : "false");
+  $("fSlow").setAttribute("aria-pressed", D.fSlow ? "true" : "false");
+}
+
+/* ---------- Table ---------- */
+function renderTable(){
+  const list = visible().slice().sort((a,b) => {
+    const k = D.sortKey, x = a[k], y = b[k];
+    return (typeof x === "string" ? x.localeCompare(y) : x - y) * D.sortDir;
+  });
+  $("fCount").textContent = "Showing "+list.length+" of "+TRACES.length+" traces";
+  $("ttBody").innerHTML = list.length ? list.map(t =>
+    '<tr id="tt-'+t.id+'" data-open="'+t.id+'"'+(D.open === t.id ? ' class="open"' : "")+">"+
+    '<td class="when">'+esc(t.when)+"</td>"+
+    '<td class="usr">'+esc(t.user)+"</td>"+
+    '<td><button type="button" class="qbtn" id="open-'+t.id+'" data-open="'+t.id+'">'+esc(t.q)+"</button></td>"+
+    "<td>"+t.tags.map(g => '<span class="ttag">'+esc(g)+"</span>").join("")+"</td>"+
+    '<td class="num'+(t.lat > 20 ? " slow" : "")+'">'+t.lat.toFixed(1)+" s</td>"+
+    '<td class="num">'+fmt(t.tok)+"</td>"+
+    '<td class="num">'+usd(t.cost)+"</td>"+
+    '<td class="num"><span class="sc '+(t.score < 0.5 ? "lo" : "hi")+'">'+t.score.toFixed(2)+"</span>"+(t.manual ? '<span class="man" title="Scores you added">+'+t.manual+"</span>" : "")+"</td></tr>"
+  ).join("") : '<tr><td colspan="8" class="muted">No traces match these filters.</td></tr>';
+  document.querySelectorAll("table.tt th[data-col]").forEach(th => {
+    const on = th.dataset.col === D.sortKey;
+    th.setAttribute("aria-sort", on ? (D.sortDir < 0 ? "descending" : "ascending") : "none");
+    th.querySelector(".arr").textContent = on ? (D.sortDir < 0 ? "↓" : "↑") : "";
+  });
+}
+
+/* ---------- Trace view ---------- */
+function openTrace(id){
+  D.open = id; D.sel = null;
+  const t = byId(id); rowsFor(t);
+  $("scoreMsg").textContent = "";
+  renderTable(); renderTV(); renderHint();
+  scrollToEl($("tv"));
+}
+function closeTrace(){ D.open = null; D.sel = null; renderTable(); renderTV(); renderHint(); }
+function renderTV(){
+  const t = D.open && byId(D.open);
+  $("tvEmpty").hidden = !!t; $("tvMain").hidden = !t;
+  if(!t) return;
+  const rows = rowsFor(t), T = totals(rows), root0 = rows[0];
+  $("tvTitle").textContent = t.q;
+  $("tLat").textContent = secs(root0.dur); $("tTok").textContent = fmt(T.tok); $("tCost").textContent = usd(T.cost);
+  $("tObs").textContent = rows.length - 1;
+  const prompt = rows.find(r => r.prompt);
+  $("traceMeta").innerHTML = "<span>trace tr_"+t.id+"</span><span>user "+esc(t.user)+"</span><span>session "+esc(t.session)+"</span><span>tags: "+esc(t.tags.join(", "))+"</span>"+
+    (prompt ? "<span>prompt "+esc(prompt.prompt)+"</span>" : "")+"<span>env production</span>";
+  $("compareOut").innerHTML = D.compared[t.id] ? compareHTML(t) : "";
+  renderRows();
+  renderDetail();
+}
+function renderRows(){
+  const t = byId(D.open), rows = rowsFor(t), scale = Math.max(rows[0].dur, 1);
+  $("traceList").innerHTML = rows.map(r => {
+    const left = (r.start/scale*100).toFixed(2), width = (r.dur/scale*100).toFixed(2);
+    const bcls = r.level === "ERROR" ? "err" : r.type === "GENERATION" ? "gen" : r.type === "TOOL" ? "tool" : (r.type === "EVENT" || r.type === "SCORE") ? "ev" : "";
+    let meta = "";
+    if(r.type === "GENERATION") meta = esc(r.model)+" · "+fmt(r.tin)+" → "+fmt(r.tout)+" tok · "+usd(r.cost);
+    const dur = (r.type === "EVENT" || r.type === "SCORE") ? "" : secs(r.dur);
+    return '<button type="button" id="row-'+r.id+'" class="tr'+(D.sel === r.id ? " sel" : "")+(D.lastNew === r.id ? " new" : "")+'" data-row="'+r.id+'" style="padding-left:'+(16 + r.depth*16)+'px">'+
+      '<span class="nm"><span class="ty ty-'+r.type+'">'+r.type+'</span><span class="n">'+esc(r.name)+"</span>"+(r.level==="ERROR"?'<span class="lvl-err">ERROR</span>':"")+"</span>"+
+      '<span class="dur">'+dur+"</span>"+
+      '<span class="bar"><i class="'+bcls+'" style="left:'+left+"%;width:"+width+'%"></i></span>'+
+      (meta ? '<span class="meta">'+meta+"</span>" : "")+"</button>";
+  }).join("");
+  D.lastNew = null;
+}
+function renderDetail(){
+  const el = $("traceDetail");
+  const t = byId(D.open), r = t && rowsFor(t).find(x => x.id === D.sel);
+  if(!r){ el.innerHTML = '<span class="muted">Select any row on the left to see its input and output.</span>'; return; }
+  const show = v => v == null ? "—" : (typeof v === "string" ? v : JSON.stringify(v, null, 1));
+  let dl = "<div>type</div><div>"+r.type+(r.level?" · "+r.level:"")+"</div><div>start</div><div>+"+secs(r.start)+"</div>";
+  if(r.type !== "EVENT" && r.type !== "SCORE") dl += "<div>duration</div><div>"+secs(r.dur)+"</div>";
+  if(r.type === "GENERATION") dl += "<div>model</div><div>"+esc(r.model)+"</div><div>tokens</div><div>"+fmt(r.tin)+" in · "+fmt(r.tout)+" out</div><div>cost</div><div>"+usd(r.cost)+"</div>";
+  if(r.prompt) dl += "<div>prompt</div><div>"+esc(r.prompt)+"</div>";
+  const note = r.note ? '<div class="found-note'+(r.find === "slow" ? " slow" : r.noteCls ? " "+r.noteCls : "")+'">'+esc(r.note)+"</div>" : "";
+  el.innerHTML = "<strong>"+esc(r.name)+"</strong>"+note+'<div class="dl">'+dl+"<div>input</div><div><pre>"+esc(show(r.input))+"</pre></div><div>output</div><div><pre>"+esc(show(r.output))+"</pre></div></div>";
+}
+function selectRow(id, reveal){
+  D.sel = D.sel === id && !reveal ? null : id;
+  document.querySelectorAll("#traceList .tr").forEach(x => x.classList.toggle("sel", x.dataset.row === D.sel));
+  renderDetail();
+  const t = byId(D.open), r = rowsFor(t).find(x => x.id === D.sel);
+  if(r && r.find && t.id === BAD && !D.found[r.find]){ D.found[r.find] = true; renderFindings(); renderHint(); }
+  if(reveal){
+    const b = $("row-"+id), list = $("traceList");
+    if(b) list.scrollTop = Math.max(0, b.offsetTop - list.offsetTop - 60);
+  }
+}
+
+/* ---------- Compare with average ---------- */
+function compareStats(t){
+  const others = TRACES.filter(x => x.kind === t.kind && x.id !== t.id);
+  const avgCost = others.reduce((s,x) => s + x.cost, 0) / others.length;
+  const avgTok = others.reduce((s,x) => s + x.tok, 0) / others.length;
+  const avgLat = others.reduce((s,x) => s + x.lat, 0) / others.length;
+  return {n:others.length, avgCost, avgTok, avgLat, rc:t.cost/avgCost, rt:t.tok/avgTok, rl:t.lat/avgLat};
+}
+function compareHTML(t){
+  const s = compareStats(t), label = t.kind === "quick" ? "quick-answer" : "report";
+  let html = "<div><strong>This run vs the other "+s.n+" "+label+" runs.</strong> Cost "+usd(t.cost)+" vs "+usd(s.avgCost)+" average ("+s.rc.toFixed(1)+"×). Tokens "+fmt(t.tok)+" vs "+fmt(s.avgTok)+" ("+s.rt.toFixed(1)+"×). Latency "+t.lat.toFixed(1)+" s vs "+s.avgLat.toFixed(1)+" s ("+s.rl.toFixed(1)+"×).</div>";
+  if(t.id === BAD) html += '<div class="found-note info">Found it: tokens are 7× the average, but cost is only '+s.rc.toFixed(1)+'×. The extra tokens came from the PDF and went to the small, cheap notes model. Cost is a side effect here, not the main problem.</div>';
+  return html;
+}
+function compare(){
+  const t = byId(D.open); if(!t) return;
+  D.compared[t.id] = true;
+  $("compareOut").innerHTML = compareHTML(t);
+  if(t.id === BAD && !D.found.cost){ D.found.cost = true; renderFindings(); renderHint(); }
+}
+
+/* ---------- Findings ---------- */
+function renderFindings(){
+  const t = byId(BAD), s = compareStats(t);
+  const F = [
+    {k:"bad", h:"An untrustworthy source passed the grade step", lock:"Not found yet. Which step decides what to trust?",
+      got:"The grade step kept a promotional page promising “guaranteed 18% a year” as source [3], and the report repeated it. The automatic judge scored citation accuracy 0.33."},
+    {k:"slow", h:"One step made the run slow", lock:"Not found yet. Look for the longest timeline bar.",
+      got:"fetch_page spent 18.0 s on a 124-page PDF, about 65% of the 27.8 s run. The other pages took about 1 s each."},
+    {k:"cost", h:"Cost compared with the average", lock:"Not checked yet. Use Compare with average.",
+      got:"This run cost "+usd(t.cost)+", "+s.rc.toFixed(1)+"× the average of the other "+s.n+" report runs ("+usd(s.avgCost)+"). Tokens were "+s.rt.toFixed(1)+"× higher, but they went to the cheap model."}
+  ];
+  $("findList").innerHTML = F.map(f => '<li id="find-'+f.k+'" class="'+(D.found[f.k] ? "got" : "")+'"><span class="st">'+(D.found[f.k] ? "✓ Found" : "Not found")+"</span><b>"+esc(f.h)+"</b><span>"+esc(D.found[f.k] ? f.got : f.lock)+"</span></li>").join("");
+  const n = Object.values(D.found).filter(Boolean).length;
+  $("findCount").textContent = n+" of 3";
+  const scored = byId(BAD).manual > 0;
+  let foot = "";
+  if(n === 3){
+    foot = "<p><strong>Diagnosis:</strong> the grader let a promotional source through, and one huge PDF made the run slow. Possible fixes: a prompt that refuses promotional sources, and a page-size limit or timeout on fetch_page.</p>";
+    if(scored) foot += '<p class="okmsg">✓ Score added to Priya\'s trace.</p>';
+    foot += '<div><button type="button" class="btn btn-primary btn-sm" id="gotoPrompts">Test a prompt fix →</button></div>';
+  }
+  $("findFoot").innerHTML = foot;
+}
+
+/* ---------- Guided hints ---------- */
+function hintState(){
+  if(D.open !== BAD){
+    if(D.open){
+      const t = byId(D.open);
+      const whose = t.user === PRIYA ? "one of Priya's traces, but from "+DAYS[t.day].slice(0,3) : esc(t.user)+"'s trace from "+DAYS[t.day].slice(0,3);
+      return {n:2, text:"This is "+whose+". Priya's complaint is about her Tuesday index-fund report. Keep looking in the table.", btn:"Open Priya's Tuesday trace", act:"open"};
+    }
+    const narrowed = D.fUser === PRIYA || D.fLow || D.fSlow;
+    if(narrowed && visible().some(t => t.id === BAD))
+      return {n:2, text:"Now find Priya's Tuesday trace. It should have a low score and a long latency. Click its question to open it.", btn:"Open it for me", act:"open"};
+    return {n:1, text:"Priya says the problem was on Tuesday. Narrow the list first: choose <b>priya@acme.example</b> in the User filter. The <b>score &lt; 0.5</b> and <b>latency &gt; 20 s</b> filters work too.", btn:"Filter by Priya", act:"filter"};
+  }
+  if(!D.found.bad) return {n:3, text:"This is the full record of that run. Start with the dodgy source. The <code>grade</code> step decides which search results to trust. Click the GENERATION row under <code>grade</code> and read its output.", btn:"Show me", act:"bad"};
+  if(!D.found.slow) return {n:4, text:"Now the slowness. Each row has a timeline bar. Which bar is longest? Click that row.", btn:"Show me", act:"slow"};
+  if(!D.found.cost) return {n:5, text:"Was it expensive too? Press <b>Compare with average</b> above the trace.", btn:"Compare for me", act:"cost"};
+  if(!byId(BAD).manual) return {n:6, text:"You found all three issues. Add a score and a comment to this trace so the team can track it. In real use, a score like this can send the trace to an annotation queue or into a dataset.", btn:"Go to the score form", act:"score"};
+  return {n:7, text:"Done. You found the cause and logged it. Next, test a fix: open <b>Prompts and evals</b> to compare a new prompt version on a dataset.", btn:"Open Prompts and evals", act:"prompts"};
+}
+let curHint = null;
+function renderHint(){
+  curHint = hintState();
+  $("hintStep").textContent = curHint.n > 6 ? "Hint · all steps done" : "Hint · step "+curHint.n+" of 6";
+  $("hintText").innerHTML = curHint.text;
+  $("hintDo").textContent = curHint.btn;
+}
+function rowByName(name, nth){
+  const rows = rowsFor(byId(BAD)); let seen = 0;
+  for(const r of rows){ if(r.name === name){ if(seen === (nth||0)) return r; seen++; } }
+  return null;
+}
+function doHint(){
+  switch(curHint.act){
+    case "filter": D.fUser = PRIYA; syncFilterControls(); renderTable(); renderHint(); break;
+    case "open": openTrace(BAD); break;
+    case "bad": { const g = rowsFor(byId(BAD)).find((r,i,a) => r.type === "GENERATION" && a[i-1] && a[i-1].name === "grade"); selectRow(g.id, true); scrollToEl($("traceDetail")); break; }
+    case "slow": { const r = rowByName("fetch_page #2"); selectRow(r.id, true); scrollToEl($("traceDetail")); break; }
+    case "cost": compare(); scrollToEl($("compareOut")); break;
+    case "score": scrollToEl($("scoreComment"), 160); $("scoreComment").focus({preventScroll:true}); break;
+    case "prompts": switchTab("prompts", true); break;
+  }
+}
+
+/* ---------- Scoring ---------- */
+function addScore(){
+  const t = byId(D.open); if(!t) return;
+  const rows = rowsFor(t), name = $("scoreName").value, val = $("scoreValue").value, comment = $("scoreComment").value.trim();
+  const r = {depth:1, type:"SCORE", name:name+" = "+val+" · by you", start:rows[0].dur, dur:0, input:null,
+    output: comment ? {source:"manual (you)", comment} : {source:"manual (you)"}, id:t.id+"-r"+rows.length};
+  rows.push(r); t.manual++;
+  $("tObs").textContent = rows.length - 1;
+  D.lastNew = r.id; D.sel = r.id;
+  $("scoreComment").value = "";
+  $("scoreMsg").textContent = "✓ Saved: "+name+" = "+val+(comment ? " with comment" : "")+".";
+  renderRows(); renderDetail(); renderTable(); renderFindings(); renderHint();
+  $("traceList").scrollTop = $("traceList").scrollHeight;
+}
+
+/* ---------- Tab 1 wiring ---------- */
+$("fUser").addEventListener("change", e => { D.fUser = e.target.value; renderTable(); renderHint(); });
+$("fTag").addEventListener("change", e => { D.fTag = e.target.value; renderTable(); renderHint(); });
+$("fLow").addEventListener("click", () => { D.fLow = !D.fLow; syncFilterControls(); renderTable(); renderHint(); });
+$("fSlow").addEventListener("click", () => { D.fSlow = !D.fSlow; syncFilterControls(); renderTable(); renderHint(); });
+$("fClear").addEventListener("click", () => { D.fUser = ""; D.fTag = ""; D.fLow = false; D.fSlow = false; syncFilterControls(); renderTable(); renderHint(); });
+document.querySelectorAll(".sort").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.sort;
+  if(D.sortKey === k) D.sortDir = -D.sortDir;
+  else { D.sortKey = k; D.sortDir = (k === "user") ? 1 : -1; }
+  renderTable();
+}));
+$("ttBody").addEventListener("click", e => { const r = e.target.closest("[data-open]"); if(r) openTrace(r.dataset.open); });
+$("traceList").addEventListener("click", e => { const r = e.target.closest("[data-row]"); if(r) selectRow(r.dataset.row); });
+$("btnCompare").addEventListener("click", compare);
+$("btnCloseTrace").addEventListener("click", closeTrace);
+$("btnAddScore").addEventListener("click", addScore);
+$("hintDo").addEventListener("click", doHint);
+$("findFoot").addEventListener("click", e => { if(e.target.closest("#gotoPrompts")) switchTab("prompts", true); });
+
+/* ---------- Demo tabs ---------- */
+function switchTab(which, focus){
+  const p = which === "prompts";
+  $("dtabTraces").setAttribute("aria-selected", p ? "false" : "true");
+  $("dtabPrompts").setAttribute("aria-selected", p ? "true" : "false");
+  $("dtabTraces").tabIndex = p ? -1 : 0; $("dtabPrompts").tabIndex = p ? 0 : -1;
+  $("paneTraces").hidden = p; $("panePrompts").hidden = !p;
+  if(focus){ (p ? $("dtabPrompts") : $("dtabTraces")).focus({preventScroll:true}); scrollToEl(document.querySelector(".dtabs")); }
+}
+$("dtabTraces").addEventListener("click", () => switchTab("traces"));
+$("dtabPrompts").addEventListener("click", () => switchTab("prompts"));
+document.querySelector(".dtabs").addEventListener("keydown", e => {
+  if(e.key === "ArrowRight" || e.key === "ArrowLeft"){ e.preventDefault(); switchTab($("dtabTraces").getAttribute("aria-selected") === "true" ? "prompts" : "traces", true); }
+});
+
+/* ================= TAB 2: prompts and evals ================= */
+const VERSIONS = [
+  {v:1, note:"First version", by:"asha"},
+  {v:2, note:"Asks for about 150 words", by:"asha"},
+  {v:3, note:"Adds the citation rule", by:"asha"},
+  {v:4, note:"Refuses promotional sources; says so when sources are weak", by:"you"}
+];
+const DIFF = [
+  ["same","You are a research assistant."],
+  ["same","Write a report of about 150 words answering: {{question}}"],
+  ["same","Use only these notes: {{notes}}"],
+  ["same","Cite each claim with [n] matching the source list."],
+  ["add","Never cite adverts, sponsored pages or pages that promise returns. Drop those notes."],
+  ["add","If fewer than 2 credible sources remain, say so instead of writing the report."],
+  ["del","Keep a neutral tone."],
+  ["add","Keep a neutral tone. Use short sentences a beginner can follow."]
+];
+// [question, citation v3, citation v4, clarity v3, clarity v4, cost v3, cost v4]
+const EXP = [
+  ["How do index funds work for a beginner? (from Priya's ticket)",0.33,1.00,0.72,0.85,0.0171,0.0176],
+  ["Is remote work better for productivity?",1.00,1.00,0.84,0.88,0.0158,0.0166],
+  ["What is RAG in AI?",1.00,1.00,0.86,0.87,0.0157,0.0163],
+  ["Are bond funds safer than equity funds?",0.67,1.00,0.78,0.86,0.0169,0.0178],
+  ["What drives churn in SaaS businesses?",1.00,1.00,0.80,0.84,0.0149,0.0157],
+  ["Does a four-day week improve output?",0.67,0.67,0.79,0.83,0.0174,0.0181],
+  ["How do index funds compare with ETFs?",1.00,1.00,0.83,0.87,0.0165,0.0172],
+  ["Is crypto a good hedge against inflation?",0.33,1.00,0.74,0.86,0.0162,0.0170],
+  ["What is a vector database?",1.00,1.00,0.85,0.88,0.0141,0.0150],
+  ["Do standing desks improve health?",0.67,0.83,0.77,0.84,0.0155,0.0164]
+];
+const P = {prod:3, staging:4, ran:false, running:false, shown:0, timer:null,
+  hist:[{w:"Thu 8 Oct · 14:02", t:"production → v3", by:"asha (engineering)"},{w:"Thu 15 Oct · 11:30", t:"staging → v4", by:"you"}]};
+
+function renderVersions(){
+  $("verList").innerHTML = VERSIONS.slice().reverse().map(v => {
+    const labs = (P.prod === v.v ? '<span class="lab production">production</span>' : "")+(P.staging === v.v ? '<span class="lab staging">staging</span>' : "");
+    return '<div class="ver" id="ver-'+v.v+'"><span class="vn">v'+v.v+"</span>"+labs+'<span class="vnote">'+esc(v.note)+' · by '+esc(v.by)+"</span></div>";
+  }).join("");
+  $("fetchBox").innerHTML = '<span>get_prompt("research-report", label="production")</span><span>→ <span class="res">research-report v'+P.prod+"</span></span>"+
+    '<span>get_prompt("research-report", label="staging")</span><span>→ <span class="res">research-report v'+P.staging+"</span></span>";
+  $("labelHist").innerHTML = P.hist.slice().reverse().map(h => '<li><span class="w">'+esc(h.w)+"</span> · <strong>"+esc(h.t)+"</strong> · "+esc(h.by)+"</li>").join("");
+  $("btnPromote").disabled = !P.ran || P.running || P.prod === 4;
+  $("btnRollback").disabled = P.prod !== 4;
+  $("btnRunExp").disabled = P.running;
+}
+$("diffBox").innerHTML = DIFF.map(([k,t]) => '<div class="'+k+'">'+esc(t)+"</div>").join("");
+
+const avg = (i, n) => { let s = 0; for(let j = 0; j < n; j++) s += EXP[j][i]; return n ? s/n : 0; };
+function renderExp(){
+  const n = P.shown;
+  $("expTableWrap").hidden = n === 0;
+  $("expBar").style.width = (n/EXP.length*100)+"%";
+  const cell = (a, b, money) => {
+    const fmtv = v => money ? usd(v) : v.toFixed(2);
+    const better = money ? b < a : b > a, worse = money ? b > a : b < a;
+    return '<td class="num">'+fmtv(a)+'</td><td class="num '+(better ? "better" : worse ? (money ? "" : "worse") : "")+'">'+fmtv(b)+"</td>";
+  };
+  let html = EXP.slice(0, n).map((e,i) => "<tr><td>"+(i+1)+"</td><td>"+esc(e[0])+"</td>"+cell(e[1],e[2])+cell(e[3],e[4])+cell(e[5],e[6],true)+"</tr>").join("");
+  if(n === EXP.length) html += '<tr class="avg"><td></td><td>Average</td>'+cell(avg(1,n),avg(2,n))+cell(avg(3,n),avg(4,n))+cell(avg(5,n),avg(6,n),true)+"</tr>";
+  $("expBody").innerHTML = html;
+  if(n === EXP.length){
+    const m = (k, a, b, money, good) => {
+      const pct = (b - a) / a * 100;
+      const cls = money ? "cost" : (b >= a ? "up" : "down");
+      return '<div class="metric"><span class="k">'+k+'</span><span class="v">'+(money ? usd(a)+" → "+usd(b) : a.toFixed(2)+" → "+b.toFixed(2))+'</span><span class="d '+cls+'">'+(pct >= 0 ? "+" : "")+pct.toFixed(0)+"% "+good+"</span></div>";
+    };
+    $("expMetrics").innerHTML = m("Citation accuracy (code check)", avg(1,n), avg(2,n), false, "better")+
+      m("Clarity (LLM judge)", avg(3,n), avg(4,n), false, "better")+
+      m("Cost per report", avg(5,n), avg(6,n), true, "more expensive");
+  } else $("expMetrics").innerHTML = n ? '<div class="metric"><span class="k">Running…</span><span class="v">'+n+" of "+EXP.length+" items</span></div>" : "";
+}
+function runExperiment(){
+  if(P.running) return;
+  clearTimeout(P.timer);
+  P.running = true; P.shown = 0;
+  $("releaseNote").textContent = "Experiment running…";
+  renderVersions(); renderExp();
+  const tick = () => {
+    P.shown++; renderExp();
+    if(P.shown < EXP.length) P.timer = setTimeout(tick, 220);
+    else {
+      P.running = false; P.ran = true;
+      $("releaseNote").textContent = P.prod === 4 ? "Experiment done. v4 is already in production." : "Experiment done: v4 cites far better for about 5% more cost. You can promote it.";
+      renderVersions();
+    }
+  };
+  if(REDUCED){ P.shown = EXP.length - 1; tick(); } else P.timer = setTimeout(tick, 220);
+}
+function promote(){
+  if(!P.ran || P.prod === 4) return;
+  P.hist.push({w:"Just now", t:"production → v4 (was v3)", by:"you"});
+  P.prod = 4;
+  $("releaseNote").textContent = "v4 is live. New traces will show research-report v4. Watch the citation score on live traffic, and roll back if it drops.";
+  renderVersions();
+}
+function rollback(){
+  if(P.prod !== 4) return;
+  P.hist.push({w:"Just now", t:"production → v3 (rolled back from v4)", by:"you"});
+  P.prod = 3;
+  $("releaseNote").textContent = "Rolled back. The app gets v3 again once its cached copy refreshes. No code release was needed.";
+  renderVersions();
+}
+$("btnRunExp").addEventListener("click", runExperiment);
+$("btnPromote").addEventListener("click", promote);
+$("btnRollback").addEventListener("click", rollback);
+
+/* ---------- Keys ---------- */
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+
+/* Open in a working state: table loaded, first hint visible */
+syncFilterControls();
+renderTable(); renderTV(); renderFindings(); renderHint();
+renderVersions(); renderExp();
+})();
+</script>
+
+</body>
+</html>

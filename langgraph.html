@@ -1,0 +1,1253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>LangGraph in depth</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module 4 of the field guides. LangGraph violet leads. A live graph with a
+   checkpoint timeline up top (the thing that makes LangGraph different), then one section per idea. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E8ECF1; --ink:#131C27; --muted:#55616F; --line:#D5DCE4;
+  --accent:#6A44C0; --accent-ink:#FFFFFF;
+  --chain:#2445C4; --chain-soft:#E2E8FB;
+  --graph:#6A44C0; --graph-soft:#EEE9FA;
+  --fuse:#08716D; --fuse-soft:#DCF1EF;
+  --ok:#2A7639; --ok-soft:#E0F0E3;
+  --warn:#9C5800; --warn-soft:#FBEEDA;
+  --bad:#B42318; --bad-soft:#FCE7E4;
+  --b1:#C2410C; --b1-soft:#FDEBDD;
+  --code-bg:#ECEFF4;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+    --accent:#BBA2FF; --accent-ink:#0D131A;
+    --chain:#8BA3FF; --chain-soft:#1D2A4F;
+    --graph:#BBA2FF; --graph-soft:#2A2245;
+    --fuse:#62D3C8; --fuse-soft:#123533;
+    --ok:#82D893; --ok-soft:#163520;
+    --warn:#F1B45E; --warn-soft:#3A2B15;
+    --bad:#FF8F84; --bad-soft:#3E1D1A;
+    --b1:#FDBA74; --b1-soft:#3B2414;
+    --code-bg:#101821;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
+  --accent:#BBA2FF; --accent-ink:#0D131A;
+  --chain:#8BA3FF; --chain-soft:#1D2A4F;
+  --graph:#BBA2FF; --graph-soft:#2A2245;
+  --fuse:#62D3C8; --fuse-soft:#123533;
+  --ok:#82D893; --ok-soft:#163520;
+  --warn:#F1B45E; --warn-soft:#3A2B15;
+  --bad:#FF8F84; --bad-soft:#3E1D1A;
+  --b1:#FDBA74; --b1-soft:#3B2414;
+  --code-bg:#101821;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1160px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.3rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.c-chain{color:var(--chain)} .c-graph{color:var(--graph)} .c-fuse{color:var(--fuse)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1160px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:760px){.brand{display:none}}
+
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:66ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop[hidden]{display:none}
+#termPop strong{font-family:var(--font-display)}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:24px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{font-weight:500;color:var(--graph)}
+.stage-head p{max-width:68ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:70ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.graph{background:var(--graph-soft);color:var(--graph)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--radius);padding:14px 16px;max-width:80ch}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout b{font-family:var(--font-display)}
+.takeaway{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;border-top:2px solid var(--ink);padding-top:12px;max-width:86ch}
+.takeaway .k{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.takeaway p{font-family:var(--font-display);font-weight:700;font-size:1.12rem;line-height:1.35}
+@media (max-width:520px){.takeaway{grid-template-columns:1fr;gap:4px}}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.good{color:var(--ok);font-weight:700}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;overflow-x:auto;font-family:var(--font-mono);font-size:.82rem;line-height:1.65;white-space:pre}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--graph)}
+pre.code .s{color:var(--fuse)}
+.code-note{font-size:.85rem;color:var(--muted)}
+.pros-cons{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+
+figure{margin:0;display:grid;gap:8px}
+.diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+.diagram svg{display:block;width:100%;height:auto;min-width:560px;max-width:780px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:74ch}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:14px;fill:var(--ink)}
+svg .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .ah{fill:var(--muted)}
+svg .b-graph{fill:var(--graph-soft);stroke:var(--graph);stroke-width:1.5}
+svg .b-plain{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--warn)}
+.demo-top{padding:14px 16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.row .lbl{font-size:.85rem;color:var(--muted)}
+.chip{font:inherit;font-size:.85rem;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.row label{display:flex;gap:6px;align-items:center;font-size:.9rem}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 13px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-bad{border-color:var(--bad);color:var(--bad)}
+.btn-sm{padding:4px 10px;font-size:.84rem}
+.spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--font-mono);font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.statusbar .lost b{color:var(--bad)}
+.apicall{font-family:var(--font-mono);font-size:.78rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:5px 10px;overflow-x:auto;white-space:nowrap;max-width:100%}
+.apicall .c{color:var(--muted)}
+.tryhint{font-size:.88rem;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:8px 12px}
+.tryhint b{color:var(--ink)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"graph cps" "state cps"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-graph{grid-area:graph;border-right:1px solid var(--line);border-bottom:1px solid var(--line);position:relative}
+.p-state{grid-area:state;border-right:1px solid var(--line)}
+.p-cps{grid-area:cps}
+@media (max-width:899px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"graph" "state" "cps"}
+  .p-graph,.p-state{border-right:0}
+  .p-graph{border-bottom:0}
+  .demo-body[data-tab="graph"] .p-state,.demo-body[data-tab="graph"] .p-cps,
+  .demo-body[data-tab="state"] .p-graph,.demo-body[data-tab="state"] .p-cps,
+  .demo-body[data-tab="cps"] .p-graph,.demo-body[data-tab="cps"] .p-state{display:none}
+}
+.narr{padding:14px 16px;display:grid;gap:10px;border-bottom:1px solid var(--line);min-height:170px;align-content:start}
+.narr-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stepno{font-family:var(--font-mono);font-size:.75rem;color:var(--muted)}
+.nodechip{font-family:var(--font-mono);font-size:.78rem;padding:2px 9px;border-radius:999px;background:var(--graph-soft);color:var(--graph);font-weight:500}
+.nodechip.err{background:var(--bad-soft);color:var(--bad)}
+.nodechip.wait{background:var(--warn-soft);color:var(--warn)}
+.nodechip.done{background:var(--ok-soft);color:var(--ok)}
+.branchchip{font-family:var(--font-mono);font-size:.72rem;padding:2px 8px;border-radius:999px;border:1.5px solid currentColor}
+.br0{color:var(--graph)} .br1{color:var(--b1)} .br2{color:var(--fuse)} .br3{color:var(--chain)}
+.narr-t{font-weight:700}
+.narr p{font-size:.95rem}
+.decide{display:grid;gap:8px}
+.decide .btns{display:flex;gap:8px;flex-wrap:wrap}
+.decide textarea{font:inherit;font-size:.9rem;width:100%;min-height:110px;padding:8px 10px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
+.report{display:grid;gap:6px;font-size:.92rem;border-left:3px solid var(--ok);padding-left:12px}
+.report h4{font-size:1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.lesson{border-radius:var(--radius);padding:12px 14px;background:var(--surface-2);display:grid;gap:8px;font-size:.92rem}
+.crashbox{border:1.5px solid var(--bad);background:var(--bad-soft);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;font-size:.93rem}
+.crashbox b{color:var(--bad)}
+
+.graphwrap{overflow-x:auto;padding:10px 12px;position:relative}
+.graphwrap svg{display:block;width:100%;min-width:560px;height:auto;transition:opacity .3s}
+.p-graph.crashed .graphwrap svg{opacity:.25;filter:grayscale(1)}
+.gnode rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .25s,stroke .25s}
+.gnode .nm{font-family:var(--font-mono);font-size:13px;font-weight:500;fill:var(--ink)}
+.gnode .kd{font-size:10.5px;fill:var(--muted)}
+.gnode.visited rect{stroke:var(--graph);stroke-opacity:.55}
+.gnode.active rect{fill:var(--graph-soft);stroke:var(--graph);stroke-width:3}
+.gnode.err rect{fill:var(--bad-soft);stroke:var(--bad);stroke-width:3}
+.gnode.wait rect{fill:var(--warn-soft);stroke:var(--warn);stroke-width:3}
+.gedge{stroke:var(--line);stroke-width:1.6;fill:none;transition:stroke .25s}
+.gedge.walked{stroke:var(--graph);stroke-opacity:.5;stroke-width:2}
+.gedge.hot{stroke:var(--graph);stroke-opacity:1;stroke-width:3;stroke-dasharray:7 5;animation:flow .9s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-24}}
+.glbl{font-size:11px;fill:var(--muted)}
+.gah{fill:var(--muted)}
+
+.state{padding:12px 16px;display:grid;gap:2px;font-family:var(--font-mono);font-size:.78rem;overflow:auto;max-height:440px}
+.state .cp{font-family:var(--font-body);font-size:.82rem;color:var(--muted);margin-bottom:6px}
+.state .lostmsg{font-family:var(--font-body);color:var(--bad);font-weight:700;padding:10px 0}
+.kv{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;padding:4px 6px;border-radius:6px;transition:background .8s}
+.kv .k{color:var(--graph)}
+.kv .v{white-space:pre-wrap;word-break:break-word;color:var(--ink)}
+.kv .v.none{color:var(--muted)}
+.kv.flash{background:var(--graph-soft);transition:none}
+.kv input{font:inherit;width:100%;min-width:0;padding:4px 6px;border-radius:6px;border:1.5px solid var(--b1);background:var(--bg);color:var(--ink)}
+.rewind-bar{display:grid;gap:8px;margin-top:10px;font-family:var(--font-body);font-size:.88rem;background:var(--b1-soft);border-radius:8px;padding:10px 12px}
+.rewind-bar .btns{display:flex;gap:6px;flex-wrap:wrap}
+
+.cps{overflow:auto;max-height:640px;padding:8px 0}
+.cprow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:7px 16px;border-left:3px solid transparent}
+.cprow.sel{background:var(--b1-soft);border-left-color:var(--b1)}
+.cprow.latest .cpn{background:var(--graph);color:var(--accent-ink)}
+.cpn{font-family:var(--font-mono);font-size:.72rem;font-weight:500;min-width:30px;text-align:center;padding:2px 6px;border-radius:999px;background:var(--surface-2);color:var(--ink)}
+.cpinfo{min-width:0;font-size:.85rem;line-height:1.35}
+.cpinfo .after{font-family:var(--font-mono);font-size:.8rem}
+.cpinfo .snip{color:var(--muted);font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cpgroup{padding:8px 16px 2px;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;display:flex;gap:8px;align-items:center}
+.empty{color:var(--muted);font-size:.9rem;padding:16px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:0 16px 12px;font-size:.78rem;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.legend i{width:12px;height:12px;border-radius:3px;border:2px solid var(--line);display:inline-block}
+.legend i.a{background:var(--graph-soft);border-color:var(--graph)}
+.legend i.v{border-color:var(--graph);opacity:.6}
+.legend i.e{background:var(--bad-soft);border-color:var(--bad)}
+.legend i.w{background:var(--warn-soft);border-color:var(--warn)}
+
+/* reducer demo */
+.reducer{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.reducer .box pre{margin:0;font-family:var(--font-mono);font-size:.78rem;white-space:pre-wrap;background:var(--code-bg);border-radius:6px;padding:8px 10px}
+
+/* cheat sheet */
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:22px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--graph)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px;display:grid;gap:8px}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="./" data-site-link>← All modules</a>
+    <a class="brand" href="#top">LangGraph in depth</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#why" data-nav="why"><span class="n">1</span>Why graphs</a>
+      <a href="#state" data-nav="state"><span class="n">2</span>State</a>
+      <a href="#edges" data-nav="edges"><span class="n">3</span>Nodes &amp; edges</a>
+      <a href="#retries" data-nav="retries"><span class="n">4</span>Retries</a>
+      <a href="#checkpoints" data-nav="checkpoints"><span class="n">5</span>Checkpoints</a>
+      <a href="#hitl" data-nav="hitl"><span class="n">6</span>Human-in-the-loop</a>
+      <a href="#timetravel" data-nav="timetravel"><span class="n">7</span>Time travel</a>
+      <a href="#streaming" data-nav="streaming"><span class="n">8</span>Streaming</a>
+      <a href="#multi" data-nav="multi"><span class="n">9</span>Multi-agent</a>
+      <a href="#deploy" data-nav="deploy"><span class="n">10</span>Deploy</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module 4 · Agent Field Guides · about 25 minutes</p>
+  <h1>LangGraph in depth: agents that loop, pause, crash and recover</h1>
+  <p class="lede">LangGraph is an <button type="button" class="term" data-term="open_source" aria-expanded="false">open-source</button> library for building an <button type="button" class="term" data-term="agent" aria-expanded="false">AI agent</button> as a map of steps. It also saves the agent's progress as it goes. That saving is what lets an agent wait for a person, survive a crash, or go back in time. We'll use the same <strong>research assistant</strong> as the earlier modules.</p>
+  <p class="hint-line">Tap any word with a dotted underline for a plain-English definition.</p>
+</div>
+
+<!-- ============ DEMO ============ -->
+<section class="stage" id="demo" aria-labelledby="hdemo">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="hdemo">Checkpoints, crashes and time travel</h2>
+    <p>Run the research assistant one step at a time. After every step LangGraph saves a <button type="button" class="term" data-term="checkpoint" aria-expanded="false">checkpoint</button>, which you'll see pile up on the right. Then break things: crash the server, rewind to an earlier checkpoint, change the state and branch off a new run.</p>
+  </div>
+
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>No real LangGraph, AI model or search engine is running. Steps, results and prices are scripted examples, and the code lines show simplified versions of the real calls.</span></div>
+    <div class="demo-top">
+      <div class="row">
+        <span class="lbl">Question:</span>
+        <button type="button" class="chip" data-q="remote" aria-pressed="true">Is remote work better for productivity?</button>
+        <button type="button" class="chip" data-q="index" aria-pressed="false">How do index funds work?</button>
+        <button type="button" class="chip" data-q="rag" aria-pressed="false">What is RAG in AI?</button>
+      </div>
+      <div class="row">
+        <label for="scenario">What happens
+          <select id="scenario">
+            <option value="bad">Search results start poor</option>
+            <option value="normal">Everything works</option>
+            <option value="timeout">Search tool times out once</option>
+            <option value="nosrc">No good sources at all</option>
+          </select>
+        </label>
+        <label for="ckpt"><input type="checkbox" id="ckpt" checked> Checkpointer on</label>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="btnNext">Run next step →</button>
+        <button type="button" class="btn" id="btnPlay" aria-pressed="false">▶ Autoplay</button>
+        <label class="small muted" for="speed">Speed <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+        <button type="button" class="btn btn-bad" id="btnCrash">Crash the server</button>
+        <button type="button" class="btn" id="btnResume" disabled>Resume from checkpoint</button>
+        <button type="button" class="btn" id="btnReset">↺ Start over</button>
+        <span class="spacer"></span>
+        <span class="small muted">Keys: <span class="kbd">N</span> next · <span class="kbd">P</span> play</span>
+      </div>
+      <div class="statusbar" aria-live="polite">
+        <span id="sBranch"></span>
+        <span id="sStep"></span>
+        <span id="sCps"></span>
+        <span id="sSpent"></span>
+        <span class="lost" id="sLost"></span>
+      </div>
+      <div class="apicall" id="apiCall"><span class="c">code: </span>app = graph.compile(checkpointer=saver)</div>
+      <p class="tryhint" id="tryHint"><b>Try this:</b> run until the search loops back (step 5), then click <b>Rewind</b> on checkpoint #2. Type a better query and <b>Fork</b> a new branch. Or press <b>Crash the server</b> at any point, then <b>Resume</b>.</p>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Demo panels">
+      <button type="button" role="tab" data-tab="graph" aria-selected="true">Graph</button>
+      <button type="button" role="tab" data-tab="state" aria-selected="false">State</button>
+      <button type="button" role="tab" data-tab="cps" aria-selected="false">Checkpoints</button>
+    </div>
+
+    <div class="demo-body" id="demoBody" data-tab="graph">
+      <div class="panel p-graph" id="pGraph">
+        <div class="panel-h">Graph <span>which step runs, and where it goes next</span></div>
+        <div class="narr" id="narr" aria-live="polite"></div>
+        <div class="graphwrap">
+          <svg id="graph" viewBox="0 0 710 400" role="img" aria-label="Research assistant graph: start, plan, search, grade; grade goes to read if good, rewrite query if poor (looping back to search), or no sources after two tries; read, write, human review, end; review can send the draft back to write; search can retry itself.">
+            <defs><marker id="gm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="gah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+            <path class="gedge" id="e-start-plan" d="M77,152 H123" marker-end="url(#gm)"/>
+            <path class="gedge" id="e-plan-search" d="M235,152 H273" marker-end="url(#gm)"/>
+            <path class="gedge" id="e-search-grade" d="M385,152 H423" marker-end="url(#gm)"/>
+            <path class="gedge" id="e-grade-nosrc" d="M535,152 H640 V248" marker-end="url(#gm)"/>
+            <text class="glbl" x="590" y="144" text-anchor="middle">gave up</text>
+            <path class="gedge" id="e-grade-read" d="M480,174 V248" marker-end="url(#gm)"/>
+            <text class="glbl" x="488" y="216">good</text>
+            <path class="gedge" id="e-grade-rewrite" d="M480,130 V42 H463" marker-end="url(#gm)"/>
+            <text class="glbl" x="488" y="92">poor</text>
+            <path class="gedge" id="e-rewrite-search" d="M350,42 H330 V128" marker-end="url(#gm)"/>
+            <text class="glbl" x="322" y="92" text-anchor="end">new query</text>
+            <path class="gedge" id="e-search-retry" d="M312,174 C296,222 364,222 348,177" marker-end="url(#gm)"/>
+            <text class="glbl" x="364" y="214">auto-retry</text>
+            <path class="gedge" id="e-read-write" d="M425,272 H388" marker-end="url(#gm)"/>
+            <path class="gedge" id="e-write-review" d="M275,272 H238" marker-end="url(#gm)"/>
+            <path class="gedge" id="e-review-end" d="M125,272 H80" marker-end="url(#gm)"/>
+            <text class="glbl" x="102" y="306" text-anchor="middle">approved</text>
+            <path class="gedge" id="e-review-write" d="M180,294 V340 H330 V297" marker-end="url(#gm)"/>
+            <text class="glbl" x="255" y="356" text-anchor="middle">rejected</text>
+            <path class="gedge" id="e-nosrc-end" d="M640,296 V384 H45 V293" marker-end="url(#gm)"/>
+            <text class="glbl" x="630" y="378" text-anchor="end">ends early</text>
+            <g class="gnode" data-node="START"><rect x="13" y="134" width="64" height="36" rx="18"/><text class="nm" x="45" y="157" text-anchor="middle">START</text></g>
+            <g class="gnode" data-node="plan"><rect x="125" y="130" width="110" height="44" rx="9"/><text class="nm" x="180" y="149" text-anchor="middle">plan</text><text class="kd" x="180" y="165" text-anchor="middle">LLM</text></g>
+            <g class="gnode" data-node="search"><rect x="275" y="130" width="110" height="44" rx="9"/><text class="nm" x="330" y="149" text-anchor="middle">search</text><text class="kd" x="330" y="165" text-anchor="middle">tool · retry ×3</text></g>
+            <g class="gnode" data-node="grade"><rect x="425" y="130" width="110" height="44" rx="9"/><text class="nm" x="480" y="149" text-anchor="middle">grade</text><text class="kd" x="480" y="165" text-anchor="middle">LLM · router</text></g>
+            <g class="gnode" data-node="rewrite"><rect x="350" y="20" width="113" height="44" rx="9"/><text class="nm" x="406" y="39" text-anchor="middle">rewrite_query</text><text class="kd" x="406" y="55" text-anchor="middle">LLM · max 2</text></g>
+            <g class="gnode" data-node="no_sources"><rect x="585" y="250" width="110" height="44" rx="9"/><text class="nm" x="640" y="269" text-anchor="middle">no_sources</text><text class="kd" x="640" y="285" text-anchor="middle">LLM · fallback</text></g>
+            <g class="gnode" data-node="read"><rect x="425" y="250" width="110" height="44" rx="9"/><text class="nm" x="480" y="269" text-anchor="middle">read</text><text class="kd" x="480" y="285" text-anchor="middle">tool ×3 + LLM</text></g>
+            <g class="gnode" data-node="write"><rect x="275" y="250" width="110" height="44" rx="9"/><text class="nm" x="330" y="269" text-anchor="middle">write</text><text class="kd" x="330" y="285" text-anchor="middle">LLM</text></g>
+            <g class="gnode" data-node="review"><rect x="125" y="250" width="110" height="44" rx="9"/><text class="nm" x="180" y="269" text-anchor="middle">human_review</text><text class="kd" x="180" y="285" text-anchor="middle">interrupt()</text></g>
+            <g class="gnode" data-node="END"><rect x="13" y="254" width="64" height="36" rx="18"/><text class="nm" x="45" y="277" text-anchor="middle">END</text></g>
+          </svg>
+        </div>
+        <div class="legend"><span><i class="a"></i>running now</span><span><i class="v"></i>already ran</span><span><i class="e"></i>error</span><span><i class="w"></i>waiting for a person</span></div>
+      </div>
+
+      <div class="panel p-state">
+        <div class="panel-h">State <span>the shared notebook, as of the latest checkpoint</span></div>
+        <div class="state" id="state"></div>
+      </div>
+
+      <div class="panel p-cps">
+        <div class="panel-h">Checkpoints <span>thread rs-0142 · saved to the database</span></div>
+        <div class="cps" id="cps"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. WHY ============ -->
+<section class="stage" id="why" aria-labelledby="h1s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · Why graphs</p>
+    <h2 id="h1s">Chain, hand-written loop, or graph?</h2>
+    <p>There are three common ways to wire up an agent. LangGraph is the third. It's worth knowing what the other two give up.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th></th><th><button type="button" class="term" data-term="chain" aria-expanded="false">Chain</button></th><th>Hand-written loop</th><th><button type="button" class="term" data-term="graph" aria-expanded="false">Graph</button> (LangGraph)</th></tr></thead>
+      <tbody>
+        <tr><td>Shape</td><td>A straight line</td><td>A <code>while</code> loop with if-statements</td><td>Boxes and arrows, including loops</td></tr>
+        <tr><td>Branches and loops</td><td>No</td><td>Yes, in code only the author understands</td><td class="good">Yes, and you can draw them</td></tr>
+        <tr><td>Pause for a person</td><td>No</td><td>Custom code</td><td class="good">Built in</td></tr>
+        <tr><td>Survive a crash</td><td>No</td><td>Custom code, often skipped</td><td class="good">Built in (checkpoints)</td></tr>
+        <tr><td>See what happened</td><td>Easy</td><td>Hard</td><td class="good">Every step is saved</td></tr>
+        <tr><td>Best for</td><td>Fixed, short tasks</td><td>Quick experiments</td><td>Agents going to production</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted" style="max-width:72ch">LangGraph is made by LangChain Inc. but doesn't require LangChain: a step can call any model or code. LangChain's own <code>create_agent</code> helper runs on LangGraph underneath.</p>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>A graph turns the agent's hidden "what next?" logic into a map your team can read, test and discuss.</p></div>
+</section>
+
+<!-- ============ 2. STATE ============ -->
+<section class="stage" id="state" aria-labelledby="h2s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · State</p>
+    <h2 id="h2s">State: the notebook every step shares</h2>
+    <p>The <button type="button" class="term" data-term="state" aria-expanded="false">state</button> is one shared record that's passed from step to step. Each step reads what it needs and returns only the fields it changed.</p>
+  </div>
+  <pre class="code"><span class="c"># Simplified. The fields of our research assistant's state.</span>
+<span class="k">class</span> ResearchState(TypedDict):
+    question: str
+    query: str
+    results: list[dict]
+    notes: Annotated[list[str], operator.add]   <span class="c"># reducer: add to the list, don't replace it</span>
+    rewrites: int
+    draft: str
+    approved: bool</pre>
+  <div class="concept">
+    <h3>Reducers: what happens when two steps write the same field</h3>
+    <p>A <button type="button" class="term" data-term="reducer" aria-expanded="false">reducer</button> is the rule for combining a new value with the old one. By default the new value replaces the old. For lists like <code>notes</code>, you usually want to add instead.</p>
+    <div class="reducer">
+      <div class="box"><span class="tag">Default: replace</span><pre>notes = ["13% gain [1]"]
+read #2 returns ["hybrid: no loss [2]"]
+→ notes = ["hybrid: no loss [2]"]   ✗ lost [1]</pre></div>
+      <div class="box"><span class="tag graph">Reducer: add</span><pre>notes = ["13% gain [1]"]
+read #2 returns ["hybrid: no loss [2]"]
+→ notes = ["13% gain [1]", "hybrid: no loss [2]"]  ✓</pre></div>
+    </div>
+    <p class="small muted">This matters most when steps run at the same time, like the three page reads in our <code>read</code> step. Chat-style agents use a ready-made reducer called <code>add_messages</code> for the conversation history.</p>
+  </div>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>The state's fields are the agent's working memory. Ask to see them: they tell you exactly what the agent can and can't "know".</p></div>
+</section>
+
+<!-- ============ 3. NODES & EDGES ============ -->
+<section class="stage" id="edges" aria-labelledby="h3s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · Nodes and edges</p>
+    <h2 id="h3s">Steps, arrows, and the decisions between them</h2>
+    <p>A <button type="button" class="term" data-term="node" aria-expanded="false">node</button> is a step: a plain function that takes the state and returns updates. An <button type="button" class="term" data-term="edge" aria-expanded="false">edge</button> is an arrow to the next step. A <button type="button" class="term" data-term="conditional_edge" aria-expanded="false">conditional edge</button> chooses the arrow at run time.</p>
+  </div>
+  <pre class="code"><span class="c"># Simplified.</span>
+graph = StateGraph(ResearchState)
+graph.add_node(<span class="s">"plan"</span>, plan)
+graph.add_node(<span class="s">"search"</span>, search)
+graph.add_node(<span class="s">"grade"</span>, grade)
+graph.add_node(<span class="s">"rewrite_query"</span>, rewrite_query)
+graph.add_edge(START, <span class="s">"plan"</span>)
+graph.add_edge(<span class="s">"plan"</span>, <span class="s">"search"</span>)
+graph.add_edge(<span class="s">"search"</span>, <span class="s">"grade"</span>)
+graph.add_conditional_edges(<span class="s">"grade"</span>, route_after_grade)
+graph.add_edge(<span class="s">"rewrite_query"</span>, <span class="s">"search"</span>)      <span class="c"># an arrow pointing backwards = a loop</span>
+
+<span class="k">def</span> route_after_grade(state):
+    <span class="k">if</span> state[<span class="s">"grade"</span>] == <span class="s">"good"</span>: <span class="k">return</span> <span class="s">"read"</span>
+    <span class="k">if</span> state[<span class="s">"rewrites"</span>] &lt; 2:    <span class="k">return</span> <span class="s">"rewrite_query"</span>
+    <span class="k">return</span> <span class="s">"no_sources"</span>          <span class="c"># the exit that stops the loop</span></pre>
+  <div class="grid g2">
+    <div class="box"><span class="tag graph">Loops need two limits</span><p>Our own rule (<code>rewrites &lt; 2</code>) gives the loop a sensible, product-level exit. LangGraph also has a <button type="button" class="term" data-term="recursion_limit" aria-expanded="false">recursion limit</button>, a safety net that stops any run after too many steps. You can change it for each run.</p></div>
+    <div class="box"><span class="tag graph">Steps can run at the same time</span><p>If two edges leave the same node, both next steps run in parallel. The results are merged into the state using the reducers. This is how one run can read three pages at once.</p></div>
+  </div>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Every arrow that points backwards needs a written exit rule. The recursion limit is a safety net, not a product decision.</p></div>
+</section>
+
+<!-- ============ 4. RETRIES ============ -->
+<section class="stage" id="retries" aria-labelledby="h4s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Retries and errors</p>
+    <h2 id="h4s">When a step fails</h2>
+    <p>Tools fail all the time: timeouts, rate limits, flaky websites. A <button type="button" class="term" data-term="retry_policy" aria-expanded="false">retry policy</button> re-runs a failed step automatically instead of failing the whole run.</p>
+  </div>
+  <pre class="code"><span class="c"># Simplified. Up to 3 attempts, waiting a bit longer each time.</span>
+graph.add_node(<span class="s">"search"</span>, search, retry_policy=RetryPolicy(max_attempts=3))</pre>
+  <div class="grid g3">
+    <div class="box"><h4>Retry</h4><p class="small">For temporary problems such as timeouts or a busy service. Same input, try again.</p></div>
+    <div class="box"><h4>Route around it</h4><p class="small">For "worked, but the result is bad". Use a conditional edge, like our grade → rewrite_query loop.</p></div>
+    <div class="box"><h4>Fail clearly</h4><p class="small">When retries run out, go to a fallback step that tells the user honestly, like our <code>no_sources</code>.</p></div>
+  </div>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Decide per tool: how many retries, how long to wait, and what the user sees when it still fails.</p></div>
+</section>
+
+<!-- ============ 5. CHECKPOINTS ============ -->
+<section class="stage" id="checkpoints" aria-labelledby="h5s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Checkpointers and threads</p>
+    <h2 id="h5s">Saving progress after every step</h2>
+    <p>A <button type="button" class="term" data-term="checkpointer" aria-expanded="false">checkpointer</button> saves a checkpoint (a copy of the state, plus what runs next) after every step. Checkpoints are grouped by a <button type="button" class="term" data-term="thread" aria-expanded="false">thread</button>: one ID per conversation or job.</p>
+  </div>
+  <pre class="code"><span class="c"># Simplified.</span>
+app = graph.compile(checkpointer=PostgresSaver(db))   <span class="c"># saved to a real database</span>
+config = {<span class="s">"configurable"</span>: {<span class="s">"thread_id"</span>: <span class="s">"rs-0142"</span>}}
+app.invoke({<span class="s">"question"</span>: q}, config)
+
+<span class="c"># The server crashed? Same thread ID, no new input: it carries on from the last checkpoint.</span>
+app.invoke(None, config)</pre>
+  <div class="grid g3">
+    <div class="box"><span class="tag ok">Enables</span><h4>Crash recovery</h4><p class="small">A run restarts at the last saved step instead of from scratch. That saves time and money.</p></div>
+    <div class="box"><span class="tag ok">Enables</span><h4>Long waits</h4><p class="small">A run can pause for hours or days for a person, with nothing kept in the server's memory.</p></div>
+    <div class="box"><span class="tag ok">Enables</span><h4>Memory across turns</h4><p class="small">A chat agent remembers earlier messages because every turn uses the same thread.</p></div>
+  </div>
+  <div class="callout warn"><b>Watch out:</b> an in-memory checkpointer is fine for demos, but it's lost when the server restarts. Production needs a database-backed one, such as Postgres. Try turning the checkpointer off in the demo, then crash the server.</div>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>"Where are checkpoints stored?" is a launch-blocking question. If the answer is "in memory", runs and approvals can be lost.</p></div>
+</section>
+
+<!-- ============ 6. HITL ============ -->
+<section class="stage" id="hitl" aria-labelledby="h6s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · Human-in-the-loop</p>
+    <h2 id="h6s">Approve, edit or reject</h2>
+    <p>An <button type="button" class="term" data-term="interrupt" aria-expanded="false">interrupt</button> pauses the graph inside a step and hands something to a person. Your app shows it, collects the decision, and resumes the same thread with the answer.</p>
+  </div>
+  <pre class="code"><span class="c"># Simplified.</span>
+<span class="k">def</span> human_review(state):
+    decision = interrupt({<span class="s">"draft"</span>: state[<span class="s">"draft"</span>]})     <span class="c"># pauses here; checkpoint saved</span>
+    <span class="k">if</span> decision[<span class="s">"action"</span>] == <span class="s">"approve"</span>: <span class="k">return</span> {<span class="s">"approved"</span>: True}
+    <span class="k">if</span> decision[<span class="s">"action"</span>] == <span class="s">"edit"</span>:    <span class="k">return</span> {<span class="s">"draft"</span>: decision[<span class="s">"text"</span>], <span class="s">"approved"</span>: True}
+    <span class="k">return</span> Command(goto=<span class="s">"write"</span>, update={<span class="s">"feedback"</span>: decision[<span class="s">"text"</span>]})
+
+<span class="c"># Later, when the reviewer clicks a button in your app:</span>
+app.invoke(Command(resume={<span class="s">"action"</span>: <span class="s">"approve"</span>}), config)</pre>
+  <div class="grid g3">
+    <div class="box"><span class="tag graph">Approve</span><p class="small">Carry on as planned.</p></div>
+    <div class="box"><span class="tag graph">Edit</span><p class="small">The person fixes the draft and their version continues. This is often faster than asking the model to redo it.</p></div>
+    <div class="box"><span class="tag graph">Reject</span><p class="small">Send it back with feedback. The arrow loops back to <code>write</code>.</p></div>
+  </div>
+  <div class="callout"><b>Design note.</b> When the run resumes, the paused step starts again from its beginning. Put the interrupt at the start of the step, and don't do anything irreversible, like sending an email, before it in the same step.</div>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Approval points are a product feature. Design the reviewer's screen, their options, and what happens if no one answers.</p></div>
+</section>
+
+<!-- ============ 7. TIME TRAVEL ============ -->
+<section class="stage" id="timetravel" aria-labelledby="h7s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>7</b> · Time travel</p>
+    <h2 id="h7s">Replay or branch off from any earlier step</h2>
+    <p>Because every step is saved, you can go back to any checkpoint. You can <strong>replay</strong> from there, or <strong>fork</strong>: change the state first and branch off a new run. The original branch is kept.</p>
+  </div>
+  <pre class="code"><span class="c"># Simplified.</span>
+history = list(app.get_state_history(config))     <span class="c"># every checkpoint, newest first</span>
+past = history[-3]                                 <span class="c"># e.g. "after plan"</span>
+fork = app.update_state(past.config, {<span class="s">"query"</span>: <span class="s">"remote work randomised study"</span>})
+app.invoke(None, fork)                             <span class="c"># a new branch runs from there</span></pre>
+  <div class="grid g3">
+    <div class="box"><h4>Debugging</h4><p class="small">"What if the query had been better?" Change one field and rerun from that point, without repeating the earlier steps.</p></div>
+    <div class="box"><h4>Recovery</h4><p class="small">A human spots a wrong turn and corrects the state before the agent continues.</p></div>
+    <div class="box"><h4>Building test cases</h4><p class="small">Save the checkpoint just before a failure, and rerun it after each fix.</p></div>
+  </div>
+  <p class="small muted">Steps after the fork point run again for real, so model calls and tools may return different results, and they cost money again.</p>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Time travel turns "it went wrong somewhere" into "it went wrong at step 4, and here's the fix", without rerunning everything.</p></div>
+</section>
+
+<!-- ============ 8. STREAMING ============ -->
+<section class="stage" id="streaming" aria-labelledby="h8s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>8</b> · Streaming</p>
+    <h2 id="h8s">Showing progress while the agent works</h2>
+    <p>A research run takes 10 to 20 seconds. <button type="button" class="term" data-term="streaming" aria-expanded="false">Streaming</button> sends updates to your app as each step finishes, so the user sees "Searching… Reading 3 sources… Writing…" instead of a spinner.</p>
+  </div>
+  <pre class="code"><span class="c"># Simplified.</span>
+<span class="k">for</span> update <span class="k">in</span> app.stream({<span class="s">"question"</span>: q}, config, stream_mode=<span class="s">"updates"</span>):
+    show_progress(update)        <span class="c"># e.g. {"search": {"results": [...]}}</span></pre>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Stream mode</th><th>What arrives</th><th>Good for</th></tr></thead>
+      <tbody>
+        <tr><td>updates</td><td>What each step changed</td><td>Progress messages ("Reading sources…")</td></tr>
+        <tr><td>values</td><td>The full state after each step</td><td>Debugging screens</td></tr>
+        <tr><td>messages</td><td>The model's reply, word by word</td><td>Typing effect for the final report</td></tr>
+        <tr><td>custom</td><td>Anything a step chooses to send</td><td>"Read 2 of 3 pages"</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Long agent runs need visible progress. Agree with engineering which steps get a user-facing message.</p></div>
+</section>
+
+<!-- ============ 9. MULTI-AGENT ============ -->
+<section class="stage" id="multi" aria-labelledby="h9s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>9</b> · Subgraphs and multi-agent</p>
+    <h2 id="h9s">Graphs inside graphs, and agents handing off</h2>
+    <p>A <button type="button" class="term" data-term="subgraph" aria-expanded="false">subgraph</button> is a whole graph used as one step of a bigger graph. That's how teams build systems of several agents.</p>
+  </div>
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 700 230" role="img" aria-label="Left: a supervisor routes work to a researcher and a writer and gets results back. Right: agents hand off directly, researcher to writer to fact-checker.">
+        <defs><marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+        <text class="ttl" x="20" y="24">Supervisor</text>
+        <rect class="b-graph" x="110" y="44" width="130" height="44" rx="8"/><text x="175" y="71" text-anchor="middle" font-size="13" fill="var(--ink)">supervisor</text>
+        <rect class="b-plain" x="30" y="160" width="120" height="44" rx="8"/><text x="90" y="187" text-anchor="middle" font-size="13" fill="var(--ink)">researcher</text>
+        <rect class="b-plain" x="200" y="160" width="120" height="44" rx="8"/><text x="260" y="187" text-anchor="middle" font-size="13" fill="var(--ink)">writer</text>
+        <line class="edge" x1="150" y1="88" x2="96" y2="158" marker-start="url(#m3)" marker-end="url(#m3)"/>
+        <line class="edge" x1="200" y1="88" x2="254" y2="158" marker-start="url(#m3)" marker-end="url(#m3)"/>
+        <text class="lbl" x="175" y="132" text-anchor="middle">task ↓ result ↑</text>
+        <line x1="355" y1="14" x2="355" y2="216" stroke="var(--line)" stroke-width="1.5"/>
+        <text class="ttl" x="380" y="24">Handoffs</text>
+        <rect class="b-plain" x="380" y="100" width="90" height="44" rx="8"/><text x="425" y="127" text-anchor="middle" font-size="13" fill="var(--ink)">researcher</text>
+        <rect class="b-plain" x="490" y="100" width="80" height="44" rx="8"/><text x="530" y="127" text-anchor="middle" font-size="13" fill="var(--ink)">writer</text>
+        <rect class="b-plain" x="590" y="100" width="100" height="44" rx="8"/><text x="640" y="127" text-anchor="middle" font-size="13" fill="var(--ink)">fact-checker</text>
+        <line class="edge" x1="470" y1="122" x2="488" y2="122" marker-end="url(#m3)"/>
+        <line class="edge" x1="570" y1="122" x2="588" y2="122" marker-end="url(#m3)"/>
+        <path class="edge" d="M640,144 V180 H425 V146" marker-end="url(#m3)"/>
+        <text class="lbl" x="532" y="198" text-anchor="middle">"needs another source"</text>
+      </svg>
+    </div>
+    <figcaption>With a supervisor, one agent decides who works next and every result comes back to it. With handoffs, each agent passes the work on directly. Supervisors are easier to control; handoffs use fewer steps.</figcaption>
+  </figure>
+  <div class="grid g2">
+    <div class="box"><h4>When it helps</h4><ul class="clean small"><li>Clearly separate jobs with different tools or permissions</li><li>Parts that can run at the same time</li><li>One agent's instructions or memory are getting too long</li></ul></div>
+    <div class="box"><h4>What it costs</h4><ul class="clean small"><li>More model calls, so more cost and waiting</li><li>Information gets lost at each handoff</li><li>Harder to test, because there are more paths</li></ul></div>
+  </div>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Start with one graph. Split into several agents only when you can name the specific limit you're hitting.</p></div>
+</section>
+
+<!-- ============ 10. DEPLOY ============ -->
+<section class="stage" id="deploy" aria-labelledby="h10s">
+  <div class="stage-head">
+    <p class="eyebrow"><b>10</b> · Deployment</p>
+    <h2 id="h10s">Running it for real users</h2>
+    <p>LangGraph is a library, so it runs wherever your code runs. The main decision is who operates the servers and the checkpoint database.</p>
+  </div>
+  <div class="grid g2">
+    <div class="box"><span class="tag">Option A</span><h4>Run it yourself</h4><p class="small">Your own servers or cloud, with a database checkpointer such as Postgres. You get full control and keep data in-house, but your team handles scaling, queues and long-running jobs.</p></div>
+    <div class="box"><span class="tag">Option B</span><h4>A managed service</h4><p class="small">LangChain offers hosting for LangGraph agents, called LangSmith Deployment since October 2025 (previously LangGraph Platform). It handles persistence, background runs and scaling, and comes with a visual debugger (LangSmith Studio). It's a paid product, so check current names and pricing.</p></div>
+  </div>
+  <div class="takeaway"><span class="k">PM takeaway</span><p>Ask who will be paged at 2 a.m. when runs get stuck. That answer often decides self-hosting versus a managed service.</p></div>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="hcs">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="hcs">LangGraph cheat sheet</h2>
+  </div>
+  <div class="sheet">
+    <p class="formula">LangGraph = <em>state</em> + <em>nodes</em> + <em>edges</em>, saved by a <em>checkpointer</em> after every step.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>The building blocks</h3><ul>
+        <li><strong>State:</strong> shared notebook; reducers decide how updates merge</li>
+        <li><strong>Node:</strong> one step (any function)</li>
+        <li><strong>Edge / conditional edge:</strong> fixed arrow / arrow chosen at run time</li>
+        <li><strong>Retry policy:</strong> automatic re-runs for flaky steps</li>
+        <li><strong>Checkpointer + thread:</strong> saved progress per job</li>
+        <li><strong>Interrupt:</strong> pause for a person; resume with their answer</li>
+        <li><strong>Time travel:</strong> replay or fork from any checkpoint</li>
+        <li><strong>Subgraph:</strong> a graph used as a step</li>
+      </ul></div>
+      <div class="blk"><h3>Questions to ask your engineers</h3><ul>
+        <li>Where are checkpoints stored, and for how long?</li>
+        <li>What stops each loop, and what's the recursion limit?</li>
+        <li>Which steps retry, how many times, and what's the fallback?</li>
+        <li>What happens to a paused run if nobody approves it?</li>
+        <li>Can any step do something twice if it re-runs after a crash?</li>
+        <li>Can we fork a failed run to reproduce a bug?</li>
+      </ul></div>
+      <div class="blk"><h3>PM takeaways</h3><ol>
+        <li>The graph is a readable map of the agent's decisions.</li>
+        <li>State fields are what the agent can know.</li>
+        <li>Every backwards arrow needs an exit rule.</li>
+        <li>Decide retries and fallbacks per tool.</li>
+        <li>Database checkpoints are a launch requirement.</li>
+        <li>Approval points are product features.</li>
+        <li>Time travel makes bugs reproducible.</li>
+        <li>Show progress during long runs.</li>
+        <li>One graph first; multi-agent only for a named reason.</li>
+      </ol></div>
+    </div>
+    <div class="blk"><h3>Glossary</h3><div class="gloss" id="glossary"></div></div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="hm">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="hm">3 common mistakes teams make with LangGraph</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>Shipping with in-memory checkpoints</h3><dl>
+      <dt>What it looks like</dt><dd>Everything works in testing. In production, a deploy or restart wipes every paused run, and reviewers' approvals disappear.</dd>
+      <dt>Fix</dt><dd>Use a database-backed checkpointer from the first real launch, and test a restart in the middle of a run.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>Loops with no exit rule of their own</h3><dl>
+      <dt>What it looks like</dt><dd>The only thing stopping a "try again" loop is the recursion limit. Runs end with a confusing error after many paid model calls.</dd>
+      <dt>Fix</dt><dd>Keep a counter in the state, route to a fallback after N tries, and tell the user what happened.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>Steps that aren't safe to run twice</h3><dl>
+      <dt>What it looks like</dt><dd>A step sends an email, then crashes or pauses. On resume or replay it runs again, and the client gets two emails.</dd>
+      <dt>Fix</dt><dd>Keep irreversible actions in their own small step after the approval, and make them safe to repeat (for example, check "already sent?").</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="langchain.html" data-site-link>← Module 3 · LangChain in depth</a>
+  <a href="langfuse.html" data-site-link>Module 5 · Langfuse in depth →</a>
+</div>
+
+<footer>
+  <p>The demo is a scripted simulation. No LangGraph, AI model or search engine is running, and the example web addresses are made up. Prices are illustrative.</p>
+  <p>Code snippets are simplified to show the idea, and real code varies by version. Product names are as of late 2025. This is an independent explainer, not affiliated with LangChain Inc.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+  open_source:{t:"Open source",d:"Software whose code is public and free to use and change under its licence. You can run it yourself."},
+  agent:{t:"AI agent",d:"Software that uses an AI model to decide its own next steps toward a goal, using tools, until the job is done."},
+  checkpoint:{t:"Checkpoint",d:"A saved copy of the agent's state after a step, plus what should run next. Runs can resume or branch from it."},
+  chain:{t:"Chain",d:"A fixed sequence of steps where each output feeds the next. It always runs in the same order."},
+  graph:{t:"Graph",d:"A map of steps (boxes) and connections (arrows). Arrows can branch and loop back."},
+  state:{t:"State",d:"The shared data passed between steps, such as the question, results, notes and draft."},
+  reducer:{t:"Reducer",d:"The rule for combining a step's update with the existing value, such as “replace” or “add to the list”."},
+  node:{t:"Node",d:"One step in a graph. In LangGraph it's a function that reads the state and returns changes."},
+  edge:{t:"Edge",d:"An arrow in a graph saying which step comes next."},
+  conditional_edge:{t:"Conditional edge",d:"An arrow chosen at run time by a small routing function, such as “if results are poor, rewrite the query”."},
+  recursion_limit:{t:"Recursion limit",d:"LangGraph's safety cap on how many steps one run may take. Hitting it stops the run with an error."},
+  retry_policy:{t:"Retry policy",d:"A rule that re-runs a failed step automatically, such as “up to 3 attempts, waiting longer each time”."},
+  checkpointer:{t:"Checkpointer",d:"The component that saves checkpoints, either in memory (lost on restart) or in a database such as Postgres."},
+  thread:{t:"Thread",d:"An ID that groups the checkpoints of one conversation or job, so it can be resumed later."},
+  interrupt:{t:"Interrupt",d:"A planned pause inside a step that waits for a person's input, then resumes the run."},
+  streaming:{t:"Streaming",d:"Sending results to the user bit by bit as they're produced, instead of all at the end."},
+  subgraph:{t:"Subgraph",d:"A complete graph used as a single step inside a bigger graph."},
+  fork:{t:"Fork",d:"Branching a new run off an earlier checkpoint, usually after changing something in the state. The original run is kept."}
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g=>"<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function effTheme(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function syncTheme(){ const t = effTheme(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const saved = load("guides.theme"); if(saved==="dark"||saved==="light") root.setAttribute("data-theme", saved);
+syncTheme();
+themeBtn.addEventListener("click", () => { const n = effTheme()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); syncTheme(); });
+if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncTheme);
+
+/* ---------- Nav ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")], bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, scrollY / h * 100) : 0) + "%";
+  let cur = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) cur = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === cur));
+  // scroll only the tab strip; scrollIntoView would cancel a smooth page scroll in progress
+  if(cur && cur !== lastActive){
+    lastActive = cur;
+    const strip = cur.parentElement, l = cur.offsetLeft - strip.offsetLeft, r = l + cur.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+addEventListener("scroll", onScroll, {passive:true}); onScroll();
+
+/* ---------- Scripted data ---------- */
+const Q = {
+  remote:{
+    question:"Is remote work better for productivity?", topic:"remote work",
+    plan:["Find research on remote work and productivity","Check the results are credible","Read the 3 best sources","Write a ~150-word report with citations"],
+    queries:["remote work productivity","remote work productivity randomised study","hybrid work performance peer-reviewed research"],
+    better:"remote work productivity randomised study",
+    good:["Does working from home work? Evidence from a randomised experiment","Hybrid working improves retention without hurting performance","The effects of remote work on collaboration among information workers"],
+    notes:["Fully remote: performance up ~13% for individual, measurable work [1]","Hybrid (2 days home): performance unchanged, resignations down a third [2]","Remote work makes cross-team collaboration more siloed [3]"],
+    paras:["It depends on the type of work. For focused, individual tasks, working from home raised output by 13% in a nine-month trial [1].","Hybrid work (two home days a week) left performance reviews unchanged over two years and cut resignations by a third [2].","The main cost is collaboration: fully remote teams connected less across groups, which may slow new ideas [3]."],
+    caveat:"Caveat: most studies cover office jobs at large firms, so results may not hold for every team."
+  },
+  index:{
+    question:"How do index funds work?", topic:"index funds",
+    plan:["Find educational and research sources on index funds","Check the results are credible","Read the 3 best sources","Write a ~150-word report with citations"],
+    queries:["index funds","index fund explained expense ratio tracking error","passive index fund vs active fund research"],
+    better:"index fund explained expense ratio tracking error",
+    good:["Index funds explained: how passive investing works","Scorecard: active funds vs their benchmarks","What is tracking error, and why does it matter?"],
+    notes:["Copies an index (e.g. Nifty 50) in the same proportions; no stock picking [1]","Low fees; most active large-cap funds trail their index over 10+ years [2]","Compare funds on expense ratio and tracking error [3]"],
+    paras:["An index fund copies a market index, such as the Nifty 50, instead of trying to beat it [1].","Because no one picks shares, fees stay low, and over 10+ years most active large-cap funds trail their index after fees [2].","When comparing funds on the same index, look at the expense ratio and the tracking error [3]."],
+    caveat:"Caveat: index funds still fall when the market falls. This is general education, not investment advice."
+  },
+  rag:{
+    question:"What is RAG in AI?", topic:"RAG",
+    plan:["Find the original research and practical guides on RAG","Check the results are credible","Read the 3 best sources","Write a ~150-word report with citations"],
+    queries:["RAG","retrieval augmented generation original paper","RAG how it works chunking retrieval"],
+    better:"retrieval augmented generation explained",
+    good:["Retrieval-augmented generation for knowledge-intensive tasks","RAG explained for product teams","Why RAG systems still get things wrong"],
+    notes:["Introduced in 2020: retrieve passages, then generate [1]","Chunk and index docs, retrieve relevant chunks, answer from them [2]","Most failures come from retrieval; reduces but doesn't remove made-up answers [3]"],
+    paras:["RAG (retrieval-augmented generation) lets an AI model look things up before answering [1].","Documents are split into chunks and indexed. For each question, the most relevant chunks are added to the prompt [2].","Most bad answers come from bad retrieval, so RAG reduces made-up answers but doesn't remove them [3]."],
+    caveat:"Caveat: RAG is only as good as the documents and search behind it."
+  }
+};
+const bad = q => [q.topic+" memes that are too real","Top 10 "+q.topic+" gadgets (sponsored)","Forum: anyone else think "+q.topic+" is overrated?"];
+const COST = {plan:0.0044, search:0, grade:0.0003, rewrite:0.0001, read:0.0009, write:0.0102, review:0, no_sources:0.0003, START:0, END:0}; // illustrative $
+const KEYS = ["question","status","plan","query","search_attempts","results","grade","rewrites","notes","draft","review"];
+const clone = o => JSON.parse(JSON.stringify(o));
+const words = a => a.join(" ").split(/\s+/).filter(Boolean).length;
+const NODE_LABEL = n => n === "rewrite" ? "rewrite_query" : n === "review" ? "human_review" : n;
+
+/* ---------- Engine ---------- */
+let run = {}, qid = "remote", lost = 0;
+function newRun(keepLost){
+  clearTimeout(run.timer);
+  if(!keepLost) lost = 0;
+  const q = Q[qid];
+  run = {q, scenario:$("scenario").value, ckpt:$("ckpt").checked,
+    next:"START", via:null, step:0, done:false, waiting:false, crashed:false, playing:false, timer:null, resume:false,
+    state:{}, changed:new Set(), sim:{searches:0, retried:false, rewrites:0, quality:null, revisions:0, humanQuery:false},
+    draft:null, visited:[], walked:[], hot:null, active:null, activeCls:"",
+    cps:[], branch:0, branches:["main"], spent:0, lastCp:null, rewind:null, editing:false,
+    narr:{title:"Ready", text:"Press <strong>Run next step</strong>. After each step, a checkpoint appears on the right.", node:null}};
+  for(const k of KEYS) run.state[k] = undefined;
+  api("app = graph.compile(checkpointer="+(run.ckpt ? "PostgresSaver(db)" : "None")+")");
+  renderAll(true); setPlaying(false);
+}
+function set(k, v){ run.state[k] = v; run.changed.add(k); }
+function api(code){ run.api = code; }
+
+const NODES = {
+  START(){
+    set("question", run.q.question); set("status", "running");
+    return {next:"plan", via:"e-start-plan", title:"The run starts", text:"LangGraph creates the state with the question, under thread <code>rs-0142</code>.", code:'app.invoke({"question": q}, {"configurable": {"thread_id": "rs-0142"}})'};
+  },
+  plan(){
+    const q = run.q;
+    set("plan", q.plan.map((p,i)=>(i+1)+". "+p).join("\n")); set("query", q.queries[0]);
+    return {next:"search", via:"e-plan-search", title:"Plan the research", text:"The model writes a plan and a first search query: <code>"+esc(q.queries[0])+"</code>. It's quite vague."};
+  },
+  search(){
+    const q = run.q, s = run.sim; s.searches++;
+    if(run.scenario === "timeout" && !s.retried){
+      s.retried = true; set("search_attempts", s.searches);
+      return {cls:"err", next:"search", via:"e-search-retry", title:"Search timed out, retrying", text:"The search tool didn't answer within 5 seconds. The retry policy runs this step again (attempt 2 of 3). No checkpoint is saved for a failed attempt.", code:"RetryPolicy(max_attempts=3) → attempt 2", noCheckpoint:true};
+    }
+    const poor = !s.humanQuery && ((run.scenario === "bad" && s.rewrites === 0) || run.scenario === "nosrc");
+    s.quality = poor ? "poor" : "good";
+    const res = poor ? bad(q) : q.good.concat(["(sponsored) "+q.topic+" made easy"]);
+    set("search_attempts", s.searches); set("results", res.map((r,i)=>(i+1)+". "+r).join("\n"));
+    return {next:"grade", via:"e-search-grade", title: poor ? "Search returns weak results" : "Search returns results",
+      text: poor ? "The results are memes, adverts and forum posts. The grade step will judge them."
+                 : (s.humanQuery ? "Your edited query found credible sources on the first try." : "The search returns results. The grade step will check them.")};
+  },
+  grade(){
+    const s = run.sim;
+    if(s.quality === "good"){ set("grade", "good"); return {next:"read", via:"e-grade-read", title:"Grade: good", text:"Credible sources found. The conditional edge routes to <code>read</code>.", code:'route_after_grade(state) → "read"'}; }
+    if(s.rewrites < 2){ set("grade", "poor"); return {next:"rewrite", via:"e-grade-rewrite", title:"Grade: poor, loop back", text:"No credible sources. The conditional edge loops to <code>rewrite_query</code> (try "+(s.rewrites+1)+" of 2).", code:'route_after_grade(state) → "rewrite_query"'}; }
+    set("grade", "poor (giving up)"); return {next:"no_sources", via:"e-grade-nosrc", title:"Grade: still poor, exit the loop", text:"Two rewrites didn't help, so our exit rule sends the run to the fallback.", code:'route_after_grade(state) → "no_sources"'};
+  },
+  rewrite(){
+    const s = run.sim; s.rewrites++;
+    const nq = run.q.queries[Math.min(s.rewrites, 2)];
+    set("query", nq); set("rewrites", s.rewrites);
+    return {next:"search", via:"e-rewrite-search", title:"Rewrite the query", text:"The model makes the query more specific: <code>"+esc(nq)+"</code>. The arrow loops back to <code>search</code>."};
+  },
+  read(){
+    set("notes", run.q.notes.map(n=>"• "+n).join("\n"));
+    return {next:"write", via:"e-read-write", title:"Read the top 3 pages", text:"Three pages are read at the same time. Their notes are merged into the state by the list reducer."};
+  },
+  write(){
+    const q = run.q, rev = run.sim.revisions > 0;
+    run.draft = rev ? [q.paras[0], q.paras[1], q.caveat] : q.paras.slice();
+    set("draft", run.draft[0].slice(0,70)+"… ("+words(run.draft)+" words)"); set("review", "pending");
+    return {next:"review", via:"e-write-review", title: rev ? "Rewrite with feedback" : "Write the report", text: rev ? "The draft is rewritten using the reviewer's feedback, which is saved in the state." : "The large model writes the report from the notes. This is the most expensive step."};
+  },
+  review(){
+    set("status", "paused: waiting for a person");
+    return {cls:"wait", wait:true, next:null, via:null, title:"Paused: human review", text:"<code>interrupt()</code> pauses the run and saves a checkpoint. Nothing waits in server memory. Choose what happens next:", code:'interrupt({"draft": state["draft"]})'};
+  },
+  no_sources(){
+    set("draft", "I couldn't find reliable sources after "+run.sim.searches+" searches. Try a narrower question.");
+    return {next:"END", via:"e-nosrc-end", title:"Fallback message", text:"The run ends honestly instead of writing a report from junk. Tip: rewind to checkpoint #2, give it a better query, and fork."};
+  },
+  END(){
+    const ok = run.sim.quality === "good";
+    set("status", ok ? "done" : "ended early");
+    return {cls:"done", end:true, next:null, via:null, title: ok ? "Done" : "Ended early", text: ok ? "The run finished on branch <strong>"+esc(run.branches[run.branch])+"</strong>." : "No report this time."};
+  }
+};
+
+function saveCheckpoint(afterNode, label){
+  if(!run.ckpt) return;
+  const cp = {id:"c"+(run.cps.length+1), n:run.cps.length+1, branch:run.branch, after:label || NODE_LABEL(afterNode), next:run.next, via:run.via,
+    state:clone(run.state), sim:clone(run.sim), draft:clone(run.draft), visited:run.visited.slice(), walked:run.walked.slice(),
+    spent:run.spent, parent:run.lastCp, waiting:run.waiting, done:run.done};
+  run.cps.push(cp); run.lastCp = cp.id;
+}
+
+function step(){
+  if(run.done || run.waiting || run.crashed || !run.next || run.rewind) return;
+  const node = run.next, via = run.via;
+  run.changed = new Set();
+  const out = NODES[node]();
+  run.step++;
+  run.spent += COST[node] || 0;
+  if(!run.visited.includes(node)) run.visited.push(node);
+  if(via && !run.walked.includes(via)) run.walked.push(via);
+  run.hot = via; run.active = node; run.activeCls = out.cls || "";
+  run.narr = {node, title:out.title, text:out.text, cls:out.cls};
+  run.next = out.next; run.via = out.via;
+  if(out.wait){ run.waiting = true; run.resume = run.playing; setPlaying(false, true); }
+  if(out.end){ run.done = true; setPlaying(false); }
+  if(!out.noCheckpoint) saveCheckpoint(node, out.wait ? "human_review (paused)" : null);
+  api(out.code || (run.ckpt && !out.noCheckpoint ? 'checkpointer.put(thread="rs-0142", checkpoint #'+run.cps.length+')' : "# no checkpointer: progress lives only in server memory"));
+  renderAll();
+}
+
+function crash(){
+  if(run.done || run.crashed || run.step === 0) return;
+  setPlaying(false);
+  run.crashed = true;
+  const inFlight = run.next ? (COST[run.next] || 0.001) / 2 : 0;
+  lost += inFlight;
+  if(!run.ckpt) lost += run.spent;
+  run.narr = {node:null, title:"Server crashed", cls:"err", text:"", crash:true};
+  api(run.ckpt ? "# server restarted. Checkpoints are safe in the database." : "# server restarted. No checkpointer, so all progress is gone.");
+  renderAll();
+}
+function resume(){
+  if(!run.crashed || !run.ckpt) return;
+  // the latest checkpoint saved (or forked from) on this branch
+  const cp = run.cps.find(c => c.id === run.lastCp);
+  if(!cp){ newRun(true); return; }
+  restore(cp, null);
+  run.crashed = false;
+  run.narr = {node:null, title:"Resumed from checkpoint #"+cp.n, text:"Same thread ID, no new input. LangGraph loads checkpoint #"+cp.n+" (after <code>"+esc(cp.after)+"</code>) and carries on. Only the step that was running when the server crashed has to run again."};
+  api('app.invoke(None, {"configurable": {"thread_id": "rs-0142"}})');
+  renderAll();
+}
+function restore(cp, edits){
+  run.state = clone(cp.state); run.sim = clone(cp.sim); run.draft = clone(cp.draft);
+  run.visited = cp.visited.slice(); run.walked = cp.walked.slice();
+  run.next = cp.next; run.via = cp.via; run.waiting = cp.waiting; run.done = cp.done;
+  run.spent = cp.spent; run.lastCp = cp.id;
+  run.active = null; run.hot = null; run.activeCls = run.waiting ? "wait" : "";
+  if(run.waiting) run.active = "review";
+  run.changed = new Set();
+  if(edits){ for(const k in edits){ run.state[k] = edits[k]; run.changed.add(k); } }
+}
+function startRewind(id){
+  if(run.playing) setPlaying(false);
+  run.rewind = id; run.editing = true;
+  if($("demoBody").dataset.tab !== "state" && innerWidth < 900) selectTab("state");
+  renderAll();
+}
+function fork(withEdits){
+  const cp = run.cps.find(c => c.id === run.rewind); if(!cp) return;
+  const qEl = $("editQuery");
+  const newQ = qEl ? qEl.value.trim() : "";
+  const edited = withEdits && newQ && newQ !== cp.state.query;
+  run.branches.push("fork " + run.branches.length);
+  run.branch = run.branches.length - 1;
+  restore(cp, edited ? {query:newQ} : null);
+  if(edited) run.sim.humanQuery = true;
+  run.crashed = false; run.rewind = null; run.editing = false;
+  run.narr = {node:null, title: edited ? "Forked with your edit" : "Replaying from checkpoint #"+cp.n,
+    text: edited ? "A new branch, <strong>"+esc(run.branches[run.branch])+"</strong>, starts from checkpoint #"+cp.n+" with <code>query</code> changed to <code>"+esc(newQ)+"</code>. The original branch is still in the list. Run the next step to see what happens."
+                 : "A new branch, <strong>"+esc(run.branches[run.branch])+"</strong>, replays from checkpoint #"+cp.n+" with the same state. Later steps run again for real."};
+  api(edited ? 'fork = app.update_state(past.config, {"query": "'+newQ.replace(/"/g,"'")+'"}); app.invoke(None, fork)' : "app.invoke(None, past.config)");
+  renderAll();
+}
+function decide(action){
+  if(!run.waiting) return;
+  run.waiting = false; run.changed = new Set();
+  if(action === "approve" || action === "edit"){
+    if(action === "edit"){ const t = ($("editDraft") && $("editDraft").value.trim()) || run.draft.join("\n\n"); run.draft = t.split(/\n\s*\n/); set("draft", run.draft[0].slice(0,70)+"… (edited by reviewer)"); }
+    set("review", action === "edit" ? "edited and approved" : "approved"); set("status", "running");
+    run.next = "END"; run.via = "e-review-end";
+    run.narr = {node:"review", title: action === "edit" ? "Edited and approved" : "Approved", text: action === "edit" ? "Your edited text replaces the draft in the state, and the run continues to the end." : "The run resumes from the checkpoint and continues to the end."};
+    api('app.invoke(Command(resume={"action": "'+action+'"}), config)');
+  } else {
+    run.sim.revisions++;
+    set("review", "rejected: “Shorter, and add a caveat.”"); set("status", "running");
+    run.next = "write"; run.via = "e-review-write";
+    run.narr = {node:"review", title:"Rejected with feedback", text:"<code>Command(goto=\"write\")</code> sends the run back to <code>write</code> with your feedback in the state."};
+    api('app.invoke(Command(resume={"action": "reject", "text": "Shorter, and add a caveat."}), config)');
+  }
+  saveCheckpoint("review", "human_review ("+action+")");
+  run.active = "review"; run.activeCls = ""; run.hot = null;
+  renderAll();
+  if(run.resume){ run.resume = false; setPlaying(true); }
+}
+
+/* ---------- Rendering ---------- */
+function renderAll(initial){ renderNarr(); renderGraph(); renderState(initial); renderCps(); renderStatus(); updateControls(); }
+function cite(p){ return esc(p).replace(/\[(\d)\]/g,'<sup class="cite">[$1]</sup>'); }
+function renderNarr(){
+  const n = run.narr;
+  let h = '<div class="narr-h"><span class="stepno">STEP '+String(run.step).padStart(2,"0")+'</span><span class="branchchip br'+(run.branch%4)+'">'+esc(run.branches[run.branch])+"</span>";
+  if(n.node) h += '<span class="nodechip '+(n.cls||"")+'">'+esc(NODE_LABEL(n.node))+"</span>";
+  h += '<span class="narr-t">'+esc(n.title)+"</span></div>";
+  if(n.crash){
+    h += run.ckpt
+      ? '<div class="crashbox"><b>The server restarted.</b><p>Everything in server memory is gone, including the half-finished step. But '+run.cps.filter(c=>c.branch===run.branch).length+' checkpoints are safe in the database. Press <strong>Resume from checkpoint</strong>.</p></div>'
+      : '<div class="crashbox"><b>The server restarted, and there\'s no checkpointer.</b><p>All progress is gone, and so is the $'+run.spent.toFixed(4)+' already spent on this run. The only option is to <strong>Start over</strong>. Turn the checkpointer on to see the difference.</p></div>';
+  } else if(n.text) h += "<p>"+n.text+"</p>";
+  if(run.waiting && !run.crashed){
+    h += '<div class="report"><h4>Draft</h4>'+run.draft.map(p=>"<p>"+cite(p)+"</p>").join("")+"</div>";
+    h += '<div class="decide"><div class="btns"><button type="button" class="btn btn-primary" id="dApprove">Approve</button><button type="button" class="btn" id="dEditToggle">Edit…</button><button type="button" class="btn" id="dReject"'+(run.sim.revisions?" disabled":"")+'>Reject with feedback</button></div>'+
+         '<div id="editWrap" hidden><textarea id="editDraft" aria-label="Edit the draft">'+esc(run.draft.join("\n\n"))+'</textarea><div class="btns"><button type="button" class="btn btn-primary" id="dEdit">Save edits and approve</button></div></div></div>';
+  }
+  if(run.done && run.sim.quality === "good" && run.draft){
+    h += '<div class="report"><h4>'+esc(run.q.question)+"</h4>"+run.draft.map(p=>"<p>"+cite(p)+"</p>").join("")+"</div>";
+  }
+  if(run.done) h += '<div class="lesson"><strong>What to try next</strong><p>'+(run.branches.length > 1 ? "You now have "+run.branches.length+" branches. Compare them in the Checkpoints panel: each kept its own history." : "Rewind to an earlier checkpoint, change the query, and fork. Or start over and crash the server halfway through.")+"</p></div>";
+  $("narr").innerHTML = h;
+  $("pGraph").classList.toggle("crashed", run.crashed);
+}
+function renderGraph(){
+  document.querySelectorAll("#graph .gnode").forEach(g => {
+    const n = g.dataset.node;
+    g.classList.toggle("visited", run.visited.includes(n));
+    g.classList.toggle("active", run.active === n && !run.activeCls);
+    g.classList.toggle("err", run.active === n && run.activeCls === "err");
+    g.classList.toggle("wait", run.active === n && run.activeCls === "wait");
+  });
+  document.querySelectorAll("#graph .gedge").forEach(e => { e.classList.toggle("walked", run.walked.includes(e.id)); e.classList.toggle("hot", run.hot === e.id); });
+}
+function kvRows(state, changed, editable){
+  return KEYS.map(k => {
+    const v = state[k];
+    let val;
+    if(editable && k === "query") val = '<input id="editQuery" type="text" value="'+esc(v || "")+'" aria-label="Edit the query">';
+    else val = '<span class="v'+(v===undefined?" none":"")+'">'+(v===undefined?"—":esc(v))+"</span>";
+    return '<div class="kv'+(changed && changed.has(k) ? " flash" : "")+'"><span class="k">'+k+"</span>"+val+"</div>";
+  }).join("");
+}
+function renderState(initial){
+  const el = $("state");
+  if(run.rewind){
+    const cp = run.cps.find(c => c.id === run.rewind);
+    const canEdit = cp.next === "search" || cp.next === "rewrite" || cp.next === "grade";
+    el.innerHTML = '<div class="cp">Viewing checkpoint <strong>#'+cp.n+'</strong> on <span class="branchchip br'+(cp.branch%4)+'">'+esc(run.branches[cp.branch])+"</span>, after <code>"+esc(cp.after)+"</code>. Next step would be <code>"+esc(cp.next ? NODE_LABEL(cp.next) : "none")+"</code>.</div>"+
+      kvRows(cp.state, null, canEdit)+
+      '<div class="rewind-bar">'+(canEdit ? "<span>Change the <strong>query</strong> above, then fork. Try something specific, such as <code>"+esc(run.q.better)+"</code>.</span>" : "<span>The query only matters before the search. For an editable query, pick a checkpoint after <code>plan</code> or <code>rewrite_query</code>.</span>")+
+      '<div class="btns">'+(canEdit ? '<button type="button" class="btn btn-sm btn-primary" id="rwFork">Fork with my edit</button>' : "")+'<button type="button" class="btn btn-sm" id="rwReplay"'+(cp.done?" disabled":"")+'>Replay from here</button><button type="button" class="btn btn-sm" id="rwCancel">Cancel</button></div></div>';
+    return;
+  }
+  if(run.crashed){ el.innerHTML = '<p class="lostmsg">Server memory was wiped.</p><p class="cp">'+(run.ckpt ? "The last checkpoint still holds the state. Resume to load it." : "Nothing was saved anywhere.")+"</p>"; return; }
+  el.innerHTML = '<div class="cp">thread <span class="mono">rs-0142</span> · branch <span class="branchchip br'+(run.branch%4)+'">'+esc(run.branches[run.branch])+"</span></div>"+kvRows(run.state, initial ? null : run.changed, false);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.querySelectorAll(".flash").forEach(e=>e.classList.remove("flash"))));
+  if(run.changed.size && $("demoBody").dataset.tab !== "state") markNew("state");
+}
+function renderCps(){
+  const el = $("cps");
+  if(!run.ckpt){ el.innerHTML = '<p class="empty">The checkpointer is off. Nothing is saved, so there\'s nothing to resume or rewind. Turn it back on above.</p>'; return; }
+  if(!run.cps.length){ el.innerHTML = '<p class="empty">No checkpoints yet. One is saved after every step.</p>'; return; }
+  let h = "";
+  run.branches.forEach((b, bi) => {
+    const list = run.cps.filter(c => c.branch === bi);
+    if(!list.length && bi !== run.branch) return;
+    const from = bi > 0 && list.length ? run.cps.find(c => c.id === list[0].parent) : null;
+    h += '<div class="cpgroup"><span class="branchchip br'+(bi%4)+'">'+esc(b)+"</span>"+(from ? '<span class="muted">from #'+from.n+"</span>" : "")+(bi === run.branch ? '<span class="muted">· current</span>' : "")+"</div>";
+    list.forEach(c => {
+      const snip = c.state.query ? "query: "+c.state.query : (c.state.status || "");
+      h += '<div class="cprow'+(c.id === run.lastCp && bi === run.branch ? " latest" : "")+(run.rewind === c.id ? " sel" : "")+'"><span class="cpn">#'+c.n+'</span><span class="cpinfo"><span class="after">after '+esc(c.after)+'</span><span class="snip">'+esc(snip)+'</span></span><button type="button" class="btn btn-sm" data-rewind="'+c.id+'">Rewind</button></div>';
+    });
+  });
+  el.innerHTML = h;
+  el.scrollTop = el.scrollHeight;
+  if($("demoBody").dataset.tab !== "cps" && run.step) markNew("cps");
+}
+function renderStatus(){
+  $("sBranch").innerHTML = "branch <b>"+esc(run.branches[run.branch])+"</b>";
+  $("sStep").innerHTML = "steps run <b>"+run.step+"</b>";
+  $("sCps").innerHTML = "checkpoints <b>"+(run.ckpt ? run.cps.length : "off")+"</b>";
+  $("sSpent").innerHTML = "spent <b>$"+run.spent.toFixed(4)+"</b>";
+  $("sLost").innerHTML = lost > 0 ? "lost to crashes <b>$"+lost.toFixed(4)+"</b>" : "";
+  $("apiCall").innerHTML = '<span class="c">code: </span>'+esc(run.api || "");
+}
+function markNew(tab){ const b = document.querySelector('.tabs [data-tab="'+tab+'"]'); if(b) b.classList.add("has-new"); }
+function updateControls(){
+  const blocked = run.done || run.waiting || run.crashed || !run.next || !!run.rewind;
+  $("btnNext").disabled = blocked; $("btnPlay").disabled = blocked && !run.playing;
+  $("btnCrash").disabled = run.done || run.crashed || run.step === 0 || !!run.rewind;
+  $("btnResume").disabled = !(run.crashed && run.ckpt);
+}
+function setPlaying(v, keepResume){
+  run.playing = v;
+  $("btnPlay").textContent = v ? "⏸ Pause" : "▶ Autoplay";
+  $("btnPlay").setAttribute("aria-pressed", v ? "true" : "false");
+  clearTimeout(run.timer);
+  if(!keepResume && !v) run.resume = false;
+  if(v) schedule();
+  updateControls();
+}
+function schedule(){
+  clearTimeout(run.timer);
+  if(!run.playing) return;
+  if(run.done || run.waiting || run.crashed || !run.next || run.rewind){ setPlaying(false, run.waiting); return; }
+  run.timer = setTimeout(() => { step(); schedule(); }, 1700 / parseFloat($("speed").value));
+}
+function togglePlay(){
+  if(run.playing){ setPlaying(false); return; }
+  if(run.done || run.waiting || run.crashed || run.rewind) return;
+  step(); if(!run.done && !run.waiting) setPlaying(true);
+}
+function selectTab(t){
+  $("demoBody").dataset.tab = t;
+  document.querySelectorAll(".tabs [data-tab]").forEach(x => { x.setAttribute("aria-selected", x.dataset.tab === t ? "true" : "false"); if(x.dataset.tab === t) x.classList.remove("has-new"); });
+}
+
+/* ---------- Wiring ---------- */
+$("btnNext").addEventListener("click", () => { step(); if(run.playing) schedule(); });
+$("btnPlay").addEventListener("click", togglePlay);
+$("btnReset").addEventListener("click", () => newRun(true));
+$("btnCrash").addEventListener("click", crash);
+$("btnResume").addEventListener("click", resume);
+$("speed").addEventListener("change", () => { if(run.playing) schedule(); });
+$("scenario").addEventListener("change", () => newRun(false));
+$("ckpt").addEventListener("change", () => newRun(true));
+document.querySelectorAll(".chip[data-q]").forEach(c => c.addEventListener("click", () => {
+  qid = c.dataset.q;
+  document.querySelectorAll(".chip[data-q]").forEach(x => x.setAttribute("aria-pressed", x === c ? "true" : "false"));
+  newRun(false);
+}));
+$("narr").addEventListener("click", e => {
+  const id = e.target.id;
+  if(id === "dApprove") decide("approve");
+  else if(id === "dReject") decide("reject");
+  else if(id === "dEdit") decide("edit");
+  else if(id === "dEditToggle"){ const w = $("editWrap"); w.hidden = !w.hidden; if(!w.hidden) $("editDraft").focus(); }
+});
+$("cps").addEventListener("click", e => { const b = e.target.closest("[data-rewind]"); if(b) startRewind(b.dataset.rewind); });
+$("state").addEventListener("click", e => {
+  if(e.target.id === "rwFork") fork(true);
+  else if(e.target.id === "rwReplay") fork(false);
+  else if(e.target.id === "rwCancel"){ run.rewind = null; run.editing = false; renderAll(); }
+});
+document.querySelectorAll(".tabs [data-tab]").forEach(b => b.addEventListener("click", () => selectTab(b.dataset.tab)));
+document.addEventListener("keydown", e => {
+  if(e.target.closest && e.target.closest("input,textarea,select")) return;
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(e.key === "n" || e.key === "N"){ step(); if(run.playing) schedule(); }
+  else if(e.key === "p" || e.key === "P") togglePlay();
+  else if(e.key === "Escape") hideTerm();
+});
+
+/* Open in a working state: first three steps already run */
+newRun(false);
+for(let i = 0; i < 3; i++) step();
+document.querySelectorAll(".tabs .has-new").forEach(b => b.classList.remove("has-new"));
+})();
+</script>
+
+</body>
+</html>
