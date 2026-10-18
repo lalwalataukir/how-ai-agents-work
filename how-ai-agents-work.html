@@ -20,42 +20,70 @@ img{max-width:100%}
 /* Layout concept: a field manual for PMs. A sticky stage rail, a live agent console up top,
    then five stages in their real order, each ending with a quick check. */
 :root{
-  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E8ECF1; --ink:#131C27; --muted:#55616F; --line:#D5DCE4;
-  --accent:#2445C4; --accent-ink:#FFFFFF; --accent-soft:#E2E8FB;
-  --think:#6A44C0; --think-soft:#EEE9FA;
-  --act:#9C5800; --act-soft:#FBEEDA;
-  --observe:#08716D; --observe-soft:#DCF1EF;
-  --final:#2A7639; --final-soft:#E0F0E3;
-  --bad:#B42318; --bad-soft:#FCE7E4;
-  --code-bg:#ECEFF4;
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
   --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --radius:10px;
+  color-scheme:dark;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
-    --accent:#8BA3FF; --accent-ink:#0D131A; --accent-soft:#1D2A4F;
-    --think:#BBA2FF; --think-soft:#2A2245;
-    --act:#F1B45E; --act-soft:#3A2B15;
-    --observe:#62D3C8; --observe-soft:#123533;
-    --final:#82D893; --final-soft:#163520;
-    --bad:#FF8F84; --bad-soft:#3E1D1A;
-    --code-bg:#101821;
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
-  --accent:#8BA3FF; --accent-ink:#0D131A; --accent-soft:#1D2A4F;
-  --think:#BBA2FF; --think-soft:#2A2245;
-  --act:#F1B45E; --act-soft:#3A2B15;
-  --observe:#62D3C8; --observe-soft:#123533;
-  --final:#82D893; --final-soft:#163520;
-  --bad:#FF8F84; --bad-soft:#3E1D1A;
-  --code-bg:#101821;
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
   color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
 }
 
 *{box-sizing:border-box}
@@ -1176,7 +1204,7 @@ function effectiveTheme(){
 }
 function syncThemeBtn(){ const t = effectiveTheme(); themeBtn.textContent = t === "dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
 const savedTheme = load("guides.theme");
-if(savedTheme === "dark" || savedTheme === "light") root.setAttribute("data-theme", savedTheme);
+if(savedTheme === "dark" || savedTheme === "light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
 syncThemeBtn();
 themeBtn.addEventListener("click", () => { const n = effectiveTheme() === "dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); syncThemeBtn(); });
 if(window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncThemeBtn);
