@@ -22,3 +22,5 @@ Everything in the demos is a scripted simulation. No AI model, search engine, fr
 The HTML files here are generated from the source pages by running `node serve.js --build`.
 
 **Search:** every page has a Search button (shortcut `/` or `Ctrl+K`) that searches all modules and the glossary. It's powered by `search.js` and the generated `search-index.js`. After changing any page's content, run `python3 build-search.py` to rebuild the index.
+
+**Tool links:** every mention of a tool (LangChain, LangGraph, Langfuse, MCP and others) links to its official docs, with a hover card. `tool-links.js` does this on every page. To add a tool or change a link, edit the `TOOLS` list at the top of that file.
