@@ -224,6 +224,8 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
       t.m.map(m => '<a href="' + esc(link(MOD[m][0])) + '"' + (local ? "" : ' target="_blank" rel="noopener"') + ">Module " + m + "</a>").join("") + "</div></article>").join("")
       : '<p class="empty">No terms match. Try a shorter word.</p>';
   }
+  const pq = new URLSearchParams(location.search).get("q");   // arriving from the site search
+  if(pq) $("q").value = pq;
   $("q").addEventListener("input", render);
   document.querySelectorAll(".mods button").forEach(b => b.addEventListener("click", () => {
     mod = b.dataset.m;
@@ -241,5 +243,6 @@ footer{margin-top:48px;padding-block:28px 56px;border-top:1px solid var(--line);
   if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", sync);
 })();
 </script>
+<script src="search.js" defer></script>
 </body>
 </html>
