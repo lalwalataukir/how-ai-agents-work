@@ -20,48 +20,79 @@ img{max-width:100%}
 /* Layout concept: module 4 of the field guides. LangGraph violet leads. A live graph with a
    checkpoint timeline up top (the thing that makes LangGraph different), then one section per idea. */
 :root{
-  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E8ECF1; --ink:#131C27; --muted:#55616F; --line:#D5DCE4;
-  --accent:#6A44C0; --accent-ink:#FFFFFF;
-  --chain:#2445C4; --chain-soft:#E2E8FB;
-  --graph:#6A44C0; --graph-soft:#EEE9FA;
-  --fuse:#08716D; --fuse-soft:#DCF1EF;
-  --ok:#2A7639; --ok-soft:#E0F0E3;
-  --warn:#9C5800; --warn-soft:#FBEEDA;
-  --bad:#B42318; --bad-soft:#FCE7E4;
-  --b1:#C2410C; --b1-soft:#FDEBDD;
-  --code-bg:#ECEFF4;
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910;
+  --chain:#A78BFA; --chain-soft:#2A1F47;
+  --graph:#F08BE0; --graph-soft:#3A1736;
+  --fuse:#5EEAD4; --fuse-soft:#0F2E2A;
+  --ok:#6EE7A0; --ok-soft:#12301F;
+  --warn:#F5B95C; --warn-soft:#382810;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --b1:#FDBA74; --b1-soft:#3B2414;
+  --code-bg:#110E18;
   --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --radius:10px;
+  color-scheme:dark;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
-    --accent:#BBA2FF; --accent-ink:#0D131A;
-    --chain:#8BA3FF; --chain-soft:#1D2A4F;
-    --graph:#BBA2FF; --graph-soft:#2A2245;
-    --fuse:#62D3C8; --fuse-soft:#123533;
-    --ok:#82D893; --ok-soft:#163520;
-    --warn:#F1B45E; --warn-soft:#3A2B15;
-    --bad:#FF8F84; --bad-soft:#3E1D1A;
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910;
+    --chain:#A78BFA; --chain-soft:#2A1F47;
+    --graph:#F08BE0; --graph-soft:#3A1736;
+    --fuse:#5EEAD4; --fuse-soft:#0F2E2A;
+    --ok:#6EE7A0; --ok-soft:#12301F;
+    --warn:#F5B95C; --warn-soft:#382810;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
     --b1:#FDBA74; --b1-soft:#3B2414;
-    --code-bg:#101821;
+    --code-bg:#110E18;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0D131A; --surface:#141C25; --surface-2:#1B2531; --ink:#E4EAF0; --muted:#9AA7B5; --line:#283443;
-  --accent:#BBA2FF; --accent-ink:#0D131A;
-  --chain:#8BA3FF; --chain-soft:#1D2A4F;
-  --graph:#BBA2FF; --graph-soft:#2A2245;
-  --fuse:#62D3C8; --fuse-soft:#123533;
-  --ok:#82D893; --ok-soft:#163520;
-  --warn:#F1B45E; --warn-soft:#3A2B15;
-  --bad:#FF8F84; --bad-soft:#3E1D1A;
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910;
+  --chain:#A78BFA; --chain-soft:#2A1F47;
+  --graph:#F08BE0; --graph-soft:#3A1736;
+  --fuse:#5EEAD4; --fuse-soft:#0F2E2A;
+  --ok:#6EE7A0; --ok-soft:#12301F;
+  --warn:#F5B95C; --warn-soft:#382810;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
   --b1:#FDBA74; --b1-soft:#3B2414;
-  --code-bg:#101821;
+  --code-bg:#110E18;
   color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --chain:#6D28D9;
+  --chain-soft:#EDE5FD;
+  --graph:#A21CAF;
+  --graph-soft:#F8E3F8;
+  --fuse:#0F766E;
+  --fuse-soft:#D7F2EE;
+  --ok:#15803D;
+  --ok-soft:#DCF3E4;
+  --warn:#9C5800;
+  --warn-soft:#FBEEDA;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --b1:#C2410C;
+  --b1-soft:#FDEBDD;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
 }
 
 *{box-sizing:border-box}
@@ -925,7 +956,7 @@ $("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t
 const root = document.documentElement, themeBtn = $("themeBtn");
 function effTheme(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
 function syncTheme(){ const t = effTheme(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
-const saved = load("guides.theme"); if(saved==="dark"||saved==="light") root.setAttribute("data-theme", saved);
+const saved = load("guides.theme"); if(saved==="dark"||saved==="light") root.setAttribute("data-theme", saved); else root.setAttribute("data-theme", "dark");
 syncTheme();
 themeBtn.addEventListener("click", () => { const n = effTheme()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); syncTheme(); });
 if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncTheme);
