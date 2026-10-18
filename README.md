@@ -20,3 +20,5 @@ Interactive guides for product managers, built around one running example: a res
 Everything in the demos is a scripted simulation. No AI model, search engine, framework or tracing service is contacted, and the example addresses are made up. These pages are independent explainers and aren't affiliated with LangChain, LangGraph, LangSmith or Langfuse.
 
 The HTML files here are generated from the source pages by running `node serve.js --build`.
+
+**Search:** every page has a Search button (shortcut `/` or `Ctrl+K`) that searches all modules and the glossary. It's powered by `search.js` and the generated `search-index.js`. After changing any page's content, run `python3 build-search.py` to rebuild the index.
