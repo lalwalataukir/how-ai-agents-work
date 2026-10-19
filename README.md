@@ -13,6 +13,7 @@ Interactive guides for product managers, built around one running example: a res
 | **5 · Langfuse in depth**: traces, cost, latency, prompt management and governance, and evaluation, with a debug-a-complaint demo | https://lalwalataukir.github.io/how-ai-agents-work/langfuse.html |
 | **6 · Metrics for a compliant wealth AI bot**: 7 metric categories with P0/P1/P2 metrics and their definitions, a spot-the-breach demo, sampling maths, Langfuse wiring, an incident runbook and a P0 launch checklist | https://lalwalataukir.github.io/how-ai-agents-work/metrics.html |
 | **7 · Shipping an agent**: staged rollout, designing for trust, unit economics and pricing, build or buy, and a six-week case study, with a rollout simulator | https://lalwalataukir.github.io/how-ai-agents-work/ship.html |
+| **8 · Context engineering**: what goes in the context window, writing instructions, tool definitions, retrieval vs memory vs history, long runs and compaction, prompt caching and context failures, with a context-budget demo | https://lalwalataukir.github.io/how-ai-agents-work/context.html |
 | **9 · Agent security**: prompt injection, least privilege, containment, MCP supply chain, data protection, red-teaming and a threat model, with a break-the-agent demo | https://lalwalataukir.github.io/how-ai-agents-work/security.html |
 | **Reference**: every glossary term from the modules, searchable, plus further reading | https://lalwalataukir.github.io/how-ai-agents-work/reference.html |
 
