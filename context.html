@@ -390,7 +390,7 @@ footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1p
 .cb-scale{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.72rem;color:var(--muted)}
 .cb-legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.78rem;color:var(--muted)}
 .cb-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:-1px}
-.cb-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,118px),1fr))}
+.cb-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,96px),1fr))}
 .cb-why{font-size:.93rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
 .window{display:grid;gap:4px;font-family:var(--font-mono);font-size:.82rem}
 .window div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:8px 12px;border-radius:8px;border-left:5px solid var(--c);background:var(--surface)}
@@ -451,6 +451,7 @@ footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1p
             <div class="metric" id="mCost"><span class="v">–</span><span class="k">cost per run (8 calls)</span></div>
             <div class="metric" id="mWait"><span class="v">–</span><span class="k">wait per run</span></div>
             <div class="metric" id="mQual"><span class="v">–</span><span class="k">eval pass rate</span></div>
+            <div class="metric" id="mSave"><span class="v">–</span><span class="k">saved by caching, per run</span></div>
           </div>
           <p class="cb-why" id="cbWhy"></p>
           <button type="button" class="btn btn-sm" id="cbReset" style="justify-self:start">↺ Back to the bloated start</button>
@@ -852,6 +853,9 @@ function render(){
   set("mCost", "₹" + cost.toFixed(2), cost <= 2 ? true : cost > 4 ? false : null);
   set("mWait", wait.toFixed(1) + " s", wait <= 12 ? true : wait > 20 ? false : null);
   set("mQual", q + "%", q >= 85 ? true : q < 70 ? false : null);
+  const saved = total / 1000 * PRICE * CALLS - cost;
+  set("mSave", cache ? "₹" + saved.toFixed(2) : "Off", cache && saved > 0 ? true : null);
+  $("mSave").querySelector(".k").textContent = cache ? "saved by caching (" + Math.round(cached / Math.max(total, 1) * 100) + "% of input cached)" : "saved by caching, per run";
   let why;
   if(q >= 85 && cost <= 2) why = "Target met: " + q + "% for ₹" + cost.toFixed(2) + " a run. Notice the best context isn't the biggest one: focused tools, trimmed pages and a summary beat sending everything." + (cache ? "" : " Turn on caching to cut the cost of the stable parts further.");
   else if(whys.length){ whys.sort((a, b) => a.q - b.q); why = "Biggest problem now: " + whys[0].w; }
