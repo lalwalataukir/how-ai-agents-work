@@ -1,0 +1,72 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agent Field Guides</title>
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--font-body); overflow:hidden; }
+  .cover { position:relative; height:288px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; overflow:hidden; }
+  .art svg { display:block; width:480px; height:288px; }
+  .accent { fill:var(--accent); }
+  .act { fill:var(--act); }
+  .observe { fill:var(--observe); }
+  .final { fill:var(--final); }
+  .blk { rx:var(--radius-lg); }
+  .pill { rx:var(--radius-xs); }
+  .done { rx:var(--radius-lg); }
+  .cut-accent { fill:var(--accent-soft); }
+  .cut-act { fill:var(--act-soft); }
+  .cut-observe { fill:var(--observe-soft); }
+  .words { position:absolute; left:var(--space-24); bottom:var(--space-24); max-width:440px; }
+  .name { margin:0; font-family:var(--font-display); font-size:64px; line-height:.95; font-weight:800; letter-spacing:-.015em; color:var(--ink); white-space:nowrap; }
+  .tag { margin:var(--space-12) 0 0 2px; font-size:14px; line-height:20px; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      accent 128x232 bled off the top (the brand hue, largest) · act 112x128 · observe 208x184 bled off the right · final 72x24 pill once (it only ever means the answer) - the loop, left to right, about 30% of 960x288
+  arrangement three slabs in loop order (think/accent, act, observe) with bottoms on one line space-56+16 above the edge, space-16 gutters, the final pill under the first slab
+  pattern     pills, from the event log and phase pills: 8px log lines cut into each slab in its own -soft tint at a space-16 pitch, like a run log coloured by phase
+  scales      gutters space-16; row pitch space-16; slab corners radius-lg; log-line rx radius-xs (half of 8); final pill rx radius-lg (half of 24)
+-->
+<rect class="accent blk" x="16" y="-16" width="128" height="232" rx="12"/>
+<rect class="act blk" x="160" y="88" width="112" height="128" rx="12"/>
+<rect class="observe blk" x="288" y="32" width="208" height="184" rx="12"/>
+<rect class="final done" x="16" y="232" width="72" height="24" rx="12"/>
+<rect class="pill cut-accent" x="32" y="136" width="64" height="8" rx="4"/>
+<rect class="pill cut-accent" x="32" y="152" width="40" height="8" rx="4"/>
+<rect class="pill cut-accent" x="80" y="152" width="32" height="8" rx="4"/>
+<rect class="pill cut-accent" x="32" y="168" width="48" height="8" rx="4"/>
+<rect class="pill cut-accent" x="32" y="184" width="72" height="8" rx="4"/>
+<rect class="pill cut-act" x="176" y="152" width="56" height="8" rx="4"/>
+<rect class="pill cut-act" x="176" y="168" width="32" height="8" rx="4"/>
+<rect class="pill cut-act" x="216" y="168" width="40" height="8" rx="4"/>
+<rect class="pill cut-act" x="176" y="184" width="48" height="8" rx="4"/>
+<rect class="pill cut-observe" x="304" y="56" width="64" height="8" rx="4"/>
+<rect class="pill cut-observe" x="376" y="56" width="48" height="8" rx="4"/>
+<rect class="pill cut-observe" x="304" y="72" width="96" height="8" rx="4"/>
+<rect class="pill cut-observe" x="304" y="88" width="40" height="8" rx="4"/>
+<rect class="pill cut-observe" x="352" y="88" width="72" height="8" rx="4"/>
+<rect class="pill cut-observe" x="304" y="104" width="56" height="8" rx="4"/>
+<rect class="pill cut-observe" x="304" y="120" width="88" height="8" rx="4"/>
+<rect class="pill cut-observe" x="400" y="120" width="32" height="8" rx="4"/>
+<rect class="pill cut-observe" x="304" y="136" width="72" height="8" rx="4"/>
+<rect class="pill cut-observe" x="304" y="152" width="48" height="8" rx="4"/>
+<rect class="pill cut-observe" x="360" y="152" width="56" height="8" rx="4"/>
+<rect class="pill cut-observe" x="304" y="168" width="104" height="8" rx="4"/>
+<rect class="pill cut-observe" x="304" y="184" width="64" height="8" rx="4"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">Agent Field<br>Guides</h1>
+<p class="tag">Interactive guides to AI agents for product managers.</p>
+</div>
+</div>
+</body>
+</html>
