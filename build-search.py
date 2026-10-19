@@ -19,6 +19,7 @@ PAGES = [
     ("ship.html", "7 · Shipping an agent"),
     ("context.html", "8 · Context engineering"),
     ("security.html", "9 · Agent security"),
+    ("evals.html", "10 · Evals in practice"),
     ("reference.html", "Glossary"),
 ]
 

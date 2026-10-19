@@ -15,6 +15,7 @@ Interactive guides for product managers, built around one running example: a res
 | **7 · Shipping an agent**: staged rollout, designing for trust, unit economics and pricing, build or buy, and a six-week case study, with a rollout simulator | https://lalwalataukir.github.io/how-ai-agents-work/ship.html |
 | **8 · Context engineering**: what goes in the context window, writing instructions, tool definitions, retrieval vs memory vs history, long runs and compaction, prompt caching and context failures, with a context-budget demo | https://lalwalataukir.github.io/how-ai-agents-work/context.html |
 | **9 · Agent security**: prompt injection, least privilege, containment, MCP supply chain, data protection, red-teaming and a threat model, with a break-the-agent demo | https://lalwalataukir.github.io/how-ai-agents-work/security.html |
+| **10 · Evals in practice**: error analysis, building a dataset, code checks, LLM judges and people, judge calibration, pass@k and pass^k, CI gates and online evals, comparing versions and a weekly ritual, with a grade-the-grader demo | https://lalwalataukir.github.io/how-ai-agents-work/evals.html |
 | **Reference**: every glossary term from the modules, searchable, plus further reading | https://lalwalataukir.github.io/how-ai-agents-work/reference.html |
 
 **Demo lab:** https://lalwalataukir.github.io/how-ai-agents-work/demo-lab.html has the LangChain, LangGraph and Langfuse demos in one page, with tabs. Each tab loads the demo from its module page, so there's only one copy of each demo.
