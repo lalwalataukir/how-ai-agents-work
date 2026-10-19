@@ -17,6 +17,7 @@ PAGES = [
     ("langfuse.html", "5 · Langfuse in depth"),
     ("metrics.html", "6 · Wealth AI metrics"),
     ("ship.html", "7 · Shipping an agent"),
+    ("security.html", "9 · Agent security"),
     ("reference.html", "Glossary"),
 ]
 

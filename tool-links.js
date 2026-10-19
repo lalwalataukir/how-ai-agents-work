@@ -29,6 +29,7 @@ const TOOLS = [
   {names:["LiteLLM"], url:"https://docs.litellm.ai/", what:"One interface and proxy for many model providers"},
   {names:["Vercel AI SDK"], url:"https://ai-sdk.dev/docs", what:"TypeScript toolkit for AI apps"},
   {names:["ClickHouse"], url:"https://clickhouse.com/docs", what:"Analytics database"},
+  {names:["OWASP Top 10 for LLM applications", "OWASP"], url:"https://genai.owasp.org/llm-top-10/", what:"The OWASP list of top security risks for LLM apps"},
   {names:["PostgreSQL", "Postgres"], url:"https://www.postgresql.org/docs/", what:"Open-source relational database"}
 ];
 
