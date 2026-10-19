@@ -1,0 +1,14 @@
+<!-- @dsCard group="Demo" height=260 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>LoopDiagram</title></head>
+<body>
+<div class="ds-pad"><figure><div class="diagram"><svg viewBox="0 0 640 150" role="img" aria-label="The agent loop"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="arrowhead" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="node plan"><rect x="10" y="40" width="130" height="62" rx="10"/><text class="ttl" x="75" y="68" text-anchor="middle">Think</text><text class="sub" x="75" y="88" text-anchor="middle">model decides</text></g>
+<g class="node act is-on"><rect x="175" y="40" width="130" height="62" rx="10"/><text class="ttl" x="240" y="68" text-anchor="middle">Act</text><text class="sub" x="240" y="88" text-anchor="middle">call a tool</text></g>
+<g class="node observe"><rect x="340" y="40" width="130" height="62" rx="10"/><text class="ttl" x="405" y="68" text-anchor="middle">Observe</text><text class="sub" x="405" y="88" text-anchor="middle">read the result</text></g>
+<g class="node finish"><rect x="505" y="40" width="125" height="62" rx="10"/><text class="ttl" x="567" y="68" text-anchor="middle">Finish</text><text class="sub" x="567" y="88" text-anchor="middle">final answer</text></g>
+<path class="edge" d="M140 71H173" marker-end="url(#ah)"/><path class="edge" d="M305 71H338" marker-end="url(#ah)"/><path class="edge" d="M470 71H503" marker-end="url(#ah)"/>
+<path class="edge" d="M405 102V128H75V104" marker-end="url(#ah)"/><text class="lbl" x="240" y="122" text-anchor="middle">not done yet: decide again</text></svg></div><figcaption>The loop runs until the model decides it has enough to answer.</figcaption></figure></div>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<!-- @dsCard group="Content" height=210 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>CodeBlock</title></head>
+<body>
+<div class="ds-pad"><pre class="code"><span class="ln"><span class="c"># the agent loop</span></span><span class="ln"><span class="k">while</span> not done:</span><span class="ln is-on">    step = model.decide(memory)</span><span class="ln">    result = tools[step.tool](step.args)</span><span class="ln">    memory.append(result)</span></pre>
+<div class="codenow"><span class="c">now:</span> search_web(query=<span>"EU AI Act fines"</span>)</div>
+<pre class="call"><span class="fn">fetch_page</span>(url="https://example-news.test/ai-act")</pre></div>
+</body>
+</html>
