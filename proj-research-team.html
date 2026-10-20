@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>P4 Research Team</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: guided project P4 of the AI engineer track. The brief as a ticket, a flow of the parts, setup from a starter zip, six milestones each with a real checker run, hints that end in the solution and an If-it-breaks box, then stretch goals, the write-up and a done-when list. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage p code,.stage li code,.stage td code{overflow-wrap:anywhere}
+.cb-diff pre.code .ln.d-add{background:var(--final-soft)}
+.cb-diff pre.code .ln.d-del{background:var(--bad-soft)}
+.cb-diff pre.code .ln.d-gap{color:var(--muted)}
+.cb-key{display:flex;gap:10px}
+.cb-key .k-add{color:var(--final)}
+.cb-key .k-del{color:var(--bad)}
+.whole{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.whole>summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:.92rem}
+.whole[open]>summary{border-bottom:1px solid var(--line)}
+.whole>.cb{border:0;border-radius:0 0 var(--radius) var(--radius)}
+
+/* ---------- Guided projects ---------- */
+.ticket{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.ticket-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+.ticket-b{padding:14px 16px;display:grid;gap:10px}
+.ticket-b .story{font-size:1.02rem;max-width:72ch}
+.ac{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-width:76ch}
+.ac li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:.93rem}
+.ac li::before{content:"✓";color:var(--final);font-weight:700}
+.flow{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(3,minmax(0,1fr));counter-reset:flow}
+@media (max-width:860px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.flow{grid-template-columns:minmax(0,1fr)}}
+.flow li{counter-increment:flow;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:4px;align-content:start;position:relative}
+.flow li::before{content:counter(flow);font-family:var(--font-mono);font-size:.72rem;color:var(--accent);border:1px solid var(--accent);border-radius:999px;width:22px;height:22px;display:grid;place-items:center}
+.flow li b{font-family:var(--font-display);font-size:.98rem}
+.flow li span{font-size:.86rem;color:var(--muted)}
+.flow li code{font-size:.8rem;overflow-wrap:anywhere}
+.flow li.loop{border-style:dashed;border-color:var(--act)}
+.ms-meta{display:flex;flex-wrap:wrap;gap:6px}
+.ms-meta span{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted);background:var(--surface)}
+.ms-meta a{color:var(--accent)}
+.todo-list{margin:0;padding-left:1.2em;display:grid;gap:4px;max-width:76ch}
+.todo-list code{overflow-wrap:anywhere}
+.hints{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:14px 16px}
+.hints-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.hints-h h3{font-size:1rem}
+.hint{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;border-left:3px solid var(--accent);padding:2px 0 2px 12px}
+.hint[hidden]{display:none}
+.hint .dm-h{color:var(--accent)}
+.stretch{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.stretch .box{display:grid;gap:8px;align-content:start}
+.proj-dl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.proj-fig{margin:0;display:grid;gap:6px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:10px}
+.proj-fig img{width:100%;height:auto;display:block;border-radius:6px}
+.proj-fig figcaption{font-size:.85rem;color:var(--muted)}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="eng-projects.html" data-site-link>← Guided projects</a>
+    <a class="brand" href="#top">P4 · Research team</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#brief" data-nav="brief">Brief</a>
+      <a href="#setup" data-nav="setup">Setup</a>
+      <a href="#m1" data-nav="m1"><span class="n">1</span>Plan</a>
+      <a href="#m2" data-nav="m2"><span class="n">2</span>Workers</a>
+      <a href="#m3" data-nav="m3"><span class="n">3</span>Writer</a>
+      <a href="#m4" data-nav="m4"><span class="n">4</span>Critic</a>
+      <a href="#m5" data-nav="m5"><span class="n">5</span>Traces, evals</a>
+      <a href="#m6" data-nav="m6"><span class="n">6</span>Models</a>
+      <a href="#stretch" data-nav="stretch">Stretch</a>
+      <a href="#writeup" data-nav="writeup">Write-up</a>
+      <a href="#done" data-nav="done">Done</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+<div class="hero">
+  <p class="eyebrow">Guided project P4 · after E12 · 6 hours</p>
+  <h1>Build a multi-agent research team</h1>
+  <p class="lede">A planner splits a topic into questions, workers research them at the same time on Wikipedia, a writer drafts a report where every paragraph is cited, and a critic sends it back once if anything isn't supported. You'll learn when a team of agents beats one agent, and how to keep it affordable, traceable and measured.</p>
+  <div class="lab-meta"><span>Time <b>6 hours</b></span><span>API cost <b>about $0.50</b></span><span>You need <b>E1 to E12 done</b></span><span>Uses <b>E4, E5, E7, E8, E11</b></span></div>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">One run: four questions researched at once, a draft the critic caught, one revision, and a cost for each role. The report is saved as Markdown. Run against a scripted stand-in for Claude and Wikipedia.</p>
+    <pre class="out">Questions:
+  - What is the James Webb Space Telescope, and what is its mirror like? (3 calls, 1 page(s) read)
+  - Why does the James Webb Space Telescope observe in infrared light? (3 calls, 1 page(s) read)
+  - Where does the James Webb Space Telescope orbit, and why there? (3 calls, 1 page(s) read)
+  - How does the James Webb Space Telescope's sunshield keep it cold? (3 calls, 1 page(s) read)
+Critic: 1 issue(s), revised once
+Saved reports/how-the-james-webb-space-telescope-works.md: 158 words, 4 sources
+[16 model calls in 4.3 s, $0.0027: planner $0.0001, worker $0.0016, writer $0.0008, critic $0.0003]</pre>
+  </div>
+</div>
+<section class="stage" id="brief" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow">The brief</p>
+    <h2 id="s1">The ticket you're picking up</h2>
+    <p>Every criterion below has a check in the starter's tests, or a number your eval measures.</p>
+  </div>
+  <div class="ticket"><div class="ticket-h"><span>P4 · research-team</span><span>Estimate: 6 hours · Labels: python, claude-api, agents, langfuse</span></div><div class="ticket-b"><p class="story">As a busy reader, I want a short report on a topic with every fact cited, so that I can learn it quickly and check anything I doubt.</p><p class="dm-h">Acceptance criteria</p><ul class="ac"><li><span>A planner splits the topic into 3 to 5 questions</span></li><li><span>Workers research the questions at the same time, each within a budget of 6 model calls and $0.01</span></li><li><span>Every paragraph cites numbered sources, and the sources are only pages a worker actually read</span></li><li><span>A critic checks the report, with code checking the citations, and the writer revises once if needed</span></li><li><span>Each run is one trace in Langfuse, with every agent inside it</span></li><li><span>An eval of 5 topics measures citations, coverage and faithfulness, and a comparison shows what each role's model costs</span></li></ul></div></div>
+  <div class="grid g2">
+    <div class="box"><h4>When a team beats one agent</h4><p class="small">A team costs more tokens than one agent, so it has to earn them. It does when the work splits into parts that don't depend on each other (four questions researched at once, each in its own small context), or when a fresh view catches what the author missed (a critic). If neither is true, E7's single agent is cheaper and simpler.</p></div>
+    <div class="box tint"><h4>What you practise</h4><ul class="small" style="margin:0;padding-left:1.1em;display:grid;gap:4px">
+      <li>An <button type="button" class="term" data-term="orchestrator" aria-expanded="false">orchestrator</button> in plain Python: plan, <button type="button" class="term" data-term="fanout" aria-expanded="false">fan-out</button>, write, check</li>
+      <li>Budgets per agent, and costs per role</li>
+      <li>Threads, a lock, and traces that still nest</li>
+      <li>An eval and a model choice for the whole team (<a href="eng-evals.html" data-site-link>E8</a>, <a href="eng-models.html" data-site-link>E11</a>)</li>
+    </ul></div>
+  </div>
+</section>
+<section class="stage" id="how" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow">Architecture</p>
+    <h2 id="s2">How the parts fit</h2>
+    <p><code>team.py</code> holds the four roles and <code>run</code>; <code>wiki.py</code> is E5's Wikipedia tools; <code>evals.py</code> and <code>compare_roles.py</code> measure it. The milestone that builds each part is in brackets, and dashed boxes can repeat.</p>
+  </div>
+  <ol class="flow"><li><b>Plan</b><span><code>plan</code>: 3 to 5 questions, as structured output (1)</span></li><li class="loop"><b>Research in parallel</b><span><code>research_all</code>: one worker per question, each with a budget (2)</span></li><li><b>Number the sources</b><span><code>number_sources</code>: every page read, once (3)</span></li><li><b>Write</b><span><code>write</code>: a report citing [1], [2]… (3)</span></li><li class="loop"><b>Critique, revise once</b><span><code>citation_problems</code> and <code>critique</code> (4)</span></li><li><b>Measure</b><span>a trace per run, an eval, and a model per role (5, 6)</span></li></ol>
+  <p class="prose">Each agent sees only what it needs: workers see one question, the writer sees the findings, the critic sees the findings and the report. Code passes the work between them, numbers the sources, checks the citations and decides when to stop.</p>
+</section>
+<section class="stage" id="setup" aria-labelledby="h-setup"><div class="stage-head"><p class="eyebrow">Before you start</p><h2 id="h-setup">Set up the starter</h2><p>Download the starter, add your keys, and run the checker.</p><div class="ms-meta"><span>About 15 minutes</span><span>Uses <a href="eng-setup.html" data-site-link>E1</a>, <a href="eng-evals.html" data-site-link>E8</a></span></div></div><div class="proj-dl"><a class="btn" href="projects/p4-research-team-starter.zip" download data-site-link>Download the starter (.zip)</a><a href="https://github.com/lalwalataukir/how-ai-agents-work/tree/main/projects/p4-research-team" target="_blank" rel="noopener">See the finished code on GitHub ↗</a></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Download and unzip it into your projects folder</h3><div class="ost"><div class="ost-tabs" role="group" aria-label="Your computer"><button type="button" data-os="mac" aria-selected="true">Mac</button><button type="button" data-os="win" aria-selected="false">Windows</button></div><div class="ost-p" data-os="mac"><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">cd ~/projects</span><span class="ln">curl -LO https://lalwalataukir.github.io/how-ai-agents-work/projects/p4-research-team-starter.zip</span><span class="ln">unzip p4-research-team-starter.zip</span><span class="ln">cd research-team</span></pre></div></div><div class="ost-p" data-os="win" hidden><div class="cb"><div class="cb-h"><span>PowerShell</span><button type="button" class="cb-copy" aria-label="Copy PowerShell">Copy</button></div><pre class="code"><span class="ln">cd ~\projects</span><span class="ln">curl.exe -LO https://lalwalataukir.github.io/how-ai-agents-work/projects/p4-research-team-starter.zip</span><span class="ln">Expand-Archive p4-research-team-starter.zip .</span><span class="ln">cd research-team</span></pre></div></div></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Install, and add your keys</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv sync</span><span class="ln">cp .env.example .env</span><span class="ln">code .</span></pre></div><p>Put your API key in <code>.env</code>, and your three Langfuse keys from E8 for milestone 5. Without Langfuse keys everything works, just without traces.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Look around</h3><ul><li><code>team.py</code>: the four roles and <code>run</code>. The prompts, data classes and <code>Costs</code> are written; you write the functions.</li><li><code>wiki.py</code>: E5's two Wikipedia tools, ready to use.</li><li><code>evals.py</code>, <code>eval_topics.json</code> and <code>compare_roles.py</code>: the eval and the model comparison, for milestones 5 and 6.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Run the checker</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [ ] 1  The planner: not started
+         test_at_most_max_questions: NotImplementedError: milestone 1: plan
+         Hint: client.messages.parse(model=ROLES["planner"], system=PLANNER, output_format=Plan,
+               ...), then costs.add("planner", response.usage). Keep each question once (compare in
+               lower case), raise RuntimeError when fewer than 2 are left, and return at most
+               MAX_QUESTIONS.
+  [ ] 2  Workers, in parallel: not started
+  [ ] 3  The writer: not started
+  [ ] 4  The critic, and the whole run: not started
+  [ ] 5  Traces and evals: not started
+  [ ] 6  A model for each role: not started
+0 of 6 milestones done. Next: milestone 1.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Make it a git repo</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git init</span><span class="ln">git add -A</span><span class="ln">git commit -m "Starter"</span></pre></div></div></li></ol></section>
+<section class="stage" id="m1" aria-labelledby="h-m1"><div class="stage-head"><p class="eyebrow"><b>1</b> · Milestone 1 of 6</p><h2 id="h-m1">The planner</h2><p>Split a topic into 3 to 5 questions that together cover it. The plan is the team's contract: each worker gets one question and nothing else.</p><div class="ms-meta"><span>About 45 minutes</span><span>Uses <a href="eng-structured.html" data-site-link>E4</a>, <a href="eng-agents.html" data-site-link>E7</a></span></div></div><p class="prose">In E7 the plan was a few steps for one agent to follow. Here each question goes to a different worker that never sees the topic or the other questions, so each must make sense on its own, and they mustn't overlap: two workers researching the same thing is money spent twice. Structured output (E4) gives you a list you can check in code.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>plan(topic, costs)</code>: the questions, tidied and checked.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write plan</h3><p>Call <code>client.messages.parse</code> with <code>model=ROLES["planner"]</code>, <code>system=PLANNER</code> and <code>output_format=Plan</code>, and add the usage to <code>costs</code> as <code>"planner"</code>. Then don't trust the list: drop blank questions and repeats (compare in lower case), raise <code>RuntimeError</code> if fewer than 2 are left, and return at most <code>MAX_QUESTIONS</code>.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 1</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  The planner: 5 checks pass
+1 of 1 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Try the planner</h3><div class="cb"><div class="cb-h"><span>In uv run python</span><button type="button" class="cb-copy" aria-label="Copy In uv run python">Copy</button></div><pre class="code"><span class="ln"><span class="k">import</span> team</span><span class="ln"><span class="k">for</span> question <span class="k">in</span> team.plan(<span class="s">"How the James Webb Space Telescope works"</span>, team.Costs()):</span><span class="ln">    print(question)</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">What is the James Webb Space Telescope, and what is its mirror like?
+Why does the James Webb Space Telescope observe in infrared light?
+Where does the James Webb Space Telescope orbit, and why there?
+How does the James Webb Space Telescope's sunshield keep it cold?</pre><p class="small">An example run against a scripted stand-in for Claude and Wikipedia, with calls slowed to about half a second: the flow, the budgets, the checks, the timings and the costs are the finished code's; real models write their own words.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 1: the planner"</span></pre></div></div></li></ol><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>response.parsed_output.questions</code> is the list. Build a new list, checking each <code>question.strip()</code> against the lower-cased ones already in it.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>Return <code>questions[:MAX_QUESTIONS]</code>: slicing past the end is fine in Python.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>team.py</span><button type="button" class="cb-copy" aria-label="Copy team.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> plan(topic, costs):</span><span class="ln">    <span class="s">"""The sub-questions for a topic: at least 2, at most MAX_QUESTIONS, no repeats."""</span></span><span class="ln">    response = client.messages.parse(</span><span class="ln">        model=ROLES[<span class="s">"planner"</span>], max_tokens=2000, system=PLANNER, output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>},</span><span class="ln">        messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">f"&lt;topic&gt;{topic}&lt;/topic&gt;"</span>}], output_format=Plan,</span><span class="ln">    )</span><span class="ln">    costs.add(<span class="s">"planner"</span>, response.usage)</span><span class="ln">    questions = []</span><span class="ln">    <span class="k">for</span> question <span class="k">in</span> response.parsed_output.questions:</span><span class="ln">        <span class="k">if</span> question.strip() <span class="k">and</span> question.strip().lower() <span class="k">not</span> <span class="k">in</span> {q.lower() <span class="k">for</span> q <span class="k">in</span> questions}:</span><span class="ln">            questions.append(question.strip())</span><span class="ln">    <span class="k">if</span> len(questions) &lt; 2:</span><span class="ln">        <span class="k">raise</span> RuntimeError(<span class="s">f"The plan has {len(questions)} question(s); a report needs at least 2."</span>)</span><span class="ln">    <span class="k">return</span> questions[:MAX_QUESTIONS]</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>KeyError: 'planner'</code></dt><dd><code>costs.add</code> takes the role's name, which it looks up in <code>ROLES</code>: <code>"planner"</code>, not the model's name.</dd><dt><code>RuntimeError: The plan has 1 question(s)</code></dt><dd>The topic may be too narrow for a report. Try a broader one, or check <code>PLANNER</code> asks for 3 to 5.</dd></dl></div></section>
+<section class="stage" id="m2" aria-labelledby="h-m2"><div class="stage-head"><p class="eyebrow"><b>2</b> · Milestone 2 of 6</p><h2 id="h-m2">Workers, in parallel</h2><p>One worker per question, all at once, each with its own budget. The pages they read are recorded by code, so the report can only cite what was really read.</p><div class="ms-meta"><span>About 1¼ hours</span><span>Uses <a href="eng-tools.html" data-site-link>E5</a>, <a href="eng-agents.html" data-site-link>E7</a></span></div></div><p class="prose">Each worker is E5's research loop on one question, with a small context of its own: one question's pages, not everyone's. Running them at once is the <button type="button" class="term" data-term="fanout" aria-expanded="false">fan-out</button> that makes a team fast: the time is the slowest worker, not the sum. Python threads suit this, because the workers spend their time waiting for the network.</p><p class="prose">Two things change when code runs in threads. Shared totals need a lock, or two workers adding at the same moment lose one addition: a <button type="button" class="term" data-term="race" aria-expanded="false">race condition</button>. <code>Costs</code> has one already. And each thread needs a copy of the current context, so its trace lands inside the run's (milestone 5): that's <button type="button" class="term" data-term="propagation" aria-expanded="false">context propagation</button>.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>research(question, costs)</code>: one worker. Returns a <code>Finding</code>.</li><li><code>research_all(questions, costs)</code>: every worker at once, in the questions' order.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write research</h3><p>E5's loop with <code>wiki.TOOLS</code> and <code>ROLES["worker"]</code>. Before every call, check the budget: <code>finding.calls</code> against <code>MAX_WORKER_CALLS</code> and this worker's spending against <code>MAX_WORKER_COST</code>; when one is reached, set <code>finding.stopped = "budget"</code> and stop. <code>costs.add</code> returns what each call cost. Run tools with <code>wiki.run_tool</code>, send a <code>ValueError</code> back as an error, and add each new page from <code>read_page</code> to <code>finding.sources</code>.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write research_all</h3><div class="cb"><div class="cb-h"><span>Every worker at once</span><button type="button" class="cb-copy" aria-label="Copy Every worker at once">Copy</button></div><pre class="code"><span class="ln"><span class="k">with</span> ThreadPoolExecutor(max_workers=WORKERS) <span class="k">as</span> pool:</span><span class="ln">    futures = [pool.submit(contextvars.copy_context().run, research, question, costs)</span><span class="ln">               <span class="k">for</span> question <span class="k">in</span> questions]</span></pre></div><p><code>copy_context().run</code> runs <code>research</code> inside a copy of this thread's context. Then collect <code>future.result()</code> for each, in order; if one raises, keep a <code>Finding</code> with <code>stopped="failed: ..."</code> instead, so one bad worker leaves a gap rather than sinking the report.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 2</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  The planner: 5 checks pass
+  [x] 2  Workers, in parallel: 7 checks pass
+2 of 2 milestones done.</pre></div><p>One check times four slow workers: in parallel they must finish in well under the time they'd take one after another.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Try the team so far</h3><div class="cb"><div class="cb-h"><span>In uv run python</span><button type="button" class="cb-copy" aria-label="Copy In uv run python">Copy</button></div><pre class="code"><span class="ln"><span class="k">import</span> team, time</span><span class="ln">costs, start = team.Costs(), time.perf_counter()</span><span class="ln">findings = team.research_all(team.plan(<span class="s">"How the James Webb Space Telescope works"</span>, costs), costs)</span><span class="ln"><span class="k">for</span> f <span class="k">in</span> findings:</span><span class="ln">    print(f.calls, <span class="s">"calls, read"</span>, [s[<span class="s">"title"</span>] <span class="k">for</span> s <span class="k">in</span> f.sources])</span><span class="ln">print(<span class="s">f"{costs.calls} calls in {time.perf_counter() - start:.1f} s, ${costs.total():.4f}"</span>)</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">3 calls, read ['James Webb Space Telescope']
+3 calls, read ['Infrared astronomy']
+3 calls, read ['Lagrange point']
+3 calls, read ['Sunshield (JWST)']
+13 calls in 2.6 s, $0.0016</pre><p class="small">An example run against a scripted stand-in for Claude and Wikipedia, with calls slowed to about half a second: the flow, the budgets, the checks, the timings and the costs are the finished code's; real models write their own words. Twelve calls of about 0.4 s took under 2 s.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 2: workers, in parallel"</span></pre></div></div></li></ol><div class="quiz" data-quiz="qp4a">
+    <p class="quiz-label">Check your understanding · Fan-out</p>
+    <p class="quiz-q">Four workers each make 3 calls of about 1 second. With WORKERS = 4, about how long does research_all take?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. That&#x27;s one after another. The threads wait for the network at the same time."><span class="l">A</span><span>About 12 seconds</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Fan-out makes the time the longest branch, not the sum."><span class="l">B</span><span>About 3 seconds: the time of the slowest worker</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Each worker&#x27;s own calls still happen one after another."><span class="l">C</span><span>About 1 second</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p>Keep a <code>spent</code> total inside <code>research</code>, separate from <code>costs</code>: the budget is per worker, and <code>costs</code> is shared by all of them.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>In <code>research_all</code>, wrap <code>future.result()</code> in <code>try</code>/<code>except Exception</code>. A result's exception is raised when you ask for it.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>team.py</span><button type="button" class="cb-copy" aria-label="Copy team.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> research(question, costs):</span><span class="ln">    <span class="s">"""One worker: E5's tool loop on one question, within its own budget of calls and dollars.</span></span><span class="ln"><span class="s">    The pages it reads are recorded by code, so the report can only cite what was really read."""</span></span><span class="ln">    finding, spent = Finding(question), 0.0</span><span class="ln">    messages = [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}]</span><span class="ln">    <span class="k">while</span> <span class="k">True</span>:</span><span class="ln">        <span class="k">if</span> finding.calls &gt;= MAX_WORKER_CALLS <span class="k">or</span> spent &gt;= MAX_WORKER_COST:  <span class="c"># the budget, checked before each call</span></span><span class="ln">            finding.stopped = <span class="s">"budget"</span></span><span class="ln">            <span class="k">break</span></span><span class="ln">        response = client.messages.create(model=ROLES[<span class="s">"worker"</span>], max_tokens=2000, system=WORKER, tools=wiki.TOOLS,</span><span class="ln">                                          messages=messages, output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>})</span><span class="ln">        spent += costs.add(<span class="s">"worker"</span>, response.usage)  <span class="c"># this worker's own spending, for its budget</span></span><span class="ln">        finding.calls += 1</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: response.content})</span><span class="ln">        <span class="k">if</span> response.stop_reason != <span class="s">"tool_use"</span>:</span><span class="ln">            finding.answer = <span class="s">""</span>.join(block.text <span class="k">for</span> block <span class="k">in</span> response.content <span class="k">if</span> block.type == <span class="s">"text"</span>)</span><span class="ln">            <span class="k">break</span></span><span class="ln">        results = []</span><span class="ln">        <span class="k">for</span> block <span class="k">in</span> response.content:</span><span class="ln">            <span class="k">if</span> block.type != <span class="s">"tool_use"</span>:</span><span class="ln">                <span class="k">continue</span></span><span class="ln">            <span class="k">try</span>:</span><span class="ln">                result, failed = wiki.run_tool(block.name, block.input), <span class="k">False</span></span><span class="ln">                <span class="k">if</span> block.name == <span class="s">"read_page"</span> <span class="k">and</span> result[<span class="s">"title"</span>] <span class="k">not</span> <span class="k">in</span> {s[<span class="s">"title"</span>] <span class="k">for</span> s <span class="k">in</span> finding.sources}:</span><span class="ln">                    finding.sources.append(result)</span><span class="ln">                text = wiki.as_text(result)</span><span class="ln">            <span class="k">except</span> ValueError <span class="k">as</span> error:</span><span class="ln">                text, failed = str(error), <span class="k">True</span></span><span class="ln">            results.append({<span class="s">"type"</span>: <span class="s">"tool_result"</span>, <span class="s">"tool_use_id"</span>: block.id, <span class="s">"content"</span>: text, <span class="s">"is_error"</span>: failed})</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: results})</span><span class="ln">    <span class="k">return</span> finding</span></pre></div><div class="cb"><div class="cb-h"><span>team.py</span><button type="button" class="cb-copy" aria-label="Copy team.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> research_all(questions, costs):</span><span class="ln">    <span class="s">"""Research every question at once, WORKERS at a time. One worker failing doesn't stop the others."""</span></span><span class="ln">    <span class="k">with</span> ThreadPoolExecutor(max_workers=WORKERS) <span class="k">as</span> pool:</span><span class="ln">        <span class="c"># each worker runs in a copy of this context, so its trace nests under this run (milestone 5)</span></span><span class="ln">        futures = [pool.submit(contextvars.copy_context().run, research, question, costs) <span class="k">for</span> question <span class="k">in</span> questions]</span><span class="ln">    findings = []</span><span class="ln">    <span class="k">for</span> question, future <span class="k">in</span> zip(questions, futures):</span><span class="ln">        <span class="k">try</span>:</span><span class="ln">            findings.append(future.result())</span><span class="ln">        <span class="k">except</span> Exception <span class="k">as</span> error:  <span class="c"># a crash in one worker becomes a gap in the report, not a failed run</span></span><span class="ln">            findings.append(Finding(question, stopped=<span class="s">f"failed: {type(error).__name__}: {error}"</span>))</span><span class="ln">    <span class="k">return</span> findings</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>test_workers_run_at_the_same_time_and_keep_their_order</code></dt><dd>Submit every question before collecting any result. Calling <code>future.result()</code> inside the submit loop waits for each worker in turn.</dd><dt><code>Workers' traces show up as separate traces</code></dt><dd>Submit with <code>contextvars.copy_context().run</code>: a new thread starts with an empty context otherwise.</dd></dl></div></section>
+<section class="stage" id="m3" aria-labelledby="h-m3"><div class="stage-head"><p class="eyebrow"><b>3</b> · Milestone 3 of 6</p><h2 id="h-m3">The writer</h2><p>Turn the findings into a short report where every paragraph cites numbered sources, and the list of sources is built by code.</p><div class="ms-meta"><span>About 45 minutes</span><span>Uses <a href="eng-structured.html" data-site-link>E4</a>, <a href="context.html" data-site-link>PM 8</a></span></div></div><p class="prose">The workers cite pages by title; a report reads better with numbers. Code numbers the pages the workers actually read, the writer cites those numbers, and code writes the list of sources at the end. The writer never types a link, so every link in the report is a page someone read. The writer sees only the findings and the sources: that context is the whole truth it may use.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>number_sources(findings)</code>: every page read, once, in order.</li><li><code>write(topic, findings, sources, costs, issues)</code>: the draft, or a revision.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write number_sources</h3><p>Go through each finding's <code>sources</code> and keep the first copy of each title. Its position plus one is its number.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write write</h3><p>Build the prompt from three tagged parts: the <code>&lt;topic&gt;</code>, the <code>&lt;findings&gt;</code> as <code>Q:</code> and <code>A:</code> pairs (say "nothing found" when a worker stopped without an answer), and the <code>&lt;sources&gt;</code> as <code>[1] Title: summary</code> lines. When <code>issues</code> are given, add them as a list and ask for the report again. Call <code>ROLES["writer"]</code> with <code>system=WRITER</code>, then add <code>## Sources</code> with a <code>1. [Title](url)</code> line for each source.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 3</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  The planner: 5 checks pass
+  [x] 2  Workers, in parallel: 7 checks pass
+  [x] 3  The writer: 6 checks pass
+3 of 3 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 3: the writer"</span></pre></div></div></li></ol><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>"\n".join(f"[{n}] {s['title']}: {s['summary']}" for n, s in enumerate(sources, 1))</code> numbers the sources for the prompt.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>The same <code>enumerate(sources, 1)</code> builds the list at the end, so the numbers always match.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>team.py</span><button type="button" class="cb-copy" aria-label="Copy team.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> number_sources(findings):</span><span class="ln">    <span class="s">"""Every page the workers read, once each, numbered from 1 in the order they were found."""</span></span><span class="ln">    sources = []</span><span class="ln">    <span class="k">for</span> finding <span class="k">in</span> findings:</span><span class="ln">        <span class="k">for</span> source <span class="k">in</span> finding.sources:</span><span class="ln">            <span class="k">if</span> source[<span class="s">"title"</span>] <span class="k">not</span> <span class="k">in</span> [s[<span class="s">"title"</span>] <span class="k">for</span> s <span class="k">in</span> sources]:</span><span class="ln">                sources.append(source)</span><span class="ln">    <span class="k">return</span> sources</span></pre></div><div class="cb"><div class="cb-h"><span>team.py</span><button type="button" class="cb-copy" aria-label="Copy team.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> write(topic, findings, sources, costs, issues=()):</span><span class="ln">    <span class="s">"""Draft the report, or revise it when issues are given, and add the numbered list of sources."""</span></span><span class="ln">    numbered = <span class="s">"\n"</span>.join(<span class="s">f"[{n}] {s['title']}: {s['summary']}"</span> <span class="k">for</span> n, s <span class="k">in</span> enumerate(sources, 1))</span><span class="ln">    notes = <span class="s">"\n\n"</span>.join(<span class="s">f"Q: {f.question}\nA: {f.answer or '(nothing found: ' + (f.stopped or 'no answer') + ')'}"</span> <span class="k">for</span> f <span class="k">in</span> findings)</span><span class="ln">    prompt = <span class="s">f"&lt;topic&gt;{topic}&lt;/topic&gt;\n\n&lt;findings&gt;\n{notes}\n&lt;/findings&gt;\n\n&lt;sources&gt;\n{numbered}\n&lt;/sources&gt;"</span></span><span class="ln">    <span class="k">if</span> issues:</span><span class="ln">        prompt += <span class="s">"\n\nA reviewer found these problems in your last draft. Write it again without them:\n"</span> + <span class="s">"\n"</span>.join(<span class="s">f"- {i}"</span> <span class="k">for</span> i <span class="k">in</span> issues)</span><span class="ln">    response = client.messages.create(model=ROLES[<span class="s">"writer"</span>], max_tokens=4000, system=WRITER,</span><span class="ln">                                      messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: prompt}])</span><span class="ln">    costs.add(<span class="s">"writer"</span>, response.usage)</span><span class="ln">    body = <span class="s">""</span>.join(block.text <span class="k">for</span> block <span class="k">in</span> response.content <span class="k">if</span> block.type == <span class="s">"text"</span>).strip()</span><span class="ln">    <span class="k">return</span> body + <span class="s">"\n\n## Sources\n\n"</span> + <span class="s">"\n"</span>.join(<span class="s">f"{n}. [{s['title']}]({s['url']})"</span> <span class="k">for</span> n, s <span class="k">in</span> enumerate(sources, 1)) + <span class="s">"\n"</span></span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>test_the_report_ends_with_its_sources</code></dt><dd>End with a single newline after the last source, and put a blank line before and after <code>## Sources</code>.</dd><dt><code>The writer lists the sources itself as well</code></dt><dd><code>WRITER</code> says not to. If it still does, remove the list from its text before adding yours, and add the rule to your eval.</dd></dl></div></section>
+<section class="stage" id="m4" aria-labelledby="h-m4"><div class="stage-head"><p class="eyebrow"><b>4</b> · Milestone 4 of 6</p><h2 id="h-m4">The critic, and the whole run</h2><p>A second agent checks the report against the findings, code checks the citations, and the writer revises once. Then put the whole team together.</p><div class="ms-meta"><span>About 1 hour</span><span>Uses <a href="eng-evals.html" data-site-link>E8</a>, <a href="eng-agents.html" data-site-link>E7</a></span></div></div><p class="prose">A <button type="button" class="term" data-term="reflection" aria-expanded="false">critic</button> works because it starts fresh: it didn't write the report, so it has nothing to defend, and its instructions are only about finding problems. Code checks what code can (every <code>[n]</code> is a real source, every paragraph cites one), so the critic model spends its attention on what needs judgement. One revision is enough: a second round costs as much again and rarely finds more.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>citation_problems(report, count)</code>: what code can check.</li><li><code>critique(report, findings, sources, costs)</code>: code first, then the critic model.</li><li><code>run(topic)</code>: the whole team, in order. Returns a <code>Result</code>.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write citation_problems</h3><p>Use only the body (<code>body_of</code> cuts off the sources). One problem for each cited number outside 1 to <code>count</code>, and one for each paragraph, skipping headings, with no <code>[n]</code> in it. Make each one specific enough to fix.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write critique</h3><p>Start with <code>citation_problems</code>. Then ask <code>ROLES["critic"]</code> for a <code>Critique</code> (structured output), giving it the findings and the report. Add its issues unless it approved.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Write run</h3><p>This is the <button type="button" class="term" data-term="orchestrator" aria-expanded="false">orchestrator</button>: <code>plan</code>, <code>research_all</code>, <code>number_sources</code>, <code>write</code>, <code>critique</code>, and if there are issues, <code>write</code> once more with them. Time it with <code>time.perf_counter()</code> and return a <code>Result</code>.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 4</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  The planner: 5 checks pass
+  [x] 2  Workers, in parallel: 7 checks pass
+  [x] 3  The writer: 6 checks pass
+  [x] 4  The critic, and the whole run: 6 checks pass
+4 of 4 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Run the team</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run team.py "How the James Webb Space Telescope works"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Questions:
+  - What is the James Webb Space Telescope, and what is its mirror like? (3 calls, 1 page(s) read)
+  - Why does the James Webb Space Telescope observe in infrared light? (3 calls, 1 page(s) read)
+  - Where does the James Webb Space Telescope orbit, and why there? (3 calls, 1 page(s) read)
+  - How does the James Webb Space Telescope's sunshield keep it cold? (3 calls, 1 page(s) read)
+Critic: 1 issue(s), revised once
+Saved reports/how-the-james-webb-space-telescope-works.md: 158 words, 4 sources
+[16 model calls in 4.3 s, $0.0027: planner $0.0001, worker $0.0016, writer $0.0008, critic $0.0003]</pre><p class="small">An example run against a scripted stand-in for Claude and Wikipedia, with calls slowed to about half a second: the flow, the budgets, the checks, the timings and the costs are the finished code's; real models write their own words. Here the first draft left one paragraph without a citation; code caught it and the writer fixed it.</p></div><p>The report is in <code>reports/</code>:</p><div class="cb"><div class="cb-h"><span>reports/how-the-james-webb-space-telescope-works.md</span><button type="button" class="cb-copy" aria-label="Copy reports/how-the-james-webb-space-telescope-works.md">Copy</button></div><pre class="code"><span class="ln"><span class="c"># How the James Webb Space Telescope works</span></span><span class="ln"> </span><span class="ln">The James Webb Space Telescope (JWST) is a space telescope designed for infrared astronomy, launched on 25 December 2021. Its primary mirror is 6.5 metres across, made of 18 gold-coated beryllium segments. [1]</span><span class="ln"> </span><span class="ln">Infrared astronomy studies objects through infrared light. Infrared passes through dust that blocks visible light, and light from the most distant galaxies is stretched into the infrared by the expansion of the universe. [2]</span><span class="ln"> </span><span class="ln">Lagrange points are positions where the gravity of two large bodies, such as the Sun and Earth, keeps a small object in step with them. The Sun-Earth L2 point is about 1.5 million kilometres from Earth, on the side away from the Sun. [3]</span><span class="ln"> </span><span class="ln">The sunshield of the James Webb Space Telescope is five layers of Kapton film about the size of a tennis court. It blocks heat from the Sun, Earth and Moon so the telescope can cool below 50 kelvin. [4]</span><span class="ln"> </span><span class="ln"><span class="c">## Sources</span></span><span class="ln"> </span><span class="ln">1. [James Webb Space Telescope](https://en.wikipedia.org/wiki/James_Webb_Space_Telescope)</span><span class="ln">2. [Infrared astronomy](https://en.wikipedia.org/wiki/Infrared_astronomy)</span><span class="ln">3. [Lagrange point](https://en.wikipedia.org/wiki/Lagrange_point)</span><span class="ln">4. [Sunshield (JWST)](https://en.wikipedia.org/wiki/Sunshield_(JWST))</span></pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 4: the critic, and the whole run"</span></pre></div></div></li></ol><div class="quiz" data-quiz="qp4b">
+    <p class="quiz-label">Check your understanding · The critic</p>
+    <p class="quiz-q">Why use a separate critic call instead of asking the writer to check its own report?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. It&#x27;s an extra call, so it costs more."><span class="l">A</span><span>A separate call is cheaper</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. A fresh context and a different job catch what the author misses. It can also use a stronger model."><span class="l">B</span><span>It starts fresh, with instructions only about finding problems, so it doesn't defend what it wrote</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. It can; it&#x27;s just a poor judge of it."><span class="l">C</span><span>The writer can't read its own output</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>re.findall(r"\[(\d+)\]", body)</code> finds the numbers. Paragraphs are <code>body.split("\n\n")</code>; skip blank ones and ones starting with <code>#</code>.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p><code>run</code> is six lines and an <code>if</code>. Pass the same <code>Costs()</code> to every role so the total covers the whole team.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>team.py</span><button type="button" class="cb-copy" aria-label="Copy team.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> citation_problems(report, count):</span><span class="ln">    <span class="s">"""What code can check: every citation number exists, and every paragraph cites something."""</span></span><span class="ln">    problems = []</span><span class="ln">    <span class="k">for</span> number <span class="k">in</span> sorted({int(n) <span class="k">for</span> n <span class="k">in</span> re.findall(<span class="s">r"\[(\d+)\]"</span>, body_of(report))}):</span><span class="ln">        <span class="k">if</span> <span class="k">not</span> 1 &lt;= number &lt;= count:</span><span class="ln">            problems.append(<span class="s">f"[{number}] is cited, but there are only {count} sources."</span>)</span><span class="ln">    <span class="k">for</span> paragraph <span class="k">in</span> body_of(report).split(<span class="s">"\n\n"</span>):</span><span class="ln">        <span class="k">if</span> paragraph.strip() <span class="k">and</span> <span class="k">not</span> paragraph.lstrip().startswith(<span class="s">"#"</span>) <span class="k">and</span> <span class="k">not</span> re.search(<span class="s">r"\[\d+\]"</span>, paragraph):</span><span class="ln">            problems.append(<span class="s">f"This paragraph has no citation: {paragraph.strip()[:60]}..."</span>)</span><span class="ln">    <span class="k">return</span> problems</span></pre></div><div class="cb"><div class="cb-h"><span>team.py</span><button type="button" class="cb-copy" aria-label="Copy team.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> critique(report, findings, sources, costs):</span><span class="ln">    <span class="s">"""Code checks first, then the critic model. Returns the list of issues; empty means approved."""</span></span><span class="ln">    issues = citation_problems(report, len(sources))</span><span class="ln">    notes = <span class="s">"\n\n"</span>.join(<span class="s">f"Q: {f.question}\nA: {f.answer}"</span> <span class="k">for</span> f <span class="k">in</span> findings)</span><span class="ln">    response = client.messages.parse(</span><span class="ln">        model=ROLES[<span class="s">"critic"</span>], max_tokens=2000, system=CRITIC, output_format=Critique,</span><span class="ln">        messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">f"&lt;findings&gt;\n{notes}\n&lt;/findings&gt;\n\n&lt;report&gt;\n{report}\n&lt;/report&gt;"</span>}],</span><span class="ln">    )</span><span class="ln">    costs.add(<span class="s">"critic"</span>, response.usage)</span><span class="ln">    <span class="k">return</span> issues + ([] <span class="k">if</span> response.parsed_output.approved <span class="k">else</span> response.parsed_output.issues)</span></pre></div><div class="cb"><div class="cb-h"><span>team.py</span><button type="button" class="cb-copy" aria-label="Copy team.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> run(topic):</span><span class="ln">    <span class="s">"""The whole team: plan, research in parallel, write, critique, and revise once if needed."""</span></span><span class="ln">    start, costs = time.perf_counter(), Costs()</span><span class="ln">    questions = plan(topic, costs)</span><span class="ln">    findings = research_all(questions, costs)</span><span class="ln">    sources = number_sources(findings)</span><span class="ln">    report = write(topic, findings, sources, costs)</span><span class="ln">    issues = critique(report, findings, sources, costs)</span><span class="ln">    <span class="k">if</span> issues:  <span class="c"># one revision: a second critique would cost more than it usually finds</span></span><span class="ln">        report = write(topic, findings, sources, costs, issues)</span><span class="ln">    <span class="k">return</span> Result(report, questions, findings, sources, issues, bool(issues), costs, round(time.perf_counter() - start, 1))</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>test_a_draft_with_problems_is_revised_once</code></dt><dd>Critique once, then write again with the issues. Don't critique the revision: that's a loop that can run forever.</dd><dt><code>Every report gets revised</code></dt><dd>Look at the issues: if the critic flags things that are fine, tighten <code>CRITIC</code>. Each revision is another writer call.</dd></dl></div></section>
+<section class="stage" id="m5" aria-labelledby="h-m5"><div class="stage-head"><p class="eyebrow"><b>5</b> · Milestone 5 of 6</p><h2 id="h-m5">Traces and evals</h2><p>See each run as one trace, with every agent inside it. Then measure the team on five topics: citations and coverage by code, faithfulness by a judge.</p><div class="ms-meta"><span>About 1 hour</span><span>Uses <a href="eng-evals.html" data-site-link>E8</a></span></div></div><p class="prose">With four agents, a bad report could come from any of them. A trace shows which: the plan, each worker's searches, the draft, the critique. The roles are already decorated with <code>@observe</code>, and because <code>research_all</code> copies the context into each thread, the workers nest under the run instead of floating off as separate traces. Run the team with your Langfuse keys in <code>.env</code> and open the trace.</p><p class="prose">This is the trace of the run above, as Langfuse receives it. The four workers start together and finish together: that's the parallel research.</p><div class="expect"><p class="expect-h">The trace</p><pre class="out">research-team                0.0 s   4.2 s
+├─ planner                   0.0 s   0.7 s
+├─ worker (3 model calls)    0.7 s   1.6 s
+├─ worker (3 model calls)    0.7 s   1.7 s
+├─ worker (3 model calls)    0.7 s   1.6 s
+├─ worker (3 model calls)    0.7 s   1.7 s
+├─ writer                    2.4 s   0.6 s
+├─ critic                    3.0 s   0.6 s
+└─ writer                    3.6 s   0.6 s</pre><p class="small">Each span's start, from the beginning of the run, and how long it took. Recorded from the scripted run by a local stand-in for Langfuse.</p></div><p class="dm-h">What you write</p><ul class="todo-list"><li><code>cited_share(report)</code> in <code>evals.py</code>: the share of paragraphs with a citation.</li><li><code>mentions(report, terms)</code>: how much of the topic it covers.</li><li><code>run_topic(case)</code>: run, grade, score the trace, and return a row.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write cited_share and mentions</h3><p>Code checks, as in E8: free, instant and the same every time. A term like <code>"sunshield|sun shield"</code> counts if either spelling is in the report.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write run_topic</h3><p>Inside <code>propagate_attributes(tags=["eval"], ...)</code>, as in E8: run the team, grade with <code>cited_share</code>, <code>mentions</code> and <code>judge</code> (written: it asks whether every claim is in the findings), then <code>team.langfuse.score_current_trace</code>. A report passes with 90% cited, 75% of the terms, and the judge's yes.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 5</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  The planner: 5 checks pass
+  [x] 2  Workers, in parallel: 7 checks pass
+  [x] 3  The writer: 6 checks pass
+  [x] 4  The critic, and the whole run: 6 checks pass
+  [x] 5  Traces and evals: 6 checks pass
+5 of 5 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Run the eval</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run evals.py 2</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] The Dartmouth workshop and the birth of artificial i cited 100% · topic 100% · judge yes · $0.0021 ·  3.5 s
+  [x] How vaccines train the immune system                 cited 100% · topic 100% · judge yes · $0.0021 ·  3.4 s
+2 of 2 passed. $0.0043 in all, 3.5 s a report.</pre><p class="small">An example run against a scripted stand-in for Claude and Wikipedia, with calls slowed to about half a second: the flow, the budgets, the checks, the timings and the costs are the finished code's; real models write their own words. Until milestone 6 every role uses Haiku, so a report costs a fraction of a cent; with stronger models for some roles, all 5 topics cost about $0.10.</p></div><p>When a topic fails, open its trace: a worker that found nothing, a writer that left out a question, or a judge that disagrees. Each points to a different fix.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 5: traces and evals"</span></pre></div></div></li></ol><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>[p for p in team.body_of(report).split("\n\n") if p.strip() and not p.lstrip().startswith("#")]</code> are the paragraphs.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>Add the judge's cost to the team's: <code>result.costs.total() + judge_cost</code>, so the eval's numbers are what a run really costs.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>evals.py</span><button type="button" class="cb-copy" aria-label="Copy evals.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> cited_share(report):</span><span class="ln">    <span class="s">"""The share of the body's paragraphs (not headings) that cite at least one source."""</span></span><span class="ln">    paragraphs = [p <span class="k">for</span> p <span class="k">in</span> team.body_of(report).split(<span class="s">"\n\n"</span>) <span class="k">if</span> p.strip() <span class="k">and</span> <span class="k">not</span> p.lstrip().startswith(<span class="s">"#"</span>)]</span><span class="ln">    <span class="k">return</span> sum(bool(re.search(<span class="s">r"\[\d+\]"</span>, p)) <span class="k">for</span> p <span class="k">in</span> paragraphs) / len(paragraphs) <span class="k">if</span> paragraphs <span class="k">else</span> 0.0</span></pre></div><div class="cb"><div class="cb-h"><span>evals.py</span><button type="button" class="cb-copy" aria-label="Copy evals.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> mentions(report, terms):</span><span class="ln">    <span class="s">"""The share of terms the report mentions. "sunshield|sun shield" means either will do."""</span></span><span class="ln">    text = report.lower()</span><span class="ln">    <span class="k">return</span> sum(any(word.lower() <span class="k">in</span> text <span class="k">for</span> word <span class="k">in</span> term.split(<span class="s">"|"</span>)) <span class="k">for</span> term <span class="k">in</span> terms) / len(terms)</span></pre></div><div class="cb"><div class="cb-h"><span>evals.py</span><button type="button" class="cb-copy" aria-label="Copy evals.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> run_topic(case):</span><span class="ln">    <span class="s">"""One topic: run the team, grade the report, and score the trace in Langfuse."""</span></span><span class="ln">    <span class="k">with</span> propagate_attributes(tags=[<span class="s">"eval"</span>], metadata={<span class="s">"topic"</span>: case[<span class="s">"topic"</span>]}):  <span class="c"># find eval runs in Langfuse</span></span><span class="ln">        result = team.run(case[<span class="s">"topic"</span>])</span><span class="ln">        cited, mentioned = cited_share(result.report), mentions(result.report, case[<span class="s">"must_mention"</span>])</span><span class="ln">        verdict, judge_cost = judge(result)</span><span class="ln">        passed = cited &gt;= MIN_CITED <span class="k">and</span> mentioned &gt;= MIN_MENTIONS <span class="k">and</span> verdict.passed</span><span class="ln">        team.langfuse.score_current_trace(name=<span class="s">"passed"</span>, value=float(passed), comment=verdict.reason)</span><span class="ln">    <span class="k">return</span> {<span class="s">"topic"</span>: case[<span class="s">"topic"</span>], <span class="s">"passed"</span>: passed, <span class="s">"cited"</span>: cited, <span class="s">"mentions"</span>: mentioned, <span class="s">"judge"</span>: verdict.passed,</span><span class="ln">            <span class="s">"reason"</span>: verdict.reason, <span class="s">"cost"</span>: result.costs.total() + judge_cost, <span class="s">"seconds"</span>: result.seconds}</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>No trace appears in Langfuse</code></dt><dd>Check the three <code>LANGFUSE_</code> keys in <code>.env</code>, and that <code>team.py</code> ends by calling <code>langfuse.flush()</code>: without it, the program can end before the trace is sent.</dd><dt><code>Workers appear as separate traces</code></dt><dd>Use <code>contextvars.copy_context().run</code> in <code>research_all</code>, as milestone 2 says.</dd></dl></div></section>
+<section class="stage" id="m6" aria-labelledby="h-m6"><div class="stage-head"><p class="eyebrow"><b>6</b> · Milestone 6 of 6</p><h2 id="h-m6">A model for each role</h2><p>Not every agent needs the same model. Compare choices on the eval, then pick the cheapest one that meets your bar, with the numbers to back it.</p><div class="ms-meta"><span>About 45 minutes</span><span>Uses <a href="eng-models.html" data-site-link>E11</a></span></div></div><p class="prose">The workers do most of the calls and simple work: searching and summarising. The planner, writer and critic make one call each, and their judgement shapes the whole report. That suggests a cheap model for workers and a stronger one for the rest, but E11's rule holds: measure on your eval, don't guess.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>compare(limit)</code> in <code>compare_roles.py</code>: the eval for each choice of roles.</li><li><code>ROLES</code> in <code>team.py</code>: your choice.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write compare</h3><p>Save a copy of <code>team.ROLES</code>. For each choice in <code>CHOICES</code>, update <code>team.ROLES</code>, run <code>evals.main(limit, quiet=True)</code>, and record how many passed, how many ran, and the cost and seconds per report. Restore <code>team.ROLES</code> in a <code>finally</code> block, so a failed run doesn't leave the wrong models in place.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  The planner: 5 checks pass
+  [x] 2  Workers, in parallel: 7 checks pass
+  [x] 3  The writer: 6 checks pass
+  [x] 4  The critic, and the whole run: 6 checks pass
+  [x] 5  Traces and evals: 6 checks pass
+  [x] 6  A model for each role: 5 checks pass
+6 of 6 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Compare, then choose</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run compare_roles.py 2</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Roles                            Passed  $ / report  s / report
+all Haiku                        2 of 2      0.0021         3.5
+Sonnet plans, writes, checks     2 of 2      0.0161         3.5
+all Sonnet                       2 of 2      0.0382         3.4</pre><p class="small">An example on two topics, against the scripted stand-in, so every choice passes: the costs are real arithmetic on its token counts. With real models, the pass rates are what you're paying for.</p></div><p>Set <code>ROLES</code> to the cheapest choice that passes your bar, and write down why in <code>MODEL_CHOICE.md</code>, as in E11: the table, your bar, and when you'd revisit it. Workers must use the cheapest model in the team; a test checks that.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 6: a model for each role"</span></pre></div></div></li></ol><div class="quiz" data-quiz="qp4c">
+    <p class="quiz-label">Check your understanding · Choosing models</p>
+    <p class="quiz-q">How should you choose the model for each role?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Workers make most of the calls; a strong model there multiplies the cost for little gain."><span class="l">A</span><span>The strongest model everywhere, to be safe</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. E11&#x27;s method, applied to a team. Revisit it when models or prices change."><span class="l">B</span><span>Run the eval for each choice, pick the cheapest that meets your quality bar, and write down why</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The planner, writer and critic make few calls but shape the whole report."><span class="l">C</span><span>The cheapest model everywhere</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>saved = dict(team.ROLES)</code> before the loop, and <code>team.ROLES.update(saved)</code> in <code>finally</code>.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>Each row from <code>evals.main</code> has <code>passed</code>, <code>cost</code> and <code>seconds</code>. Divide the sums by the number of rows.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>compare_roles.py</span><button type="button" class="cb-copy" aria-label="Copy compare_roles.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> compare(limit=<span class="k">None</span>):</span><span class="ln">    <span class="s">"""Run the eval with each choice of roles. Returns {choice: (passed, reports, cost per report, seconds per report)}."""</span></span><span class="ln">    saved, table = dict(team.ROLES), {}</span><span class="ln">    <span class="k">try</span>:</span><span class="ln">        <span class="k">for</span> name, roles <span class="k">in</span> CHOICES.items():</span><span class="ln">            team.ROLES.update(roles)</span><span class="ln">            rows = evals.main(limit, quiet=<span class="k">True</span>)</span><span class="ln">            table[name] = (sum(r[<span class="s">"passed"</span>] <span class="k">for</span> r <span class="k">in</span> rows), len(rows), sum(r[<span class="s">"cost"</span>] <span class="k">for</span> r <span class="k">in</span> rows) / len(rows),</span><span class="ln">                           sum(r[<span class="s">"seconds"</span>] <span class="k">for</span> r <span class="k">in</span> rows) / len(rows))</span><span class="ln">    <span class="k">finally</span>:</span><span class="ln">        team.ROLES.update(saved)  <span class="c"># put the real choice back, whatever happened</span></span><span class="ln">    <span class="k">return</span> table</span></pre></div><div class="cb"><div class="cb-h"><span>team.py</span><button type="button" class="cb-copy" aria-label="Copy team.py">Copy</button></div><pre class="code"><span class="ln">ROLES = {  <span class="c"># cheap where the work is simple and repeated, stronger where judgement matters</span></span><span class="ln">    <span class="s">"planner"</span>: <span class="s">"claude-sonnet-5-5"</span>,</span><span class="ln">    <span class="s">"worker"</span>: <span class="s">"claude-haiku-5-5"</span>,</span><span class="ln">    <span class="s">"writer"</span>: <span class="s">"claude-sonnet-5-5"</span>,</span><span class="ln">    <span class="s">"critic"</span>: <span class="s">"claude-sonnet-5-5"</span>,</span><span class="ln">}</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>test_roles_are_restored_even_when_a_run_fails</code></dt><dd>Restore <code>team.ROLES</code> in a <code>finally</code> block, not after the loop.</dd><dt><code>The comparison costs more than expected</code></dt><dd>Every choice runs the team on every topic. Use 1 or 2 topics while you build it, then all 5 once.</dd></dl></div></section>
+<section class="stage" id="stretch" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Go further</p>
+    <h2 id="s9">Stretch goals</h2>
+    <p>Pick one or two. Run the eval before and after each.</p>
+  </div>
+  <div class="stretch">
+    <div class="box"><h4>Approve the plan first</h4><p class="small">Show the questions and let the reader edit or approve them before any research, as E7's approval step did for saving notes. It's cheap, and it's where a person adds the most value.</p></div>
+    <div class="box"><h4>Watch it work</h4><p class="small">Make <code>run</code> yield events (plan, each finding, draft, critique) and stream them to a page with FastAPI, as in E9, so readers see the workers finish one by one.</p></div>
+    <div class="box"><h4>A LangGraph version</h4><p class="small">Rebuild the team as a graph, using LangGraph's <code>Send</code> to fan out one worker per question, and a checkpoint so a long run can resume after a crash. Compare the code size with yours.</p></div>
+    <div class="box"><h4>Reuse findings</h4><p class="small">Cache each finding by its question for a day. Topics often share questions; a cache hit costs nothing and returns in milliseconds. Show the saving in the eval.</p></div>
+  </div>
+</section>
+<section class="stage" id="writeup" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Show it</p>
+    <h2 id="s10">Write it up</h2>
+    <p>Push it to a public GitHub repo, then replace <code>README.md</code> with this. Commit one report it wrote, and a screenshot of a trace: together they show the whole system in two images.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>README.md</span><button type="button" class="cb-copy" aria-label="Copy README.md">Copy</button></div><pre class="code"><span class="ln"><span class="c"># Research team</span></span><span class="ln"> </span><span class="ln">A team of agents that writes a short report on any topic, with every paragraph cited.</span><span class="ln">A planner splits the topic into questions, workers research them in parallel on Wikipedia,</span><span class="ln">a writer drafts the report, and a critic sends it back once if anything is unsupported.</span><span class="ln"> </span><span class="ln"><span class="c">## What it does</span></span><span class="ln"> </span><span class="ln">&lt;a report it wrote, and the command that made it&gt;</span><span class="ln"> </span><span class="ln"><span class="c">## How it works</span></span><span class="ln"> </span><span class="ln">- Planner (structured output): 3 to 5 independent questions</span><span class="ln">- Workers in parallel threads, each with a budget of 6 calls and $0.01; the pages they read</span><span class="ln">  are recorded by code, so the report can only cite real pages</span><span class="ln">- Writer cites numbered sources; code builds the source list, so every link is real</span><span class="ln">- Critic: code checks the citations, a model checks the claims; one revision at most</span><span class="ln">- Every run is one Langfuse trace, with each agent nested inside it</span><span class="ln"> </span><span class="ln"><span class="c">## Evals</span></span><span class="ln"> </span><span class="ln">5 topics: &lt;passed&gt; of 5 pass (90% of paragraphs cited, 75% of key terms, a judge's yes),</span><span class="ln">at $&lt;cost&gt; a report. Models per role chosen with compare_roles.py: see MODEL_CHOICE.md.</span><span class="ln"> </span><span class="ln"><span class="c">## Run it yourself</span></span><span class="ln"> </span><span class="ln">uv sync</span><span class="ln">cp .env.example .env    # add your API key, and Langfuse keys for traces</span><span class="ln">uv run team.py "How the James Webb Space Telescope works"</span><span class="ln">uv run check.py         # the offline tests</span><span class="ln"> </span><span class="ln"><span class="c">## What I'd do next</span></span><span class="ln"> </span><span class="ln">- &lt;two honest improvements&gt;</span></pre></div>
+  <div class="grid g2">
+    <div class="box"><h4>One line for your CV</h4><p class="small">"Built a multi-agent research system on the Claude API: a planner, parallel workers with per-agent budgets, a writer and a critic, traced end to end in Langfuse, with an eval on 5 topics and models chosen per role (<pass rate>, $<cost> a report)."</p></div>
+    <div class="box"><h4>Be ready to explain</h4><ul class="small" style="margin:0;padding-left:1.1em;display:grid;gap:4px">
+      <li>When a team of agents is worth its extra tokens, and when it isn't</li>
+      <li>Why the sources are numbered by code, not by the model</li>
+      <li>What the lock in <code>Costs</code> prevents, and why traces need copied context</li>
+      <li>Why the critic gets one round, not a loop</li>
+      <li>Which model each role uses, and the numbers behind it</li>
+    </ul></div>
+  </div>
+</section>
+<section class="stage" id="done" aria-labelledby="s11">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s11">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, P4 is marked done on the track page, and you've finished every guided project.</p>
+  </div>
+  <ul class="done-list" data-mod="p4" data-what="Project"><li><label><input type="checkbox"><span><code>uv run check.py</code> says 6 of 6 milestones done</span></label></li><li><label><input type="checkbox"><span><code>uv run evals.py</code> passes at least 4 of the 5 topics</span></label></li><li><label><input type="checkbox"><span>A trace in Langfuse shows the workers nested inside the run, side by side in time</span></label></li><li><label><input type="checkbox"><span><code>compare_roles.py</code> ran, and <code>MODEL_CHOICE.md</code> says which model each role uses and why</span></label></li><li><label><input type="checkbox"><span>The repo is on GitHub with your README and a report it wrote, and <code>.env</code> isn't in it</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+  <p class="score" id="quizScore"></p>
+  <div class="box" style="display:grid;gap:10px"><h3>Words used in this project</h3><div class="gloss" id="glossary"></div></div>
+</section>
+
+<div class="next-module">
+  <a href="eng-capstone.html" data-site-link>← E12 · Capstone and portfolio</a>
+  <a href="eng-projects.html" data-site-link>All guided projects →</a>
+</div>
+
+<footer>
+  <p>The example runs, the report and the trace come from the finished code, run against a scripted stand-in for the Claude API and for Wikipedia, with calls slowed to about half a second; the page summaries are short, accurate paraphrases written for these examples. Real models write their own words.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic, Langfuse or Wikipedia.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "orchestrator": {
+  "t": "Orchestrator",
+  "d": "The code that runs a team of agents: who works when, what each is given, and what happens to their results. Here it's run()."
+ },
+ "fanout": {
+  "t": "Fan-out",
+  "d": "Splitting work into independent parts, running them at the same time, then gathering the results."
+ },
+ "race": {
+  "t": "Race condition",
+  "d": "A bug where the result depends on which of two threads gets somewhere first, such as both adding to one total and one addition being lost."
+ },
+ "reflection": {
+  "t": "Critic (reflection)",
+  "d": "A second model call that reviews the first one's work against the evidence and asks for changes."
+ },
+ "propagation": {
+  "t": "Context propagation",
+  "d": "Passing the current trace on to work started in another thread, so it's recorded in the right place."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Hints: one at a time, the last one is the solution ---------- */
+(function(){
+"use strict";
+document.querySelectorAll(".hints").forEach(box => {
+  const hints = [...box.querySelectorAll(".hint")], btn = box.querySelector(".hint-next");
+  let shown = 0;
+  function label(){
+    if(shown >= hints.length){ btn.hidden = true; return; }
+    btn.textContent = shown === hints.length - 1 ? "Show the solution" : "Show hint " + (shown + 1) + " of " + (hints.length - 1);
+  }
+  btn.addEventListener("click", () => {
+    hints[shown].hidden = false; shown++;
+    label();
+    const focus = hints[shown - 1].querySelector(".dm-h"); if(focus){ focus.setAttribute("tabindex", "-1"); focus.focus(); }
+  });
+  label();
+})
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  if(!btn) return;  /* diffs have no copy button: copy the whole file instead */
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? (list.dataset.what || "Module") + " marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.p4";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>

@@ -37,6 +37,7 @@ PAGES = [
     ("proj-code-review.html", "P1 · AI code reviewer"),
     ("proj-data-agent.html", "P2 · Data-analysis agent"),
     ("proj-code-qa.html", "P3 · Codebase Q&A assistant"),
+    ("proj-research-team.html", "P4 · Multi-agent research report"),
     ("reference.html", "Glossary"),
 ]
 

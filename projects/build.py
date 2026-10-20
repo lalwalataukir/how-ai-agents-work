@@ -27,8 +27,9 @@ PROJECTS = {  # folder here -> (folder name in the zip, number of milestones)
     "p1-code-review": ("code-reviewer", 5),
     "p2-data-agent": ("data-agent", 6),
     "p3-code-qa": ("code-qa", 6),
+    "p4-research-team": ("research-team", 6),
 }
-SKIP = {".venv", "__pycache__", ".pytest_cache", "review.md", ".env", "shop.db", "charts", "index"}
+SKIP = {".venv", "__pycache__", ".pytest_cache", "review.md", ".env", "shop.db", "charts", "index", "reports"}
 BEGIN = re.compile(r"^(\s*)# BEGIN m(\d+)\s*$")
 END = re.compile(r"^\s*# END m(\d+)\s*$")
 STARTER = re.compile(r"^(\s*)#>(?: (.*)|$)")
@@ -69,17 +70,22 @@ def render(text, stage):
     return "\n".join(out) + ("\n" if text.endswith("\n") else "")
 
 
+def name_of(node):
+    """A top-level function's or class's name, or the variable a top-level assignment sets."""
+    return getattr(node, "name", None) or getattr(getattr(node, "targets", [None])[0], "id", None)
+
+
 def milestone_code(text, number):
-    """The finished top-level functions and classes that milestone `number` writes, as source."""
+    """The finished top-level functions, classes and settings that milestone `number` writes, as source."""
     names = []
     tree = ast.parse(text)
     for start, _, n, _, _, _ in blocks(text):
-        if n == number:
-            node = next(node for node in tree.body if node.lineno <= start + 1 <= node.end_lineno)
-            if node.name not in names:
-                names.append(node.name)
+        if n == number:  # the block's first finished line, just after "# BEGIN"
+            node = next(node for node in tree.body if node.lineno <= start + 2 <= node.end_lineno)
+            if name_of(node) not in names:
+                names.append(name_of(node))
     done = render(text, number)
-    nodes = {node.name: node for node in ast.parse(done).body if hasattr(node, "name")}
+    nodes = {name_of(node): node for node in ast.parse(done).body if name_of(node)}
     return [ast.get_source_segment(done, nodes[name]) for name in names]
 
 
