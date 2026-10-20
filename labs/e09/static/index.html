@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Research assistant</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; line-height: 1.55; }
+    body { max-width: 680px; margin: 40px auto; padding: 0 16px; }
+    form { display: flex; gap: 8px; }
+    input { flex: 1; font: inherit; padding: 8px 10px; }
+    button { font: inherit; padding: 8px 16px; cursor: pointer; }
+    #steps { color: GrayText; font-family: ui-monospace, monospace; font-size: 0.85rem; padding-left: 1.2em; }
+    #answer { white-space: pre-wrap; }
+    #stats { color: GrayText; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>Research assistant</h1>
+  <p>Ask a question. It searches Wikipedia, reads what it needs and cites its sources.</p>
+  <form id="form">
+    <input id="question" required minlength="3" maxlength="500" placeholder="Who coined the term artificial intelligence?">
+    <button>Ask</button>
+  </form>
+  <ul id="steps"></ul>
+  <div id="answer" aria-live="polite"></div>
+  <p id="stats"></p>
+
+  <script>
+    const form = document.getElementById("form");
+    const steps = document.getElementById("steps");
+    const answer = document.getElementById("answer");
+    const stats = document.getElementById("stats");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const question = document.getElementById("question").value;
+      steps.innerHTML = "";
+      answer.textContent = "";
+      stats.textContent = "Thinking…";
+      form.querySelector("button").disabled = true;
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question }),
+        });
+        if (!response.ok) {  // 429 too many questions, 503 budget used up, 422 a bad question
+          const error = await response.json();
+          stats.textContent = typeof error.detail === "string" ? error.detail : "Ask a question of 3 to 500 characters.";
+          return;
+        }
+        // The answer arrives as server-sent events: lines starting "data: ", with a blank line after each
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const frames = buffer.split("\n\n");
+          buffer = frames.pop();  // keep any half-received event for the next read
+          for (const frame of frames) {
+            if (frame.startsWith("data: ")) show(JSON.parse(frame.slice(6)));
+          }
+        }
+      } catch (error) {
+        stats.textContent = "Something went wrong. Try again.";
+      } finally {
+        form.querySelector("button").disabled = false;
+      }
+    });
+
+    function show(event) {
+      if (event.type === "plan") addStep("plan: " + event.steps.join(" → "));
+      if (event.type === "tool") addStep(event.name + " " + JSON.stringify(event.input));
+      if (event.type === "text") answer.textContent += event.text;  // textContent: model output is never run as HTML
+      if (event.type === "done") {
+        if (!answer.textContent) answer.textContent = event.answer;  // e.g. when it stopped at a limit
+        stats.textContent = `${event.calls} model calls · first words after ${event.first_text} s · ` +
+          `done in ${event.seconds} s · $${event.cost.toFixed(4)}`;
+      }
+    }
+
+    function addStep(text) {
+      const item = document.createElement("li");
+      item.textContent = text;
+      steps.append(item);
+    }
+  </script>
+</body>
+</html>

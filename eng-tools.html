@@ -427,6 +427,17 @@ pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;b
 .dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
 .dm-note:empty{display:none}
 .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage p code,.stage li code,.stage td code{overflow-wrap:anywhere}
+.cb-diff pre.code .ln.d-add{background:var(--final-soft)}
+.cb-diff pre.code .ln.d-del{background:var(--bad-soft)}
+.cb-diff pre.code .ln.d-gap{color:var(--muted)}
+.cb-key{display:flex;gap:10px}
+.cb-key .k-add{color:var(--final)}
+.cb-key .k-del{color:var(--bad)}
+.whole{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.whole>summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:.92rem}
+.whole[open]>summary{border-bottom:1px solid var(--line)}
+.whole>.cb{border:0;border-radius:0 0 var(--radius) var(--radius)}
 
 /* ---------- E5: tool-use loop stepper ---------- */
 .ls-body{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
@@ -740,7 +751,7 @@ The term "artificial intelligence" comes from a 1955 proposal by John McCarthy a
 
 <div class="next-module">
   <a href="eng-structured.html" data-site-link>← Module E4 · Prompts and structured output</a>
-  <a href="engineer.html" data-site-link>E6 · Embeddings and RAG is coming next. See the track →</a>
+  <a href="eng-rag.html" data-site-link>Module E6 · Embeddings and RAG →</a>
 </div>
 
 <footer>
@@ -961,6 +972,7 @@ function copyText(t){
 }
 document.querySelectorAll(".cb").forEach(cb => {
   const btn = cb.querySelector(".cb-copy");
+  if(!btn) return;  /* diffs have no copy button: copy the whole file instead */
   btn.addEventListener("click", () => {
     const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
     copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },

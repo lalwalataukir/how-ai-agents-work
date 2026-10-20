@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E9 Shipping It</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E9 of the AI engineer track. A latency-and-cost waterfall demo up top, then the web app, streaming, limits, caching, latency and hosting, a lab that deploys the agent to Render, a done-when checklist and the cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage p code,.stage li code,.stage td code{overflow-wrap:anywhere}
+.cb-diff pre.code .ln.d-add{background:var(--final-soft)}
+.cb-diff pre.code .ln.d-del{background:var(--bad-soft)}
+.cb-diff pre.code .ln.d-gap{color:var(--muted)}
+.cb-key{display:flex;gap:10px}
+.cb-key .k-add{color:var(--final)}
+.cb-key .k-del{color:var(--bad)}
+.whole{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.whole>summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:.92rem}
+.whole[open]>summary{border-bottom:1px solid var(--line)}
+.whole>.cb{border:0;border-radius:0 0 var(--radius) var(--radius)}
+
+/* ---------- E9: latency and cost ---------- */
+.lc-body{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.lc-wf{display:grid;gap:6px}
+.lc-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:center;font-size:.82rem}
+@media (max-width:600px){.lc-row{grid-template-columns:minmax(0,1fr);gap:2px}}
+.lc-name{font-family:var(--font-mono);font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc-lane{position:relative;height:20px;background:var(--surface-2);border-radius:4px}
+.lc-seg{position:absolute;top:2px;bottom:2px;border-radius:3px;background:var(--accent)}
+.lc-seg.wait{background:var(--accent-soft);border:1px solid var(--accent)}
+.lc-seg.tool{background:var(--act)}
+.lc-seg.text{background:var(--final)}
+.lc-seg.cold{background:var(--bad-soft);border:1px dashed var(--bad)}
+.lc-first{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--final)}
+.lc-axis{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.7rem;color:var(--muted)}
+.lc-key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.78rem;color:var(--muted)}
+.lc-key span{display:inline-flex;align-items:center;gap:6px}
+.lc-key i{display:inline-block;width:14px;height:10px;border-radius:2px;background:var(--accent)}
+.lc-key i.wait{background:var(--accent-soft);border:1px solid var(--accent)}
+.lc-key i.tool{background:var(--act)}
+.lc-key i.text{background:var(--final)}
+.lc-key i.cold{background:var(--bad-soft);border:1px dashed var(--bad)}
+.lc-key i.first{width:2px;height:14px;background:var(--final)}
+.path-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:820px}
+.path-list li{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.path-list b{font-family:var(--font-mono);font-weight:500;color:var(--accent);font-size:.85rem}
+@media (max-width:520px){.path-list li{grid-template-columns:minmax(0,1fr);gap:2px}}
+.host-table td:first-child{font-weight:600}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E9 · Shipping it</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#webapp" data-nav="webapp"><span class="n">1</span>A web app</a>
+      <a href="#streaming" data-nav="streaming"><span class="n">2</span>Streaming</a>
+      <a href="#limits" data-nav="limits"><span class="n">3</span>Limits</a>
+      <a href="#caching" data-nav="caching"><span class="n">4</span>Caching</a>
+      <a href="#latency" data-nav="latency"><span class="n">5</span>Latency</a>
+      <a href="#hosting" data-nav="hosting"><span class="n">6</span>Hosting</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E9 · AI engineer track · about 5 hours</p>
+  <h1>Shipping it: your agent at a public URL</h1>
+  <p class="lede">So far your agent runs in a terminal on your laptop. This module puts it on the web: <button type="button" class="term" data-term="fastapi" aria-expanded="false">FastAPI</button> serves a small page that streams answers as they're written, rate limits and a daily <button type="button" class="term" data-term="budget" aria-expanded="false">cost cap</button> stop strangers running up your bill, <button type="button" class="term" data-term="prompt_cache" aria-expanded="false">prompt caching</button> cuts the cost of each question, and Render hosts it for free. <a href="ship.html" data-site-link>Module 7</a> covered launching as a PM; this is the engineering under it.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="ttft" aria-expanded="false">time to first token</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">A web page anyone can use, backed by your agent:</p>
+    <pre class="out">https://research-assistant-….onrender.com
+
+  plan: Search Wikipedia for where the term came from → Read the page → Answer
+  read_page {"title":"Dartmouth workshop"}
+John McCarthy coined the term in the 1955 proposal for the 1956 Dartmouth workshop [Dartmouth workshop].
+4 model calls · first words after 3.9 s · done in 5.1 s · $0.0004</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">Latency and cost</h2>
+    <p>One visitor asks "Who coined the term artificial intelligence?". The agent plans, searches, reads a page and answers: four model calls and two tool calls. See where the seconds and the cents go, and what each lever changes.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>Prices are the real per-token prices for each model. Token counts are typical for this question; the timings are illustrative, and real ones vary from request to request.</span></div>
+    <div class="demo-top">
+      <div class="ctl"><span>Model</span><div class="seg" id="lcModel" role="group" aria-label="Model"></div></div>
+      <div class="ctl"><span>Streaming</span><div class="seg" id="lcStream" role="group" aria-label="Streaming"></div></div>
+      <div class="ctl"><span>Caching</span><div class="seg" id="lcCache" role="group" aria-label="Prompt caching"></div></div>
+      <div class="ctl"><span>Server</span><div class="seg" id="lcCold" role="group" aria-label="Server state"></div></div>
+      <div class="ctl"><span>Questions a day</span><div class="seg" id="lcDay" role="group" aria-label="Questions per day"></div></div>
+      <div class="dm-metrics" aria-live="polite">
+        <div class="metric" id="mFirst"><span class="v">0 s</span><span class="k">until the first words</span></div>
+        <div class="metric" id="mTotal"><span class="v">0 s</span><span class="k">until the answer is complete</span></div>
+        <div class="metric" id="mPer"><span class="v">$0</span><span class="k">per 1,000 questions</span></div>
+        <div class="metric" id="mMonth"><span class="v">$0</span><span class="k">a month at this traffic</span></div>
+      </div>
+    </div>
+    <div class="lc-body">
+      <div class="lc-wf" id="lcWf"></div>
+      <div class="lc-axis" id="lcAxis"></div>
+      <div class="lc-key"><span><i class="wait"></i>waiting for the first token</span><span><i></i>model writing</span><span><i class="text"></i>answer streaming</span><span><i class="tool"></i>tool call</span><span><i class="cold"></i>server waking up</span><span><i class="first"></i>first words on screen</span></div>
+      <p class="dm-note" id="lcNote"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. A WEB APP ============ -->
+<section class="stage" id="webapp" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · From script to web app</p>
+    <h2 id="s1">A server between the visitor and your key</h2>
+    <p>A web app splits the work in two. The page runs in the visitor's browser; your code runs on a server you control. Only the server holds the API key, and the browser only ever talks to your server.</p>
+  </div>
+  <ol class="path-list">
+    <li><b>Browser</b><span>The page sends the question to <code>/ask</code> and shows whatever comes back.</span></li>
+    <li><b>FastAPI</b><span>Checks the question, applies the limits, and calls your agent. Runs inside <button type="button" class="term" data-term="uvicorn" aria-expanded="false">Uvicorn</button>, the web server.</span></li>
+    <li><b>Agent</b><span>The same <code>steps()</code> from E7 to E8, now streaming, with only read-only tools.</span></li>
+    <li><b>Claude and Wikipedia</b><span>Called from your server, never from the browser.</span></li>
+  </ol>
+  <div class="cb"><div class="cb-h"><span>The heart of app.py</span><button type="button" class="cb-copy" aria-label="Copy The heart of app.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">class</span> Question(BaseModel):</span><span class="ln">    question: str = Field(min_length=3, max_length=500)</span><span class="ln"> </span><span class="ln">@app.post(<span class="s">"/ask"</span>, response_class=EventSourceResponse, dependencies=[Depends(check_limits)])</span><span class="ln"><span class="k">def</span> ask(body: Question):</span><span class="ln">    <span class="k">for</span> event <span class="k">in</span> agent.steps(body.question, [], tools=WEB_TOOLS, approve=<span class="k">lambda</span> name, args: <span class="k">False</span>):</span><span class="ln">        <span class="k">yield</span> event   <span class="c"># each one reaches the browser at once</span></span></pre></div>
+  <p class="prose">A decorator turns a function into a web address. The <code>Question</code> model checks the input: anything that isn't 3 to 500 characters gets a 422 error before your function runs.</p>
+</section>
+
+<!-- ============ 2. STREAMING ============ -->
+<section class="stage" id="streaming" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · Streaming</p>
+    <h2 id="s2">Show progress at once, words as they come</h2>
+    <p>An agent question takes several seconds. Waiting in silence feels broken; watching steps appear and words arrive feels fast. The total time is the same, but the <button type="button" class="term" data-term="ttft" aria-expanded="false">time to first token</button> drops a lot.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>The agent yields</h4><p class="small"><code>steps()</code> already yields plan and tool events. Streaming each model call adds <code>"text"</code> events, one per piece of text.</p></div>
+    <div class="box"><h4>FastAPI forwards</h4><p class="small">With <code>response_class=EventSourceResponse</code>, every event the function yields goes out at once as a <button type="button" class="term" data-term="sse" aria-expanded="false">server-sent event</button>: a line starting <code>data:</code>.</p></div>
+    <div class="box"><h4>The page reads</h4><p class="small"><code>fetch</code> plus a stream reader picks up each event as it arrives and adds it to the page, as text, never as HTML.</p></div>
+  </div>
+  <div class="quiz" data-quiz="qe9a">
+    <p class="quiz-label">Check your understanding · Streaming</p>
+    <p class="quiz-q">Streaming makes the answer complete…</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The model writes at the same speed either way."><span class="l">A</span><span>…much sooner, because the model writes faster</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Total time barely changes. What changes is how long the visitor waits before seeing anything."><span class="l">B</span><span>…at about the same time, but the first words appear seconds earlier</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The overhead is tiny; the total is about the same."><span class="l">C</span><span>…later, because streaming adds overhead</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 3. LIMITS ============ -->
+<section class="stage" id="limits" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · Limits</p>
+    <h2 id="s3">A public URL spends your money</h2>
+    <p>Anyone who finds your app can send it questions, and every question costs you. Limits decide how much damage one visitor, a bot or a bug can do.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Limit</th><th>In the lab</th><th>Stops</th></tr></thead>
+      <tbody>
+        <tr><td>Input size</td><td>3 to 500 characters, checked by Pydantic (422)</td><td>Huge prompts that cost a lot per question</td></tr>
+        <tr><td><button type="button" class="term" data-term="rate_limit" aria-expanded="false">Rate limit</button></td><td>5 questions a minute per visitor (429)</td><td>One visitor or script hammering the app</td></tr>
+        <tr><td>Daily cost cap</td><td><code>DAILY_BUDGET</code>, $0.50 by default (503)</td><td>Many visitors adding up</td></tr>
+        <tr><td>Per-question limits</td><td>E7's <code>MAX_CALLS</code> and <code>MAX_COST</code></td><td>One question looping</td></tr>
+        <tr><td>Fewer tools</td><td>Only <code>search_wikipedia</code> and <code>read_page</code></td><td>Strangers reading your notes or writing files</td></tr>
+        <tr><td>Console spend limit</td><td>Set in E3, outside your code</td><td>Everything else, including your own bugs</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="callout"><b>Memory isn't storage.</b> The lab counts questions and dollars in Python variables, so a restart resets them, and a free host restarts often. That's fine for a demo. A busy app would keep the counts in a database such as Redis, and the Console's spend limit stays the backstop either way.</p>
+  <div class="quiz" data-quiz="qe9b">
+    <p class="quiz-label">Check your understanding · Limits</p>
+    <p class="quiz-q">Your free Render app restarted overnight. What happened to today's DAILY_BUDGET count?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. It lives in a Python variable, which a restart wipes."><span class="l">A</span><span>It carried on from where it was</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. That&#x27;s why the Console&#x27;s spend limit matters: it&#x27;s the cap no restart can reset. A busy app would keep counts in a database."><span class="l">B</span><span>It went back to $0, so more can be spent today</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Free Render services lose their files on every restart, and the lab never saves the count."><span class="l">C</span><span>Render saved it to disk</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 4. CACHING ============ -->
+<section class="stage" id="caching" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Prompt caching</p>
+    <h2 id="s4">Don't pay full price for the same text twice</h2>
+    <p>Every call in the loop starts with the same tools and system prompt, then the conversation so far. <button type="button" class="term" data-term="prompt_cache" aria-expanded="false">Prompt caching</button> lets the API keep that start for five minutes. A request that begins with exactly the same text reads it from the cache instead.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Input tokens that are…</th><th>Cost, compared with normal input</th><th>Claude Haiku 5.5, per million</th></tr></thead>
+      <tbody>
+        <tr><td>New</td><td>1×</td><td>$0.10</td></tr>
+        <tr><td>Written to the cache</td><td>1.25×</td><td>$0.125</td></tr>
+        <tr><td>Read from the cache</td><td>0.1×</td><td>$0.01</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g3">
+    <div class="box tint"><h4>Where to mark it</h4><p class="small">One breakpoint on the system prompt caches the tools and instructions every visitor shares. The top-level <code>cache_control</code> caches each conversation as it grows.</p></div>
+    <div class="box tint"><h4>What breaks it</h4><p class="small">Any change before a breakpoint: a time or date in the system prompt, tools in a different order, a different model. Then <code>cache_read_input_tokens</code> stays at 0.</p></div>
+    <div class="box tint"><h4>The small print</h4><p class="small">Claude Haiku 5.5 caches prompts of 512 tokens or more. Entries last five minutes, and each read resets the clock, so steady traffic keeps them warm.</p></div>
+  </div>
+  <p class="prose">For the demo's question, caching cuts the input cost by about 60% and the total by about half. <a href="context.html" data-site-link>Module 8</a> covers the context design that makes caching work.</p>
+</section>
+
+<!-- ============ 5. LATENCY ============ -->
+<section class="stage" id="latency" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Latency</p>
+    <h2 id="s5">Where the seconds go</h2>
+    <p>An agent's time is mostly model calls in a row, each waiting for its first token and then writing, with tool calls in between. The demo shows it as a waterfall.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Lever</th><th>What it changes</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td>Stream</td><td>First words appear seconds earlier</td><td>None</td></tr>
+        <tr><td>Fewer calls</td><td>Better tool descriptions and plans mean fewer laps</td><td>Your time</td></tr>
+        <tr><td>Lower effort</td><td>Less thinking before each reply (E3)</td><td>Some quality on hard questions</td></tr>
+        <tr><td>Parallel tool calls</td><td>Two pages read at once, not one after the other</td><td>None</td></tr>
+        <tr><td>A smaller model</td><td>Faster replies, cheaper tokens</td><td>Quality: check with your evals (E11)</td></tr>
+        <tr><td>Keep the server awake</td><td>No minute-long <button type="button" class="term" data-term="cold_start" aria-expanded="false">cold start</button></td><td>A paid instance, from $7 a month on Render</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="quiz" data-quiz="qe9c">
+    <p class="quiz-label">Check your understanding · Latency</p>
+    <p class="quiz-q">Your agent makes four model calls in a row for each question. Which change cuts the total time the most?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Streaming helps how fast it feels, not how long it takes."><span class="l">A</span><span>Streaming the final answer</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Each lap of the loop costs a full wait for a reply. Fewer laps is the biggest win, and it saves money too."><span class="l">B</span><span>Better tool descriptions, so most questions need two calls instead of four</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The host adds milliseconds; each model call adds seconds."><span class="l">C</span><span>A faster web host</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 6. HOSTING ============ -->
+<section class="stage" id="hosting" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · Hosting</p>
+    <h2 id="s6">Render's free tier, and what it costs you</h2>
+    <p>A host runs your server on the internet and gives it an address. Render connects to your GitHub repo, installs your project with uv, starts it, and redeploys on every push to <code>main</code>.</p>
+  </div>
+  <div class="grid g2">
+    <div class="box"><h4>What free gets you</h4><p class="small">A web service with a public <code>onrender.com</code> address, 512 MB of memory and 750 free instance hours a month, enough for one app running all month.</p></div>
+    <div class="box"><h4>The catches</h4><p class="small">It sleeps after 15 minutes without visitors and takes about a minute to wake. Files written on the server vanish on every restart and deploy. It's for demos, not production.</p></div>
+  </div>
+  <div class="tablewrap">
+    <table class="host-table">
+      <thead><tr><th>Other options (checked October 2026)</th><th>Free for this app?</th></tr></thead>
+      <tbody>
+        <tr><td>Railway</td><td>A one-time trial credit, then a small monthly credit; usage-based after that</td></tr>
+        <tr><td>Fly.io</td><td>No free tier for new accounts</td></tr>
+        <tr><td>Koyeb</td><td>One small free instance, but a card is required to sign up</td></tr>
+        <tr><td>Hugging Face Spaces</td><td>Free CPU, best suited to Gradio and Streamlit demos</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="prose">Free tiers change often; check the host's pricing page before you rely on one. Whatever the host, the key goes in its <button type="button" class="term" data-term="env_var" aria-expanded="false">environment variables</button>, never in the repo.</p>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · on your laptop, then the internet</p>
+    <h2 id="s7">Put your agent on the web</h2>
+    <p>You'll stream and cache the agent, wrap it in FastAPI with limits, add a page, and deploy it to Render.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>4–5 hours</b></span><span>API cost <b>under $0.050</b>, plus what visitors use, capped by <code>DAILY_BUDGET</code></span><span>You need <b>E8 done</b>, a free Render account</span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Install FastAPI and Uvicorn</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv add fastapi uvicorn</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Resolved 140 packages in 1.62s
+Installed 9 packages in 61ms
+ + fastapi==0.150.0
+ + uvicorn==0.54.0
+ ...</pre><p class="small">Numbers and versions will differ.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Stream and cache in agent.py</h3><p>Two changes to the loop: it streams each model call so text can go out as it's written, and it marks what to cache. Cache tokens are priced too.</p><div class="cb cb-diff"><div class="cb-h"><span>agent.py: what changes from E8</span><span class="cb-key" aria-hidden="true"><span class="k-add">+ added</span><span class="k-del">- removed</span></span></div><pre class="code"><span class="ln d-gap">⋯</span><span class="ln d-del">-"""E8 lab: the E7 agent, now traced. Every run shows up in Langfuse as a tree: the agent,</span><span class="ln d-del">-each model call with its tokens, and each tool call.</span><span class="ln d-add">+"""E9 lab: the E8 agent, ready for the web. It streams its answer as it's written and caches</span><span class="ln d-add">+the parts of each request that repeat, which cuts cost and time to first word.</span><span class="ln"> </span><span class="ln"> Run it with:</span><span class="ln d-gap">⋯</span><span class="ln"> def add_usage(state, usage):</span><span class="ln">     state["calls"] += 1</span><span class="ln d-del">-    state["tokens_in"] += usage.input_tokens</span><span class="ln d-add">+    state["tokens_in"] += usage.input_tokens  # input that wasn't read from the cache</span><span class="ln d-add">+    state["cache_written"] += usage.cache_creation_input_tokens or 0  # costs 1.25 times the input price</span><span class="ln d-add">+    state["cache_read"] += usage.cache_read_input_tokens or 0  # costs a tenth of the input price</span><span class="ln">     state["tokens_out"] += usage.output_tokens</span><span class="ln d-del">-    state["cost"] = (state["tokens_in"] * PRICE_IN + state["tokens_out"] * PRICE_OUT) / 1_000_000</span><span class="ln d-add">+    dollars = (state["tokens_in"] + 1.25 * state["cache_written"] + 0.1 * state["cache_read"]) * PRICE_IN</span><span class="ln d-add">+    state["cost"] = (dollars + state["tokens_out"] * PRICE_OUT) / 1_000_000</span><span class="ln"> </span><span class="ln"> </span><span class="ln d-gap">⋯</span><span class="ln"> def steps(question, memory, tools=ALL_TOOLS, approve=ask_to_approve):</span><span class="ln">     """Run the agent on one question, yielding an event for each thing it does:</span><span class="ln d-del">-    a plan, each tool call, and finally "done" with the answer and what it cost."""</span><span class="ln d-del">-    state = {"calls": 0, "tokens_in": 0, "tokens_out": 0, "cost": 0.0, "tools": []}  # this run's state</span><span class="ln d-add">+    a plan, each tool call, each piece of text as it's written, and finally "done"."""</span><span class="ln d-add">+    state = {"calls": 0, "tokens_in": 0, "cache_written": 0, "cache_read": 0, "tokens_out": 0,</span><span class="ln d-add">+             "cost": 0.0, "tools": []}  # this run's state</span><span class="ln">     plan, usage = make_plan(question, memory)</span><span class="ln">     add_usage(state, usage)</span><span class="ln d-gap">⋯</span><span class="ln">             answer = f"Stopped: this question reached its limit of {MAX_CALLS} model calls or ${MAX_COST}."</span><span class="ln">             break</span><span class="ln d-del">-        response = client.messages.create(</span><span class="ln d-del">-            model=MODEL, max_tokens=4000, system=SYSTEM, tools=offered, messages=messages,</span><span class="ln d-del">-        )</span><span class="ln d-add">+        with client.messages.stream(</span><span class="ln d-add">+            model=MODEL, max_tokens=4000, tools=offered, messages=messages,</span><span class="ln d-add">+            system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],  # shared by every visitor</span><span class="ln d-add">+            cache_control={"type": "ephemeral"},  # and this conversation so far, for the next call in the loop</span><span class="ln d-add">+        ) as stream:</span><span class="ln d-add">+            for text in stream.text_stream:</span><span class="ln d-add">+                yield {"type": "text", "text": text}  # words go out as they're written</span><span class="ln d-add">+            response = stream.get_final_message()</span><span class="ln">         add_usage(state, response.usage)</span><span class="ln">         messages.append({"role": "assistant", "content": response.content})</span><span class="ln d-gap">⋯</span><span class="ln">             print(f"  -&gt; {event['name']}({json.dumps(event['input'])})")</span><span class="ln">         elif event["type"] == "done":</span><span class="ln d-del">-            print(f"  [{event['calls']} model calls, {event['tokens_in']} tokens in, "</span><span class="ln d-del">-                  f"{event['tokens_out']} out, ${event['cost']:.5f}]\n")</span><span class="ln d-add">+            print(f"  [{event['calls']} model calls, {event['tokens_in']} tokens in, {event['cache_read']} "</span><span class="ln d-add">+                  f"read from cache, {event['tokens_out']} out, ${event['cost']:.5f}]\n")</span><span class="ln">             print(event["answer"])</span><span class="ln">             memory.append({"role": "user", "content": question})  # memory keeps the answers, not the tool calls</span></pre></div><details class="whole"><summary>Show the whole of agent.py after this step</summary><div class="cb"><div class="cb-h"><span>agent.py</span><button type="button" class="cb-copy" aria-label="Copy agent.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E9 lab: the E8 agent, ready for the web. It streams its answer as it's written and caches</span></span><span class="ln"><span class="s">the parts of each request that repeat, which cuts cost and time to first word.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run agent.py</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> json</span><span class="ln"><span class="k">import</span> re</span><span class="ln"><span class="k">from</span> datetime <span class="k">import</span> date</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"> </span><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"><span class="k">from</span> dotenv <span class="k">import</span> load_dotenv</span><span class="ln"><span class="k">from</span> langfuse <span class="k">import</span> get_client, observe</span><span class="ln"><span class="k">from</span> pydantic <span class="k">import</span> BaseModel</span><span class="ln"> </span><span class="ln"><span class="k">from</span> rag <span class="k">import</span> index_file, search  <span class="c"># E6: your notes</span></span><span class="ln"><span class="k">from</span> research_bot <span class="k">import</span> TOOLS <span class="k">as</span> WIKI_TOOLS, run_tool <span class="k">as</span> run_wiki_tool  <span class="c"># E5: Wikipedia</span></span><span class="ln"> </span><span class="ln">load_dotenv()</span><span class="ln">langfuse = get_client()  <span class="c"># reads the LANGFUSE_ keys from .env; Claude calls are then traced too</span></span><span class="ln"> </span><span class="ln">MODEL = <span class="s">"claude-haiku-5-5"</span></span><span class="ln">PRICE_IN, PRICE_OUT = 0.10, 0.50  <span class="c"># dollars per million tokens, for this model</span></span><span class="ln">MAX_CALLS = 10   <span class="c"># stop condition: most model calls for one question</span></span><span class="ln">MAX_COST = 0.02  <span class="c"># stop condition: most dollars for one question</span></span><span class="ln">NOTES = Path(__file__).parent / <span class="s">"notes"</span>  <span class="c"># save_note writes Markdown files here</span></span><span class="ln">SYSTEM = (</span><span class="ln">    <span class="s">"You are a research assistant. Use the tools to search the user's notes and Wikipedia, and follow "</span></span><span class="ln">    <span class="s">"the plan you're given, changing it if a tool shows it won't work. Cite every fact: [Page title] "</span></span><span class="ln">    <span class="s">"for Wikipedia, [file, page N] for the user's notes. Save a note only when the user asks you to. "</span></span><span class="ln">    <span class="s">"If you can't find the answer, say so. Answer in at most 200 words."</span></span><span class="ln">)</span><span class="ln">PLANNER = (</span><span class="ln">    <span class="s">"You plan the work of a research assistant. Its tools: search_notes (the user's own notes and PDFs), "</span></span><span class="ln">    <span class="s">"search_wikipedia and read_page (Wikipedia), and save_note (only when the user asks to save something). "</span></span><span class="ln">    <span class="s">"Write a plan of 1 to 4 short steps for the latest request. Don't answer it."</span></span><span class="ln">)</span><span class="ln"> </span><span class="ln">TOOLS = WIKI_TOOLS + [</span><span class="ln">    {</span><span class="ln">        <span class="s">"name"</span>: <span class="s">"search_notes"</span>,</span><span class="ln">        <span class="s">"description"</span>: <span class="s">"Search the user's own notes and PDFs. Returns up to 4 passages, each with its file "</span></span><span class="ln">                       <span class="s">"and page. Use it first for anything the user may have notes on."</span>,</span><span class="ln">        <span class="s">"input_schema"</span>: {</span><span class="ln">            <span class="s">"type"</span>: <span class="s">"object"</span>,</span><span class="ln">            <span class="s">"properties"</span>: {<span class="s">"query"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"What to look for, in plain words"</span>}},</span><span class="ln">            <span class="s">"required"</span>: [<span class="s">"query"</span>],</span><span class="ln">            <span class="s">"additionalProperties"</span>: <span class="k">False</span>,</span><span class="ln">        },</span><span class="ln">        <span class="s">"strict"</span>: <span class="k">True</span>,</span><span class="ln">    },</span><span class="ln">    {</span><span class="ln">        <span class="s">"name"</span>: <span class="s">"save_note"</span>,</span><span class="ln">        <span class="s">"description"</span>: <span class="s">"Save a note for the user as a Markdown file. Only use it when the user asks to save "</span></span><span class="ln">                       <span class="s">"something. The user approves every save."</span>,</span><span class="ln">        <span class="s">"input_schema"</span>: {</span><span class="ln">            <span class="s">"type"</span>: <span class="s">"object"</span>,</span><span class="ln">            <span class="s">"properties"</span>: {</span><span class="ln">                <span class="s">"title"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"A short title"</span>},</span><span class="ln">                <span class="s">"text"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"The note, with its citations"</span>},</span><span class="ln">            },</span><span class="ln">            <span class="s">"required"</span>: [<span class="s">"title"</span>, <span class="s">"text"</span>],</span><span class="ln">            <span class="s">"additionalProperties"</span>: <span class="k">False</span>,</span><span class="ln">        },</span><span class="ln">        <span class="s">"strict"</span>: <span class="k">True</span>,</span><span class="ln">    },</span><span class="ln">]</span><span class="ln">ALL_TOOLS = [tool[<span class="s">"name"</span>] <span class="k">for</span> tool <span class="k">in</span> TOOLS]</span><span class="ln">NEEDS_APPROVAL = {<span class="s">"save_note"</span>}  <span class="c"># tools that change something: a person says yes first</span></span><span class="ln"> </span><span class="ln">client = anthropic.Anthropic()</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">class</span> Plan(BaseModel):</span><span class="ln">    steps: list[str]</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> make_plan(question, memory):</span><span class="ln">    <span class="s">"""Ask for a short plan before any tool runs. Returns the steps and the call's token usage."""</span></span><span class="ln">    response = client.messages.parse(</span><span class="ln">        model=MODEL, max_tokens=1000, system=PLANNER, output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>},</span><span class="ln">        messages=memory + [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}], output_format=Plan,</span><span class="ln">    )</span><span class="ln">    <span class="k">return</span> response.parsed_output.steps, response.usage</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> save_note(title, text):</span><span class="ln">    <span class="s">"""Write a Markdown note, and add it to your notes so search_notes can find it later."""</span></span><span class="ln">    NOTES.mkdir(exist_ok=<span class="k">True</span>)</span><span class="ln">    slug = re.sub(<span class="s">r"[^a-z0-9]+"</span>, <span class="s">"-"</span>, title.lower()).strip(<span class="s">"-"</span>)[:50] <span class="k">or</span> <span class="s">"note"</span></span><span class="ln">    path = NOTES / <span class="s">f"{date.today()}-{slug}.md"</span></span><span class="ln">    path.write_text(<span class="s">f"# {title}\n\n{text}\n"</span>, encoding=<span class="s">"utf-8"</span>)</span><span class="ln">    index_file(path, NOTES)</span><span class="ln">    <span class="k">return</span> {<span class="s">"saved"</span>: path.name}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> ask_to_approve(name, args):</span><span class="ln">    <span class="s">"""Human approval: show what the agent wants to do and wait for a yes."""</span></span><span class="ln">    print(<span class="s">f"\n  The agent wants to run {name}:"</span>)</span><span class="ln">    <span class="k">for</span> key, value <span class="k">in</span> args.items():</span><span class="ln">        print(<span class="s">f"    {key}: {value}"</span>)</span><span class="ln">    <span class="k">return</span> input(<span class="s">"  Allow it? [y/N] "</span>).strip().lower() == <span class="s">"y"</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln">@observe(as_type=<span class="s">"tool"</span>)</span><span class="ln"><span class="k">def</span> run_tool(name, args, approve):</span><span class="ln">    <span class="s">"""Run one tool call. Returns the text to send back, and whether it failed."""</span></span><span class="ln">    <span class="k">if</span> name <span class="k">in</span> (<span class="s">"search_wikipedia"</span>, <span class="s">"read_page"</span>):</span><span class="ln">        <span class="k">return</span> run_wiki_tool(name, args)  <span class="c"># E5's code, with its error handling</span></span><span class="ln">    <span class="k">if</span> name <span class="k">in</span> NEEDS_APPROVAL <span class="k">and</span> <span class="k">not</span> approve(name, args):</span><span class="ln">        <span class="k">return</span> <span class="s">"The user said no. Don't try again; tell them it wasn't saved."</span>, <span class="k">True</span></span><span class="ln">    <span class="k">if</span> name == <span class="s">"search_notes"</span>:</span><span class="ln">        <span class="k">return</span> json.dumps(search(args[<span class="s">"query"</span>]) <span class="k">or</span> <span class="s">"No notes matched."</span>), <span class="k">False</span></span><span class="ln">    <span class="k">if</span> name == <span class="s">"save_note"</span>:</span><span class="ln">        <span class="k">return</span> json.dumps(save_note(args[<span class="s">"title"</span>], args[<span class="s">"text"</span>])), <span class="k">False</span></span><span class="ln">    <span class="k">return</span> <span class="s">f"There is no tool called {name}."</span>, <span class="k">True</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> add_usage(state, usage):</span><span class="ln">    state[<span class="s">"calls"</span>] += 1</span><span class="ln">    state[<span class="s">"tokens_in"</span>] += usage.input_tokens  <span class="c"># input that wasn't read from the cache</span></span><span class="ln">    state[<span class="s">"cache_written"</span>] += usage.cache_creation_input_tokens <span class="k">or</span> 0  <span class="c"># costs 1.25 times the input price</span></span><span class="ln">    state[<span class="s">"cache_read"</span>] += usage.cache_read_input_tokens <span class="k">or</span> 0  <span class="c"># costs a tenth of the input price</span></span><span class="ln">    state[<span class="s">"tokens_out"</span>] += usage.output_tokens</span><span class="ln">    dollars = (state[<span class="s">"tokens_in"</span>] + 1.25 * state[<span class="s">"cache_written"</span>] + 0.1 * state[<span class="s">"cache_read"</span>]) * PRICE_IN</span><span class="ln">    state[<span class="s">"cost"</span>] = (dollars + state[<span class="s">"tokens_out"</span>] * PRICE_OUT) / 1_000_000</span><span class="ln"> </span><span class="ln"> </span><span class="ln">@observe(name=<span class="s">"agent"</span>, as_type=<span class="s">"agent"</span>)</span><span class="ln"><span class="k">def</span> steps(question, memory, tools=ALL_TOOLS, approve=ask_to_approve):</span><span class="ln">    <span class="s">"""Run the agent on one question, yielding an event for each thing it does:</span></span><span class="ln"><span class="s">    a plan, each tool call, each piece of text as it's written, and finally "done"."""</span></span><span class="ln">    state = {<span class="s">"calls"</span>: 0, <span class="s">"tokens_in"</span>: 0, <span class="s">"cache_written"</span>: 0, <span class="s">"cache_read"</span>: 0, <span class="s">"tokens_out"</span>: 0,</span><span class="ln">             <span class="s">"cost"</span>: 0.0, <span class="s">"tools"</span>: []}  <span class="c"># this run's state</span></span><span class="ln">    plan, usage = make_plan(question, memory)</span><span class="ln">    add_usage(state, usage)</span><span class="ln">    <span class="k">yield</span> {<span class="s">"type"</span>: <span class="s">"plan"</span>, <span class="s">"steps"</span>: plan}</span><span class="ln"> </span><span class="ln">    numbered = <span class="s">"\n"</span>.join(<span class="s">f"{n}. {step}"</span> <span class="k">for</span> n, step <span class="k">in</span> enumerate(plan, 1))</span><span class="ln">    messages = memory + [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">f"{question}\n\n&lt;plan&gt;\n{numbered}\n&lt;/plan&gt;"</span>}]</span><span class="ln">    offered = [tool <span class="k">for</span> tool <span class="k">in</span> TOOLS <span class="k">if</span> tool[<span class="s">"name"</span>] <span class="k">in</span> tools]</span><span class="ln">    seen = set()  <span class="c"># tool calls already made, to catch a loop asking for the same thing</span></span><span class="ln">    <span class="k">while</span> <span class="k">True</span>:</span><span class="ln">        <span class="k">if</span> state[<span class="s">"calls"</span>] &gt;= MAX_CALLS <span class="k">or</span> state[<span class="s">"cost"</span>] &gt;= MAX_COST:  <span class="c"># stop conditions, before every call</span></span><span class="ln">            answer = <span class="s">f"Stopped: this question reached its limit of {MAX_CALLS} model calls or ${MAX_COST}."</span></span><span class="ln">            <span class="k">break</span></span><span class="ln">        <span class="k">with</span> client.messages.stream(</span><span class="ln">            model=MODEL, max_tokens=4000, tools=offered, messages=messages,</span><span class="ln">            system=[{<span class="s">"type"</span>: <span class="s">"text"</span>, <span class="s">"text"</span>: SYSTEM, <span class="s">"cache_control"</span>: {<span class="s">"type"</span>: <span class="s">"ephemeral"</span>}}],  <span class="c"># shared by every visitor</span></span><span class="ln">            cache_control={<span class="s">"type"</span>: <span class="s">"ephemeral"</span>},  <span class="c"># and this conversation so far, for the next call in the loop</span></span><span class="ln">        ) <span class="k">as</span> stream:</span><span class="ln">            <span class="k">for</span> text <span class="k">in</span> stream.text_stream:</span><span class="ln">                <span class="k">yield</span> {<span class="s">"type"</span>: <span class="s">"text"</span>, <span class="s">"text"</span>: text}  <span class="c"># words go out as they're written</span></span><span class="ln">            response = stream.get_final_message()</span><span class="ln">        add_usage(state, response.usage)</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: response.content})</span><span class="ln">        <span class="k">if</span> response.stop_reason != <span class="s">"tool_use"</span>:  <span class="c"># the model answered</span></span><span class="ln">            answer = <span class="s">""</span>.join(block.text <span class="k">for</span> block <span class="k">in</span> response.content <span class="k">if</span> block.type == <span class="s">"text"</span>)</span><span class="ln">            <span class="k">if</span> response.stop_reason != <span class="s">"end_turn"</span>:</span><span class="ln">                answer += <span class="s">f"\n(Stopped early: {response.stop_reason})"</span></span><span class="ln">            <span class="k">break</span></span><span class="ln"> </span><span class="ln">        results = []</span><span class="ln">        <span class="k">for</span> block <span class="k">in</span> response.content:</span><span class="ln">            <span class="k">if</span> block.type != <span class="s">"tool_use"</span>:</span><span class="ln">                <span class="k">continue</span></span><span class="ln">            <span class="k">yield</span> {<span class="s">"type"</span>: <span class="s">"tool"</span>, <span class="s">"name"</span>: block.name, <span class="s">"input"</span>: block.input}</span><span class="ln">            state[<span class="s">"tools"</span>].append(block.name)</span><span class="ln">            key = block.name + json.dumps(block.input, sort_keys=<span class="k">True</span>)</span><span class="ln">            <span class="k">if</span> block.name <span class="k">not</span> <span class="k">in</span> tools:  <span class="c"># only the tools offered for this run, whatever the model asks</span></span><span class="ln">                text, failed = <span class="s">f"There is no tool called {block.name}."</span>, <span class="k">True</span></span><span class="ln">            <span class="k">elif</span> key <span class="k">in</span> seen:</span><span class="ln">                text, failed = <span class="s">"You already made this exact call. Use its result above."</span>, <span class="k">True</span></span><span class="ln">            <span class="k">else</span>:</span><span class="ln">                seen.add(key)</span><span class="ln">                text, failed = run_tool(block.name, block.input, approve)</span><span class="ln">            results.append({<span class="s">"type"</span>: <span class="s">"tool_result"</span>, <span class="s">"tool_use_id"</span>: block.id, <span class="s">"content"</span>: text, <span class="s">"is_error"</span>: failed})</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: results})</span><span class="ln">    <span class="k">yield</span> {<span class="s">"type"</span>: <span class="s">"done"</span>, <span class="s">"answer"</span>: answer, **state}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> ask(question, memory):</span><span class="ln">    <span class="s">"""Run the agent in the terminal, then remember the question and answer for follow-ups."""</span></span><span class="ln">    <span class="k">for</span> event <span class="k">in</span> steps(question, memory):</span><span class="ln">        <span class="k">if</span> event[<span class="s">"type"</span>] == <span class="s">"plan"</span>:</span><span class="ln">            print(<span class="s">"  plan: "</span> + <span class="s">" | "</span>.join(event[<span class="s">"steps"</span>]))</span><span class="ln">        <span class="k">elif</span> event[<span class="s">"type"</span>] == <span class="s">"tool"</span>:</span><span class="ln">            print(<span class="s">f"  -&gt; {event['name']}({json.dumps(event['input'])})"</span>)</span><span class="ln">        <span class="k">elif</span> event[<span class="s">"type"</span>] == <span class="s">"done"</span>:</span><span class="ln">            print(<span class="s">f"  [{event['calls']} model calls, {event['tokens_in']} tokens in, {event['cache_read']} "</span></span><span class="ln">                  <span class="s">f"read from cache, {event['tokens_out']} out, ${event['cost']:.5f}]\n"</span>)</span><span class="ln">            print(event[<span class="s">"answer"</span>])</span><span class="ln">            memory.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question})  <span class="c"># memory keeps the answers, not the tool calls</span></span><span class="ln">            memory.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: event[<span class="s">"answer"</span>]})</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main():</span><span class="ln">    memory = []  <span class="c"># earlier questions and answers in this session</span></span><span class="ln">    print(<span class="s">"Ask a research question. Type quit to stop."</span>)</span><span class="ln">    <span class="k">while</span> <span class="k">True</span>:</span><span class="ln">        question = input(<span class="s">"\nYou: "</span>).strip()</span><span class="ln">        <span class="k">if</span> question.lower() <span class="k">in</span> (<span class="s">"quit"</span>, <span class="s">"exit"</span>):</span><span class="ln">            <span class="k">break</span></span><span class="ln">        <span class="k">if</span> <span class="k">not</span> question:</span><span class="ln">            <span class="k">continue</span></span><span class="ln">        <span class="k">try</span>:</span><span class="ln">            ask(question, memory)</span><span class="ln">        <span class="k">except</span> anthropic.APIConnectionError:</span><span class="ln">            print(<span class="s">"Could not reach the API. Check your internet connection and try again."</span>)</span><span class="ln">        <span class="k">except</span> anthropic.APIStatusError <span class="k">as</span> error:  <span class="c"># a bad key, no credit, overloaded: after the SDK's retries</span></span><span class="ln">            print(<span class="s">f"The API answered {error.status_code}: {error.message}"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    main()</span></pre></div></details><ul><li><b><code>client.messages.stream</code></b> replaces <code>create</code>. Each piece of text is <code>yield</code>ed as a <code>"text"</code> event; <code>get_final_message()</code> still gives the whole reply for the loop.</li><li><b>Two cache breakpoints.</b> The one on <code>system</code> caches the tools and system prompt, the same for every visitor. The top-level <code>cache_control</code> caches the conversation so far, which the next call in the loop starts with.</li><li><b><code>add_usage</code></b> prices written cache tokens at 1.25 times the input price and read ones at a tenth.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Write app.py</h3><div class="cb"><div class="cb-h"><span>app.py</span><button type="button" class="cb-copy" aria-label="Copy app.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E9 lab: the research assistant as a web app, with streaming, rate limits and a daily cost cap.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it on your laptop with:</span></span><span class="ln"><span class="s">    uv run uvicorn app:app --reload</span></span><span class="ln"><span class="s">then open http://127.0.0.1:8000</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> os</span><span class="ln"><span class="k">import</span> time</span><span class="ln"><span class="k">from</span> collections <span class="k">import</span> defaultdict, deque</span><span class="ln"><span class="k">from</span> datetime <span class="k">import</span> date</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"> </span><span class="ln"><span class="k">from</span> fastapi <span class="k">import</span> Depends, FastAPI, HTTPException, Request</span><span class="ln"><span class="k">from</span> fastapi.responses <span class="k">import</span> FileResponse</span><span class="ln"><span class="k">from</span> fastapi.sse <span class="k">import</span> EventSourceResponse</span><span class="ln"><span class="k">from</span> pydantic <span class="k">import</span> BaseModel, Field</span><span class="ln"> </span><span class="ln"><span class="k">import</span> agent</span><span class="ln"> </span><span class="ln">MAX_PER_MINUTE = 5  <span class="c"># questions per visitor per minute</span></span><span class="ln">DAILY_BUDGET = float(os.environ.get(<span class="s">"DAILY_BUDGET"</span>, <span class="s">"0.50"</span>))  <span class="c"># dollars a day, for all visitors together</span></span><span class="ln">WEB_TOOLS = [<span class="s">"search_wikipedia"</span>, <span class="s">"read_page"</span>]  <span class="c"># a public site gets no private notes and no saving</span></span><span class="ln"> </span><span class="ln">app = FastAPI()</span><span class="ln">recent = defaultdict(deque)  <span class="c"># visitor -&gt; times of their recent questions</span></span><span class="ln">spent = {<span class="s">"day"</span>: <span class="s">""</span>, <span class="s">"dollars"</span>: 0.0}  <span class="c"># resets each day, and whenever the server restarts</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">class</span> Question(BaseModel):</span><span class="ln">    question: str = Field(min_length=3, max_length=500)  <span class="c"># FastAPI rejects anything else with a 422</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> check_limits(request: Request):</span><span class="ln">    <span class="s">"""Runs before every question. Raising an HTTPException turns the request away."""</span></span><span class="ln">    now, times = time.time(), recent[request.client.host]</span><span class="ln">    <span class="k">while</span> times <span class="k">and</span> now - times[0] &gt; 60:</span><span class="ln">        times.popleft()  <span class="c"># forget questions older than a minute</span></span><span class="ln">    <span class="k">if</span> len(times) &gt;= MAX_PER_MINUTE:</span><span class="ln">        <span class="k">raise</span> HTTPException(429, <span class="s">"Too many questions. Wait a minute and try again."</span>)</span><span class="ln">    <span class="k">if</span> spent[<span class="s">"day"</span>] != date.today().isoformat():</span><span class="ln">        spent.update(day=date.today().isoformat(), dollars=0.0)</span><span class="ln">    <span class="k">if</span> spent[<span class="s">"dollars"</span>] &gt;= DAILY_BUDGET:</span><span class="ln">        <span class="k">raise</span> HTTPException(503, <span class="s">"Today's budget is used up. Try again tomorrow."</span>)</span><span class="ln">    times.append(now)</span><span class="ln"> </span><span class="ln"> </span><span class="ln">@app.get(<span class="s">"/"</span>)</span><span class="ln"><span class="k">def</span> home():</span><span class="ln">    <span class="k">return</span> FileResponse(Path(__file__).parent / <span class="s">"static"</span> / <span class="s">"index.html"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln">@app.get(<span class="s">"/health"</span>)</span><span class="ln"><span class="k">def</span> health():</span><span class="ln">    <span class="k">return</span> {<span class="s">"ok"</span>: <span class="k">True</span>}  <span class="c"># the host checks this to know the app is up</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln">@app.post(<span class="s">"/ask"</span>, response_class=EventSourceResponse, dependencies=[Depends(check_limits)])</span><span class="ln"><span class="k">def</span> ask(body: Question):</span><span class="ln">    <span class="s">"""Stream the agent's events to the page as they happen: plan, tools, text, done."""</span></span><span class="ln">    start, first_text = time.perf_counter(), <span class="k">None</span></span><span class="ln">    <span class="k">for</span> event <span class="k">in</span> agent.steps(body.question, [], tools=WEB_TOOLS, approve=<span class="k">lambda</span> name, args: <span class="k">False</span>):</span><span class="ln">        <span class="k">if</span> event[<span class="s">"type"</span>] == <span class="s">"text"</span> <span class="k">and</span> first_text <span class="k">is</span> <span class="k">None</span>:</span><span class="ln">            first_text = time.perf_counter() - start  <span class="c"># what the visitor feels as speed</span></span><span class="ln">        <span class="k">if</span> event[<span class="s">"type"</span>] == <span class="s">"done"</span>:</span><span class="ln">            spent[<span class="s">"dollars"</span>] += event[<span class="s">"cost"</span>]</span><span class="ln">            event[<span class="s">"seconds"</span>] = round(time.perf_counter() - start, 1)</span><span class="ln">            event[<span class="s">"first_text"</span>] = round(first_text <span class="k">or</span> event[<span class="s">"seconds"</span>], 1)</span><span class="ln">        <span class="k">yield</span> event</span></pre></div><ul><li><b><code>Question</code></b> is a Pydantic model: FastAPI rejects anything that isn't 3 to 500 characters with a 422, before your code runs.</li><li><b><code>check_limits</code></b> runs before every question. It keeps each visitor's recent times and turns away a sixth question in a minute (429), and stops all questions once today's spending reaches <code>DAILY_BUDGET</code> (503).</li><li><b><code>ask</code></b> streams the agent's events as <button type="button" class="term" data-term="sse" aria-expanded="false">server-sent events</button>, offering only the two read-only Wikipedia tools, refusing every approval, and adding timings to the last event.</li><li><b><code>/health</code></b> answers instantly, so the host can tell the app is up.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Write the page</h3><p>Create a <code>static</code> folder with this <code>index.html</code>. It sends the question, then reads the stream piece by piece.</p><div class="cb"><div class="cb-h"><span>static/index.html</span><button type="button" class="cb-copy" aria-label="Copy static/index.html">Copy</button></div><pre class="code"><span class="ln">&lt;!doctype html&gt;</span><span class="ln">&lt;html lang="en"&gt;</span><span class="ln">&lt;head&gt;</span><span class="ln">  &lt;meta charset="utf-8"&gt;</span><span class="ln">  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;</span><span class="ln">  &lt;title&gt;Research assistant&lt;/title&gt;</span><span class="ln">  &lt;style&gt;</span><span class="ln">    :root { color-scheme: light dark; font-family: system-ui, sans-serif; line-height: 1.55; }</span><span class="ln">    body { max-width: 680px; margin: 40px auto; padding: 0 16px; }</span><span class="ln">    form { display: flex; gap: 8px; }</span><span class="ln">    input { flex: 1; font: inherit; padding: 8px 10px; }</span><span class="ln">    button { font: inherit; padding: 8px 16px; cursor: pointer; }</span><span class="ln"><span class="c">    #steps { color: GrayText; font-family: ui-monospace, monospace; font-size: 0.85rem; padding-left: 1.2em; }</span></span><span class="ln"><span class="c">    #answer { white-space: pre-wrap; }</span></span><span class="ln"><span class="c">    #stats { color: GrayText; font-size: 0.85rem; }</span></span><span class="ln">  &lt;/style&gt;</span><span class="ln">&lt;/head&gt;</span><span class="ln">&lt;body&gt;</span><span class="ln">  &lt;h1&gt;Research assistant&lt;/h1&gt;</span><span class="ln">  &lt;p&gt;Ask a question. It searches Wikipedia, reads what it needs and cites its sources.&lt;/p&gt;</span><span class="ln">  &lt;form id="form"&gt;</span><span class="ln">    &lt;input id="question" required minlength="3" maxlength="500" placeholder="Who coined the term artificial intelligence?"&gt;</span><span class="ln">    &lt;button&gt;Ask&lt;/button&gt;</span><span class="ln">  &lt;/form&gt;</span><span class="ln">  &lt;ul id="steps"&gt;&lt;/ul&gt;</span><span class="ln">  &lt;div id="answer" aria-live="polite"&gt;&lt;/div&gt;</span><span class="ln">  &lt;p id="stats"&gt;&lt;/p&gt;</span><span class="ln"> </span><span class="ln">  &lt;script&gt;</span><span class="ln">    const form = document.getElementById("form");</span><span class="ln">    const steps = document.getElementById("steps");</span><span class="ln">    const answer = document.getElementById("answer");</span><span class="ln">    const stats = document.getElementById("stats");</span><span class="ln"> </span><span class="ln">    form.addEventListener("submit", async (event) =&gt; {</span><span class="ln">      event.preventDefault();</span><span class="ln">      const question = document.getElementById("question").value;</span><span class="ln">      steps.innerHTML = "";</span><span class="ln">      answer.textContent = "";</span><span class="ln">      stats.textContent = "Thinking…";</span><span class="ln">      form.querySelector("button").disabled = true;</span><span class="ln">      try {</span><span class="ln">        const response = await fetch("/ask", {</span><span class="ln">          method: "POST",</span><span class="ln">          headers: { "Content-Type": "application/json" },</span><span class="ln">          body: JSON.stringify({ question }),</span><span class="ln">        });</span><span class="ln">        if (!response.ok) {  // 429 too many questions, 503 budget used up, 422 a bad question</span><span class="ln">          const error = await response.json();</span><span class="ln">          stats.textContent = typeof error.detail === "string" ? error.detail : "Ask a question of 3 to 500 characters.";</span><span class="ln">          return;</span><span class="ln">        }</span><span class="ln">        // The answer arrives as server-sent events: lines starting "data: ", with a blank line after each</span><span class="ln">        const reader = response.body.getReader();</span><span class="ln">        const decoder = new TextDecoder();</span><span class="ln">        let buffer = "";</span><span class="ln">        while (true) {</span><span class="ln">          const { value, done } = await reader.read();</span><span class="ln">          if (done) break;</span><span class="ln">          buffer += decoder.decode(value, { stream: true });</span><span class="ln">          const frames = buffer.split("\n\n");</span><span class="ln">          buffer = frames.pop();  // keep any half-received event for the next read</span><span class="ln">          for (const frame of frames) {</span><span class="ln">            if (frame.startsWith("data: ")) show(JSON.parse(frame.slice(6)));</span><span class="ln">          }</span><span class="ln">        }</span><span class="ln">      } catch (error) {</span><span class="ln">        stats.textContent = "Something went wrong. Try again.";</span><span class="ln">      } finally {</span><span class="ln">        form.querySelector("button").disabled = false;</span><span class="ln">      }</span><span class="ln">    });</span><span class="ln"> </span><span class="ln">    function show(event) {</span><span class="ln">      if (event.type === "plan") addStep("plan: " + event.steps.join(" → "));</span><span class="ln">      if (event.type === "tool") addStep(event.name + " " + JSON.stringify(event.input));</span><span class="ln">      if (event.type === "text") answer.textContent += event.text;  // textContent: model output is never run as HTML</span><span class="ln">      if (event.type === "done") {</span><span class="ln">        if (!answer.textContent) answer.textContent = event.answer;  // e.g. when it stopped at a limit</span><span class="ln">        stats.textContent = `${event.calls} model calls · first words after ${event.first_text} s · ` +</span><span class="ln">          `done in ${event.seconds} s · $${event.cost.toFixed(4)}`;</span><span class="ln">      }</span><span class="ln">    }</span><span class="ln"> </span><span class="ln">    function addStep(text) {</span><span class="ln">      const item = document.createElement("li");</span><span class="ln">      item.textContent = text;</span><span class="ln">      steps.append(item);</span><span class="ln">    }</span><span class="ln">  &lt;/script&gt;</span><span class="ln">&lt;/body&gt;</span><span class="ln">&lt;/html&gt;</span></pre></div><p class="small">The answer goes in with <code>textContent</code>, never <code>innerHTML</code>, so nothing the model writes can run as code in a visitor's browser.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Run it on your laptop</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run uvicorn app:app --reload</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">INFO:     Will watch for changes in these directories: ['/Users/you/research-assistant']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [41273] using WatchFiles
+INFO:     Started server process [41275]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.</pre><p class="small"><code>--reload</code> restarts the server whenever you save a file.</p></div><p>Open <a href="http://127.0.0.1:8000" target="_blank" rel="noopener">http://127.0.0.1:8000</a> and ask a question. The plan and tool calls appear first, then the answer word by word, then a line like <code>4 model calls · first words after 3.9 s · done in 5.1 s · $0.0004</code>.</p><p>Now ask six questions within a minute. The sixth gets "Too many questions. Wait a minute and try again." That's the rate limit.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>See the cache work</h3><p>Run the terminal version twice with the same question, within five minutes:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run agent.py</span><span class="ln">You: Who coined the term artificial intelligence?</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [4 model calls, 214 tokens in, 2850 read from cache, 301 out, $0.00047]
+...
+  [4 model calls, 214 tokens in, 3850 read from cache, 301 out, $0.00035]</pre><p class="small">First run: calls 2 to 4 read what call 1 cached. Second run: call 1 also reads the tools and system prompt from the cache. Your numbers will differ; if "read from cache" stays at 0, something in the prompt changes every time.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Put it on the internet with Render</h3><p>Commit and push everything first, including <code>uv.lock</code>, <code>.python-version</code> and the <code>static</code> folder. Then sign up at <a href="https://render.com" target="_blank" rel="noopener">render.com</a> with your GitHub account and choose <b>New → Web Service</b>. Pick your <code>research-assistant</code> repo and fill in:</p><div class="tablewrap"><table><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody><tr><td>Language</td><td>Python 3</td></tr><tr><td>Build Command</td><td><code>uv sync --frozen</code></td></tr><tr><td>Start Command</td><td><code>uv run uvicorn app:app --host 0.0.0.0 --port $PORT --forwarded-allow-ips "*"</code></td></tr><tr><td>Instance Type</td><td>Free</td></tr><tr><td>Environment Variables</td><td><code>ANTHROPIC_API_KEY</code> (your key), <code>DAILY_BUDGET</code> = <code>0.50</code>, and the three <code>LANGFUSE_</code> keys if you want production traces</td></tr><tr><td>Health Check Path (under Advanced)</td><td><code>/health</code></td></tr></tbody></table></div><p>Click <b>Deploy Web Service</b> and watch the log:</p><div class="expect"><p class="expect-h">Expected output</p><pre class="out">==&gt; Running build command 'uv sync --frozen'...
+Resolved 151 packages in 4ms
+Installed 148 packages in 2.31s
+==&gt; Build successful 🎉
+==&gt; Deploying...
+==&gt; Running 'uv run uvicorn app:app --host 0.0.0.0 --port $PORT --forwarded-allow-ips "*"'
+INFO:     Uvicorn running on http://0.0.0.0:10000 (Press CTRL+C to quit)
+==&gt; Your service is live 🎉</pre><p class="small">Render finds uv because <code>uv.lock</code> is in your repo. Your notes and database aren't deployed: they're in <code>.gitignore</code>, and the public app doesn't use them.</p></div><ul><li><b><code>--host 0.0.0.0 --port $PORT</code></b> listens where Render sends traffic.</li><li><b><code>--forwarded-allow-ips "*"</code></b> trusts Render's proxy to say who each visitor is, so each gets their own rate limit instead of everyone sharing one.</li><li><b>The key lives in Render's settings,</b> as an <button type="button" class="term" data-term="env_var" aria-expanded="false">environment variable</button>. There's no <code>.env</code> on the server, and the browser never sees the key.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">8</span><div class="lab-b"><h3>Share it and watch it</h3><p>Open your <code>https://research-assistant-….onrender.com</code> address on your phone, and send it to a friend. After 15 minutes without visitors the free service sleeps, and the next visit takes about a minute to wake it.</p><p>Then check three places: Render's <b>Logs</b> tab (each request), Langfuse (each run, if you added the keys), and the Anthropic Console's usage page (the real spend). Keep the Console's monthly spend limit low (E3): it's the cap that survives restarts.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">9</span><div class="lab-b"><h3>Make it yours</h3><p>Pick at least one:</p><ul><li>Show the steps as friendlier text: "Searching Wikipedia for …" instead of the raw tool call.</li><li>Add a "Stop" button that cancels the request with an <code>AbortController</code>.</li><li>Lower <code>MAX_PER_MINUTE</code> to 2 and test the error message on your phone.</li><li>Log each question's cost and time to Render's logs, and compare them with Langfuse.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">10</span><div class="lab-b"><h3>Commit and push</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add agent.py app.py static/index.html pyproject.toml uv.lock</span><span class="ln">git commit -m "Serve the agent as a streaming web app"</span><span class="ln">git push</span></pre></div><p>Render deploys every push to <code>main</code> automatically. With E8's workflow, changes reach it through a pull request whose evals passed.</p></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>bash: line 1: uvicorn: command not found</code></dt><dd>Start the command with <code>uv run</code>, and make sure <code>uv add uvicorn</code> put it in <code>pyproject.toml</code> and <code>uv.lock</code>.</dd><dt><code>==&gt; No open ports detected, continuing to scan...</code></dt><dd>The app is listening in the wrong place. Use <code>--host 0.0.0.0 --port $PORT</code> exactly; a fixed port number won't work on Render.</dd><dt><code>anthropic.AuthenticationError: Error code: 401  (in Render's logs)</code></dt><dd>The key is missing or mistyped in Render's <b>Environment</b> settings. Save it there, then redeploy.</dd><dt><code>Too many questions. Wait a minute and try again.  (for everyone at once)</code></dt><dd>All visitors look like one. Add <code>--forwarded-allow-ips "*"</code> to the start command so the app sees each visitor's address.</dd></dl></div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s8">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E9 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="e9"><li><label><input type="checkbox"><span>Your page streams an answer on your laptop, with the plan, tool calls and timings</span></label></li><li><label><input type="checkbox"><span>A sixth question within a minute got "Too many questions"</span></label></li><li><label><input type="checkbox"><span>A second run of the same question read tokens from the cache</span></label></li><li><label><input type="checkbox"><span>Your app is live at a public <code>onrender.com</code> address, with the key only in Render's settings</span></label></li><li><label><input type="checkbox"><span>Everything is pushed, and Render redeployed from <code>main</code></span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s9">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula">Browser → <em>FastAPI</em> (validate, <em>rate limit</em>, <em>budget</em>) → <em>agent</em> (stream, <em>cache</em>, read-only tools) → <em>events</em> → page. Key in the host's <em>environment</em>, never the repo.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>FastAPI</h3><ul>
+        <li><code>@app.post("/ask", response_class=EventSourceResponse)</code></li>
+        <li>Pydantic model for the request body</li>
+        <li><code>Depends(check_limits)</code> runs first</li>
+        <li><code>HTTPException(429, …)</code> turns away</li>
+      </ul></div>
+      <div class="blk"><h3>Speed and cost</h3><ul>
+        <li><code>client.messages.stream</code>, yield text</li>
+        <li>Cache breakpoint on <code>system</code> + top-level</li>
+        <li>Check <code>cache_read_input_tokens</code></li>
+        <li>Measure first words, not only total time</li>
+      </ul></div>
+      <div class="blk"><h3>Render</h3><ul>
+        <li>Build: <code>uv sync --frozen</code></li>
+        <li>Start: <code>uv run uvicorn app:app --host 0.0.0.0 --port $PORT</code></li>
+        <li>Secrets in Environment</li>
+        <li>Health check <code>/health</code></li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s10">3 common shipping mistakes</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>The API key in the browser</h3><dl>
+      <dt>What it looks like</dt><dd>The page calls the Claude API directly with the key in its JavaScript, where anyone can read it and spend your money.</dd>
+      <dt>Fix</dt><dd>The browser talks only to your server. The key lives in the host's environment variables.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>No limits on a public URL</h3><dl>
+      <dt>What it looks like</dt><dd>A bot finds the app overnight, and the morning brings a bill.</dd>
+      <dt>Fix</dt><dd>Input limits, a per-visitor rate limit, a daily cap in code, and a spend limit in the Console.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>A timestamp in the system prompt</h3><dl>
+      <dt>What it looks like</dt><dd>"Today is 20 October, 09:41:07" at the top of every prompt, so the cache never matches and every token is paid in full.</dd>
+      <dt>Fix</dt><dd>Keep the start of the prompt identical; put anything that changes after the cache breakpoints.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="eng-evals.html" data-site-link>← Module E8 · Tracing and evals in code</a>
+  <a href="eng-security.html" data-site-link>Module E10 · Security in code →</a>
+</div>
+
+<footer>
+  <p>The latency and cost demo uses each model's real prices with typical token counts; its timings are illustrative. Free-tier details for hosts were checked in October 2026 and change often.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic, Render or the Wikimedia Foundation.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "fastapi": {
+  "t": "FastAPI",
+  "d": "A Python web framework: decorate a function with @app.post(\"/ask\") and it becomes a web address that checks its input and returns a response."
+ },
+ "uvicorn": {
+  "t": "Uvicorn",
+  "d": "The web server that runs a FastAPI app: it listens on a port and passes each request to your code."
+ },
+ "sse": {
+  "t": "Server-sent events (SSE)",
+  "d": "A way for a server to send a stream of small messages over one HTTP response, each a line starting \"data:\". The page reads them as they arrive."
+ },
+ "ttft": {
+  "t": "Time to first token",
+  "d": "How long until the first words appear. With streaming, it's what a visitor feels as speed, more than the total time."
+ },
+ "rate_limit": {
+  "t": "Rate limit",
+  "d": "A cap on how many requests one visitor can make in a period, such as 5 a minute. Extra requests get a 429 error."
+ },
+ "budget": {
+  "t": "Cost cap",
+  "d": "A limit on what the app may spend, such as $0.50 a day. When it's reached, the app refuses new questions until the next day."
+ },
+ "prompt_cache": {
+  "t": "Prompt caching",
+  "d": "The API keeps the start of a prompt for a few minutes. A later request that begins with exactly the same text reads it from the cache at a tenth of the price."
+ },
+ "env_var": {
+  "t": "Environment variable",
+  "d": "A named setting given to a program by where it runs, such as ANTHROPIC_API_KEY on your host. Secrets go here, never in code."
+ },
+ "cold_start": {
+  "t": "Cold start",
+  "d": "The delay while a sleeping server wakes up for its first request. Render's free tier sleeps after 15 minutes without traffic."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Latency and cost (real prices, typical tokens, illustrative timings) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const MODELS = {
+  haiku: {name:"Claude Haiku 5.5", pin:0.10, pout:0.50, read:0.01, ttft:0.5, tps:150},
+  sonnet: {name:"Claude Sonnet 5.5", pin:2.00, pout:10.00, read:0.20, ttft:0.9, tps:80},
+  opus: {name:"Claude Opus 5.5", pin:4.00, pout:20.00, read:0.20, ttft:1.4, tps:55}
+};
+/* The question's calls: tokens in and out, what can be read from the cache, and what is written */
+const CALLS = [
+  {name:"plan", tin:210, tout:45, read:0, write:0},
+  {name:"call 1 → search", tin:1240, tout:70, read:1000, write:240, tool:{name:"search_wikipedia", s:0.4}},
+  {name:"call 2 → read", tin:1610, tout:55, read:1240, write:370, tool:{name:"read_page", s:0.5}},
+  {name:"call 3 → answer", tin:2150, tout:131, read:1610, write:540, answer:true}
+];
+let model = "haiku", stream = true, cache = true, cold = false, day = 500;
+function seg(id, items, cur, on){
+  $(id).innerHTML = items.map(([v, t]) => '<button type="button" data-v="' + v + '" aria-pressed="' + (String(v) === String(cur)) + '">' + t + '</button>').join("");
+  $(id).onclick = e => { const b = e.target.closest("button"); if(b){ on(b.dataset.v); render(); } };
+}
+function money(x){ return x >= 100 ? "$" + x.toLocaleString("en", {minimumFractionDigits:2, maximumFractionDigits:2}) : "$" + x.toFixed(3); }
+function render(){
+  seg("lcModel", [["haiku","Haiku 5.5"],["sonnet","Sonnet 5.5"],["opus","Opus 5.5"]], model, v => model = v);
+  seg("lcStream", [["on","On"],["off","Off"]], stream ? "on" : "off", v => stream = v === "on");
+  seg("lcCache", [["on","On"],["off","Off"]], cache ? "on" : "off", v => cache = v === "on");
+  seg("lcCold", [["warm","Awake"],["cold","Asleep (free tier)"]], cold ? "cold" : "warm", v => cold = v === "cold");
+  seg("lcDay", [[50,"50"],[500,"500"],[5000,"5,000"]], day, v => day = +v);
+  const M = MODELS[model];
+  let t = 0.1, rows = [], first = 0, dollars = 0;
+  if(cold){ rows.push({name:"server wakes up", segs:[{cls:"cold", a:0, b:50}]}); t = 50.1; }
+  CALLS.forEach(c => {
+    const read = cache ? c.read : 0, write = cache ? c.write : 0, fresh = c.tin - read - write;
+    dollars += (fresh * M.pin + write * M.pin * 1.25 + read * M.read + c.tout * M.pout) / 1e6;
+    const wait = M.ttft * (cache && read > 0 ? 0.75 : 1), gen = c.tout / M.tps;
+    const segs = [{cls:"wait", a:t, b:t + wait}, {cls:c.answer ? "text" : "", a:t + wait, b:t + wait + gen}];
+    if(c.answer) first = t + wait;
+    t += wait + gen;
+    rows.push({name:c.name, segs});
+    if(c.tool){ rows.push({name:c.tool.name, segs:[{cls:"tool", a:t, b:t + c.tool.s}]}); t += c.tool.s; }
+  });
+  const total = t;
+  if(!stream) first = total;
+  const span = Math.max(total, 0.1);
+  const pct = x => (x / span * 100).toFixed(2) + "%";
+  $("lcWf").innerHTML = rows.map(r => '<div class="lc-row"><span class="lc-name">' + r.name + '</span><span class="lc-lane">' +
+    r.segs.map(s => '<span class="lc-seg ' + s.cls + '" style="left:' + pct(s.a) + ';width:' + pct(Math.max(s.b - s.a, span * 0.004)) + '"></span>').join("") +
+    '<span class="lc-first" style="left:' + pct(first) + '"></span></span></div>').join("");
+  $("lcAxis").innerHTML = "<span>0 s</span><span>" + (span / 2).toFixed(1) + " s</span><span>" + span.toFixed(1) + " s</span>";
+  $("mFirst").querySelector(".v").textContent = first.toFixed(1) + " s";
+  $("mTotal").querySelector(".v").textContent = total.toFixed(1) + " s";
+  $("mPer").querySelector(".v").textContent = money(dollars * 1000);
+  const month = dollars * day * 30, budget = 0.5, fits = Math.floor(budget / dollars);
+  const mm = $("mMonth"); mm.querySelector(".v").textContent = money(month);
+  mm.classList.toggle("warn", fits < day);
+  let note = M.name + ": " + money(dollars * 1000) + " per 1,000 questions" + (cache ? ", with caching." : ", without caching.");
+  if(!stream) note += " Without streaming, the visitor stares at a blank page for all " + total.toFixed(1) + " s.";
+  else note += " Streaming puts the first words up at " + first.toFixed(1) + " s, while the answer is still being written.";
+  if(cold) note += " The free server was asleep: a minute of waking up dwarfs everything else.";
+  note += fits < day ? " At " + day.toLocaleString("en") + " questions a day, a $0.50 DAILY_BUDGET runs out after " + fits.toLocaleString("en") + " of them, and the rest get a 503." : " A $0.50 DAILY_BUDGET covers " + day.toLocaleString("en") + " questions a day.";
+  $("lcNote").textContent = note;
+}
+render();
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  if(!btn) return;  /* diffs have no copy button: copy the whole file instead */
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e9";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>
