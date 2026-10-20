@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E2 Python for AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E2 of the AI engineer track. A predict-the-output stepper up top, then the dozen Python ideas AI code uses, a lab that calls Wikipedia's API, a done-when checklist and the usual cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- E2: predict-the-output stepper ---------- */
+.ps-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.ps-tabs button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.ps-tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ps-tabs button.is-ok::after{content:" ✓";color:var(--final)}
+.ps-tabs button[aria-pressed="true"].is-ok::after{color:var(--accent-ink)}
+.ps-body{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+@media (max-width:820px){.ps-body{grid-template-columns:minmax(0,1fr)}}
+.ps-code{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start;min-width:0;border-right:1px solid var(--line)}
+@media (max-width:820px){.ps-code{border-right:0;border-bottom:1px solid var(--line)}}
+.ps-side{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0}
+.ps-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ps-vars{width:100%;min-width:0;border-collapse:collapse;font-size:.84rem;table-layout:fixed}
+.ps-vars td{border-top:1px solid var(--line);padding:5px 6px;vertical-align:top;overflow-wrap:anywhere}
+.ps-vars td:first-child{font-family:var(--font-mono);width:36%}
+.ps-vars td:nth-child(2){color:var(--muted);font-size:.78rem;width:22%}
+.ps-vars td:last-child{font-family:var(--font-mono)}
+.ps-vars tr.new td{background:var(--accent-soft)}
+.ps-empty{font-size:.85rem;color:var(--muted)}
+.ps-q{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;gap:8px;border:1.5px solid var(--accent);border-radius:10px;padding:12px;background:var(--surface)}
+.ps-q[hidden]{display:none}
+.ps-q .ps-opts{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+.ps-q .opt span{overflow-wrap:anywhere;min-width:0}
+.ps-q .opt{font-family:var(--font-mono);font-size:.84rem}
+.ps-why{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.ps-why:empty{display:none}
+.ps-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E2 · Python for AI work</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#values" data-nav="values"><span class="n">1</span>Values</a>
+      <a href="#collections" data-nav="collections"><span class="n">2</span>Lists and dicts</a>
+      <a href="#functions" data-nav="functions"><span class="n">3</span>Functions and loops</a>
+      <a href="#files" data-nav="files"><span class="n">4</span>Files and JSON</a>
+      <a href="#exceptions" data-nav="exceptions"><span class="n">5</span>Errors</a>
+      <a href="#web" data-nav="web"><span class="n">6</span>Web APIs</a>
+      <a href="#assistants" data-nav="assistants"><span class="n">7</span>AI assistants</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E2 · AI engineer track · about 4 hours</p>
+  <h1>Python for AI work: the parts you'll actually use</h1>
+  <p class="lede">You don't need all of Python to build agents. You need about a dozen ideas: values and <button type="button" class="term" data-term="variable" aria-expanded="false">variables</button>, lists and dicts, functions and loops, files and <button type="button" class="term" data-term="json" aria-expanded="false">JSON</button>, errors, and calling a web <button type="button" class="term" data-term="api" aria-expanded="false">API</button>. This module teaches those, then has you write a script that fetches Wikipedia summaries and saves them as notes: the research assistant's first real tool.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="dict" aria-expanded="false">dict</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">A script that asks Wikipedia about any topic and keeps a tidy JSON file of notes, without crashing on bad input:</p>
+    <pre class="out">% uv run wiki_notes.py "Prompt engineering" "Qwxzzy"
+Saved: Prompt engineering (64 words)
+Error: Qwxzzy: Wikipedia answered 404
+Notes in notes.json: 2</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">Predict the output</h2>
+    <p>Five short programs, each covering one idea from this module. Step through one line at a time and watch the variables change. Before each <code>print</code>, predict what it will show. Reading code line by line like this is how you'll check code an AI assistant writes for you.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>The steps are scripted to match what Python does. Nothing runs, so try the same lines yourself with uv run python in the lab.</span></div>
+    <div class="demo-top">
+      <div class="ps-tabs" id="psTabs" role="group" aria-label="Program"></div>
+      <p class="small" id="psScore">Predictions right: 0 of 0</p>
+    </div>
+    <div class="ps-body">
+      <div class="ps-code">
+        <pre class="code" id="psCode"></pre>
+        <div class="ps-ctl"><button type="button" class="btn btn-primary" id="psNext">Run the next line ▶</button><button type="button" class="btn btn-sm" id="psRestart">↺ Restart</button></div>
+        <p class="ps-why" id="psWhy" aria-live="polite"></p>
+      </div>
+      <div class="ps-side">
+        <div class="ps-q" id="psQ" hidden>
+          <p class="ps-h" id="psQt">Predict</p>
+          <div class="ps-opts" id="psOpts"></div>
+        </div>
+        <div><p class="ps-h">Variables</p><div id="psVars"></div></div>
+        <div><p class="ps-h">Output</p><pre class="out" id="psOut" aria-live="polite"></pre></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. VALUES ============ -->
+<section class="stage" id="values" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · Values and variables</p>
+    <h2 id="s1">Five kinds of value cover most AI code</h2>
+    <p>A variable is a name for a value. The <code>=</code> sign means "make this name point to this value", not "equals". Most of what flows through an AI app is text: prompts, answers and web pages, all <button type="button" class="term" data-term="string" aria-expanded="false">strings</button>.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Try it in uv run python</span><button type="button" class="cb-copy" aria-label="Copy Try it in uv run python">Copy</button></div><pre class="code"><span class="ln">topic = <span class="s">"Large language model"</span>    <span class="c"># str: text, in quotes</span></span><span class="ln">words = 120                       <span class="c"># int: a whole number</span></span><span class="ln">price = 3.0                       <span class="c"># float: a number with a decimal point</span></span><span class="ln">done = <span class="k">False</span>                      <span class="c"># bool: True or False</span></span><span class="ln">url = <span class="k">None</span>                        <span class="c"># None: no value yet</span></span><span class="ln">print(<span class="s">f"{topic}: {words} words"</span>)  <span class="c"># prints  Large language model: 120 words</span></span></pre></div>
+  <p class="prose">The <button type="button" class="term" data-term="fstring" aria-expanded="false">f-string</button> on the last line is how you'll build prompts: write the text, and put each variable in <code>{…}</code>. Anything after <code>#</code> is a comment, for people only; Python ignores it.</p>
+</section>
+
+<!-- ============ 2. LISTS AND DICTS ============ -->
+<section class="stage" id="collections" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · Lists and dicts</p>
+    <h2 id="s2">The two shapes all AI data comes in</h2>
+    <p>A <button type="button" class="term" data-term="list" aria-expanded="false">list</button> keeps items in order. A dict looks values up by name. Put dicts inside a list and you have the exact shape you'll send to an LLM in E3: a conversation, as a list of messages.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Try it in uv run python</span><button type="button" class="cb-copy" aria-label="Copy Try it in uv run python">Copy</button></div><pre class="code"><span class="ln">topics = [<span class="s">"agents"</span>, <span class="s">"RAG"</span>, <span class="s">"evals"</span>]   <span class="c"># list: items in order</span></span><span class="ln">topics[0]                             <span class="c"># "agents" (counting starts at 0)</span></span><span class="ln">topics.append(<span class="s">"tools"</span>)                <span class="c"># add to the end</span></span><span class="ln"> </span><span class="ln">note = {<span class="s">"title"</span>: <span class="s">"RAG"</span>, <span class="s">"words"</span>: 42}  <span class="c"># dict: values looked up by key</span></span><span class="ln">note[<span class="s">"title"</span>]                         <span class="c"># "RAG"</span></span><span class="ln">note[<span class="s">"words"</span>] = 50                    <span class="c"># change a value</span></span><span class="ln">note.get(<span class="s">"url"</span>, <span class="s">"none"</span>)               <span class="c"># "none", because there is no "url" key</span></span><span class="ln"> </span><span class="ln">messages = [                          <span class="c"># a list of dicts: the shape of an LLM call</span></span><span class="ln">    {<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"What is RAG?"</span>},</span><span class="ln">]</span></pre></div>
+  <div class="grid g2">
+    <div class="box tint"><h4>Square brackets <code>[ ]</code></h4><p class="small">Make a list, and read from both lists and dicts: <code>topics[0]</code> is the first item, <code>note["title"]</code> the value for <code>"title"</code>.</p></div>
+    <div class="box tint"><h4>Curly braces <code>{ }</code></h4><p class="small">Make a dict of <code>key: value</code> pairs. Keys are usually strings. Asking for a key that isn't there raises <code>KeyError</code>, so use <code>.get()</code> when it might be missing.</p></div>
+  </div>
+  <div class="quiz" data-quiz="qe2a">
+    <p class="quiz-label">Check your understanding · Lists and dicts</p>
+    <p class="quiz-q">What is messages here?  messages = [{"role": "user", "content": "Hi"}]</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The outer square brackets make a list. The dict is the one item inside it."><span class="l">A</span><span>A dict</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Square brackets make the list, curly braces the dict inside. This is the exact shape you&#x27;ll send to an LLM in E3."><span class="l">B</span><span>A list containing one dict</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. There are strings inside (&quot;user&quot;, &quot;Hi&quot;), but the whole thing is a list of dicts."><span class="l">C</span><span>A string</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 3. FUNCTIONS AND LOOPS ============ -->
+<section class="stage" id="functions" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · Functions and loops</p>
+    <h2 id="s3">Name a piece of work, then repeat it</h2>
+    <p>A <button type="button" class="term" data-term="function" aria-expanded="false">function</button> wraps a few lines under a name, so you can run them again with different inputs. A <button type="button" class="term" data-term="loop" aria-expanded="false">loop</button> runs the same lines for each item in a list. Agents are built from both: an agent is a loop that calls functions (tools) until the job is done.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Try it in uv run python</span><button type="button" class="cb-copy" aria-label="Copy Try it in uv run python">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> word_count(text):</span><span class="ln">    <span class="s">"""Return how many words are in text."""</span></span><span class="ln">    <span class="k">return</span> len(text.split())</span><span class="ln"> </span><span class="ln"><span class="k">for</span> topic <span class="k">in</span> [<span class="s">"agents"</span>, <span class="s">"RAG"</span>, <span class="s">"evals"</span>]:</span><span class="ln">    <span class="k">if</span> topic == <span class="s">"RAG"</span>:</span><span class="ln">        print(<span class="s">"found it:"</span>, topic)</span><span class="ln">    <span class="k">else</span>:</span><span class="ln">        print(<span class="s">"not this one:"</span>, topic)</span><span class="ln"> </span><span class="ln">print(word_count(<span class="s">"Agents call tools in a loop"</span>))  <span class="c"># 6</span></span></pre></div>
+  <p class="callout"><b>Indentation is part of the code.</b> The four spaces at the start of a line show what's inside the function, the loop or the <code>if</code>. A colon <code>:</code> ends the line above every indented block. VS Code indents for you when you press Enter after a colon.</p>
+</section>
+
+<!-- ============ 4. FILES AND JSON ============ -->
+<section class="stage" id="files" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Files and JSON</p>
+    <h2 id="s4">JSON is how programs pass data around</h2>
+    <p>Web APIs answer in JSON, LLMs can be asked to reply in it (E4), and it's the simplest way to save data between runs. Python's <code>json</code> module turns JSON text into dicts and lists, and back.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Try it in uv run python</span><button type="button" class="cb-copy" aria-label="Copy Try it in uv run python">Copy</button></div><pre class="code"><span class="ln"><span class="k">import</span> json</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"> </span><span class="ln">note = {<span class="s">"title"</span>: <span class="s">"RAG"</span>, <span class="s">"words"</span>: 42}</span><span class="ln">path = Path(<span class="s">"notes.json"</span>)</span><span class="ln">path.write_text(json.dumps([note], indent=2))  <span class="c"># Python -&gt; JSON text -&gt; file</span></span><span class="ln">notes = json.loads(path.read_text())          <span class="c"># file -&gt; JSON text -&gt; Python</span></span><span class="ln">print(notes[0][<span class="s">"title"</span>])                      <span class="c"># RAG</span></span></pre></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>JSON</th><th>Python</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>object</td><td>dict</td><td><code>{"title": "RAG"}</code></td></tr>
+        <tr><td>array</td><td>list</td><td><code>["agents", "RAG"]</code></td></tr>
+        <tr><td>string</td><td>str</td><td><code>"RAG"</code></td></tr>
+        <tr><td>number</td><td>int or float</td><td><code>42</code>, <code>0.5</code></td></tr>
+        <tr><td>true / false</td><td>True / False</td><td><code>true</code> becomes <code>True</code></td></tr>
+        <tr><td>null</td><td>None</td><td><code>null</code> becomes <code>None</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 5. ERRORS ============ -->
+<section class="stage" id="exceptions" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Errors</p>
+    <h2 id="s5">Handle the errors you expect, let the rest show</h2>
+    <p>When something goes wrong while the program runs, Python raises an <button type="button" class="term" data-term="exception" aria-expanded="false">exception</button>. Unless you handle it, the program stops and prints a traceback (you learned to read those in E1). AI code meets errors constantly: networks fail, APIs say no, and models return something unexpected.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Try it in uv run python</span><button type="button" class="cb-copy" aria-label="Copy Try it in uv run python">Copy</button></div><pre class="code"><span class="ln">note = {<span class="s">"title"</span>: <span class="s">"RAG"</span>}</span><span class="ln"><span class="k">try</span>:</span><span class="ln">    words = note[<span class="s">"words"</span>]</span><span class="ln"><span class="k">except</span> KeyError:</span><span class="ln">    words = 0           <span class="c"># a missing count is fine here: use 0</span></span><span class="ln">print(words)            <span class="c"># 0</span></span></pre></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Exception</th><th>Typical cause</th></tr></thead>
+      <tbody>
+        <tr><td><code>KeyError</code></td><td>Asking a dict for a key it doesn't have</td></tr>
+        <tr><td><code>IndexError</code></td><td>Asking for item 5 of a list with 3 items</td></tr>
+        <tr><td><code>TypeError</code></td><td>Mixing types, such as <code>"words: " + 42</code> (use an f-string)</td></tr>
+        <tr><td><code>ValueError</code></td><td>The right type but a bad value, such as <code>int("ten")</code></td></tr>
+        <tr><td><code>FileNotFoundError</code></td><td>Opening a file that isn't there, often the wrong folder</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="prose">Catch only the errors you expect and know what to do about. Catching everything hides real bugs: the program keeps running with wrong data, and you never see the traceback that would have told you why.</p>
+</section>
+
+<!-- ============ 6. WEB APIS ============ -->
+<section class="stage" id="web" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · Calling a web API</p>
+    <h2 id="s6">Ask a server for data, get JSON back</h2>
+    <p>A web API is a URL that answers programs instead of people. You send a request, and it sends back a <button type="button" class="term" data-term="status" aria-expanded="false">status code</button> and a body, usually JSON. The <code>httpx</code> package does the sending.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Try it after uv add httpx (lab step 3)</span><button type="button" class="cb-copy" aria-label="Copy Try it after uv add httpx (lab step 3)">Copy</button></div><pre class="code"><span class="ln"><span class="k">import</span> httpx</span><span class="ln"> </span><span class="ln">url = <span class="s">"https://en.wikipedia.org/api/rest_v1/page/summary/Python_(programming_language)"</span></span><span class="ln">headers = {<span class="s">"User-Agent"</span>: <span class="s">"research-assistant/0.1 (you@example.com)"</span>}</span><span class="ln">response = httpx.get(url, headers=headers, timeout=10)</span><span class="ln">print(response.status_code)   <span class="c"># 200 means OK</span></span><span class="ln">data = response.json()        <span class="c"># the body, as a dict</span></span><span class="ln">print(data[<span class="s">"title"</span>])          <span class="c"># Python (programming language)</span></span></pre></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Status</th><th>Means</th><th>What your code should do</th></tr></thead>
+      <tbody>
+        <tr><td>200</td><td>OK</td><td>Read the body</td></tr>
+        <tr><td>400</td><td>Bad request: something in what you sent is wrong</td><td>Fix the request; retrying won't help</td></tr>
+        <tr><td>401 / 403</td><td>Not allowed: missing or wrong key, or blocked</td><td>Check the key or <button type="button" class="term" data-term="user_agent" aria-expanded="false">User-Agent</button></td></tr>
+        <tr><td>404</td><td>Not found</td><td>Report it and move on</td></tr>
+        <tr><td>429</td><td>Too many requests</td><td>Wait, then retry</td></tr>
+        <tr><td>500 / 503</td><td>The server has a problem</td><td>Wait, then retry a few times</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="callout"><b>An LLM is a web API too.</b> In E3 you'll send a request with your messages as JSON and your API key in a header, and get the model's answer back as JSON. The SDK wraps it in one function call, but underneath it's what you do here, including 429s and timeouts.</p>
+  <div class="quiz" data-quiz="qe2b">
+    <p class="quiz-label">Check your understanding · Web APIs</p>
+    <p class="quiz-q">Your script gets status 429 from an API. What does it mean, and what should the code do?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. That&#x27;s 404."><span class="l">A</span><span>The page doesn't exist; skip it</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. 429 means slow down. LLM APIs send it too, which is why E3 covers retries."><span class="l">B</span><span>Too many requests: wait a little, then retry</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A typo gives a SyntaxError before any request is sent. 429 comes from the server."><span class="l">C</span><span>There's a typo in your Python code</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 7. AI ASSISTANTS ============ -->
+<section class="stage" id="assistants" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow"><b>7</b> · Pairing with an AI coding assistant</p>
+    <h2 id="s7">Let it help you learn, not think for you</h2>
+    <p>AI engineers use coding assistants all day: Claude Code, GitHub Copilot, Cursor and chat assistants. They're excellent teachers if you use them that way, and a trap if you paste code you don't understand into a project you'll need to debug later.</p>
+  </div>
+  <ol class="steps-list">
+    <li><b>Ask it to explain before you ask it to write.</b> "Explain this function line by line" teaches more than "write me a function".</li>
+    <li><b>Give it what it needs:</b> the file, the full error, the command you ran and what you expected.</li>
+    <li><b>Ask for small changes</b> and run the code after each one.</li>
+    <li><b>Read every line before you commit.</b> If you can't explain a line, ask about it, or change it and see what breaks.</li>
+    <li><b>Never paste API keys</b> or other secrets into a chat.</li>
+  </ol>
+  <pre class="out">I'm learning Python. Here is wiki_notes.py and the error I get when I run
+uv run wiki_notes.py "Mercury" in my project folder:
+
+[paste the whole error]
+[paste the file]
+
+Explain what the error means and where it comes from. Then suggest the
+smallest fix, and explain why it works. Don't rewrite the rest of the file.</pre>
+  <div class="quiz" data-quiz="qe2c">
+    <p class="quiz-label">Check your understanding · AI assistants</p>
+    <p class="quiz-q">An AI assistant writes a 40-line function that works, but you don't understand two of the lines. What do you do?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. When it breaks later, those two lines are exactly the ones you won&#x27;t be able to debug."><span class="l">A</span><span>Commit it, since it works</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Using assistants is normal practice. Shipping lines you can&#x27;t explain is the problem."><span class="l">B</span><span>Ask it to explain those lines, change something small, and run it again before committing</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. That throws away a good teacher. Use it, and make sure you understand the result."><span class="l">C</span><span>Delete it and write everything yourself from scratch</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · on your laptop</p>
+    <h2 id="s8">Give the research assistant its first tool</h2>
+    <p>You'll write a script that fetches Wikipedia summaries and saves them as notes. In E5 the model will call a function like <code>fetch_summary</code> by itself; for now, you call it.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>2–3 hours</b></span><span>API cost <b>none</b></span><span>You need <b>E1 done</b></span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Open your project</h3><p>In VS Code: <b>File → Open Recent → research-assistant</b>, then <b>Terminal → New Terminal</b>. Run <code>pwd</code> if you're not sure where you are.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Try Python one line at a time</h3><p>Open <button type="button" class="term" data-term="repl" aria-expanded="false">interactive Python</button>, then type each line after the <code>&gt;&gt;&gt;</code> prompt and press Enter. Try the examples from this page the same way.</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run python</span></pre></div><div class="cb"><div class="cb-h"><span>At the &gt;&gt;&gt; prompt</span><button type="button" class="cb-copy" aria-label="Copy At the &gt;&gt;&gt; prompt">Copy</button></div><pre class="code"><span class="ln">topic = <span class="s">"agents"</span></span><span class="ln">topic.upper()</span><span class="ln">len(topic)</span><span class="ln">exit()</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">&gt;&gt;&gt; topic = "agents"
+&gt;&gt;&gt; topic.upper()
+'AGENTS'
+&gt;&gt;&gt; len(topic)
+6
+&gt;&gt;&gt; exit()</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Add the httpx package</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv add httpx</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Resolved 8 packages in 300ms
+Prepared 7 packages in 552ms
+Installed 7 packages in 8ms
+ + anyio==4.15.1
+ + certifi==2026.10.19
+ + h11==0.16.0
+ + httpcore==1.0.9
+ + httpx==0.28.1
+ + idna==3.20
+ + typing-extensions==4.16.0</pre><p class="small">Versions and times will differ. httpx needs the other packages, so uv installs them too. <code>pyproject.toml</code> now lists httpx, and <code>uv.lock</code> records the exact versions. Commit both.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Write the script</h3><p>Create <code>wiki_notes.py</code>. Type it if you have the time, or paste it and then read every line, including the comments. Then change the email in <code>HEADERS</code> to yours.</p><div class="cb"><div class="cb-h"><span>wiki_notes.py</span><button type="button" class="cb-copy" aria-label="Copy wiki_notes.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E2 lab: save short Wikipedia summaries as notes.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with one or more topics:</span></span><span class="ln"><span class="s">    uv run wiki_notes.py "Large language model" "Prompt engineering"</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> json</span><span class="ln"><span class="k">import</span> sys</span><span class="ln"><span class="k">from</span> datetime <span class="k">import</span> date</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"><span class="k">from</span> urllib.parse <span class="k">import</span> quote</span><span class="ln"> </span><span class="ln"><span class="k">import</span> httpx</span><span class="ln"> </span><span class="ln">API_URL = <span class="s">"https://en.wikipedia.org/api/rest_v1/page/summary/"</span></span><span class="ln"><span class="c"># Wikipedia asks every script to say who it is. Put your email or GitHub link here.</span></span><span class="ln">HEADERS = {<span class="s">"User-Agent"</span>: <span class="s">"research-assistant/0.1 (you@example.com)"</span>}</span><span class="ln">NOTES_FILE = Path(<span class="s">"notes.json"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> fetch_summary(topic):</span><span class="ln">    <span class="s">"""Ask Wikipedia for a short summary of one topic. Returns the JSON as a dict."""</span></span><span class="ln">    url = API_URL + quote(topic.replace(<span class="s">" "</span>, <span class="s">"_"</span>))</span><span class="ln">    response = httpx.get(url, headers=HEADERS, timeout=10, follow_redirects=<span class="k">True</span>)</span><span class="ln">    response.raise_for_status()  <span class="c"># turns answers like 404 into an error</span></span><span class="ln">    <span class="k">return</span> response.json()</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> make_note(data):</span><span class="ln">    <span class="s">"""Keep only the fields we need from Wikipedia's answer."""</span></span><span class="ln">    <span class="k">return</span> {</span><span class="ln">        <span class="s">"title"</span>: data[<span class="s">"title"</span>],</span><span class="ln">        <span class="s">"description"</span>: data.get(<span class="s">"description"</span>, <span class="s">""</span>),</span><span class="ln">        <span class="s">"summary"</span>: data[<span class="s">"extract"</span>],</span><span class="ln">        <span class="s">"url"</span>: data[<span class="s">"content_urls"</span>][<span class="s">"desktop"</span>][<span class="s">"page"</span>],</span><span class="ln">        <span class="s">"saved_on"</span>: date.today().isoformat(),</span><span class="ln">    }</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> load_notes():</span><span class="ln">    <span class="s">"""Read the notes saved so far, or start with an empty list."""</span></span><span class="ln">    <span class="k">if</span> NOTES_FILE.exists():</span><span class="ln">        <span class="k">return</span> json.loads(NOTES_FILE.read_text(encoding=<span class="s">"utf-8"</span>))</span><span class="ln">    <span class="k">return</span> []</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> save_notes(notes):</span><span class="ln">    NOTES_FILE.write_text(json.dumps(notes, indent=2, ensure_ascii=<span class="k">False</span>), encoding=<span class="s">"utf-8"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> already_saved(notes, title):</span><span class="ln">    <span class="k">for</span> note <span class="k">in</span> notes:</span><span class="ln">        <span class="k">if</span> note[<span class="s">"title"</span>] == title:</span><span class="ln">            <span class="k">return</span> <span class="k">True</span></span><span class="ln">    <span class="k">return</span> <span class="k">False</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main(topics):</span><span class="ln">    notes = load_notes()</span><span class="ln">    <span class="k">for</span> topic <span class="k">in</span> topics:</span><span class="ln">        <span class="k">try</span>:</span><span class="ln">            data = fetch_summary(topic)</span><span class="ln">        <span class="k">except</span> httpx.HTTPStatusError <span class="k">as</span> error:</span><span class="ln">            print(<span class="s">f"Error: {topic}: Wikipedia answered {error.response.status_code}"</span>)</span><span class="ln">            <span class="k">continue</span></span><span class="ln">        <span class="k">except</span> httpx.RequestError <span class="k">as</span> error:</span><span class="ln">            print(<span class="s">f"Error: {topic}: could not reach Wikipedia ({type(error).__name__})"</span>)</span><span class="ln">            <span class="k">continue</span></span><span class="ln"> </span><span class="ln">        <span class="k">if</span> data.get(<span class="s">"type"</span>) == <span class="s">"disambiguation"</span>:</span><span class="ln">            print(<span class="s">f"Skipped: {topic} has several meanings. Try a more specific title."</span>)</span><span class="ln">            <span class="k">continue</span></span><span class="ln"> </span><span class="ln">        note = make_note(data)</span><span class="ln">        <span class="k">if</span> already_saved(notes, note[<span class="s">"title"</span>]):</span><span class="ln">            print(<span class="s">f"Skipped: {note['title']} is already saved"</span>)</span><span class="ln">            <span class="k">continue</span></span><span class="ln"> </span><span class="ln">        notes.append(note)</span><span class="ln">        words = len(note[<span class="s">"summary"</span>].split())</span><span class="ln">        print(<span class="s">f"Saved: {note['title']} ({words} words)"</span>)</span><span class="ln"> </span><span class="ln">    save_notes(notes)</span><span class="ln">    print(<span class="s">f"Notes in {NOTES_FILE}: {len(notes)}"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    topics = sys.argv[1:]  <span class="c"># everything typed after the file name</span></span><span class="ln">    <span class="k">if</span> <span class="k">not</span> topics:</span><span class="ln">        topics = [<span class="s">"Large language model"</span>]</span><span class="ln">    main(topics)</span></pre></div><ul><li><b><code>fetch_summary</code></b> builds the web address, asks Wikipedia, and turns the JSON answer into a dict.</li><li><b><code>make_note</code></b> keeps the five fields you need from that dict.</li><li><b><code>load_notes</code></b> and <b><code>save_notes</code></b> read and write <code>notes.json</code>.</li><li><b><code>main</code></b> loops over your topics. Each error is caught and reported, so one bad topic doesn't stop the rest.</li><li><b><code>if __name__ == "__main__":</code></b> runs <code>main</code> only when you run this file directly, which lets later modules import its functions.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Run it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run wiki_notes.py "Large language model"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Saved: Large language model (93 words)
+Notes in notes.json: 1</pre><p class="small">Your word count will differ, because Wikipedia's summary changes. Open <code>notes.json</code> in VS Code to see your note as JSON.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Try the awkward cases</h3><p>Real data is messy. Give it a page you already have, one that doesn't exist, and one with several meanings:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run wiki_notes.py "Prompt engineering" "Large language model" "Qwxzzy" "Mercury"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Saved: Prompt engineering (64 words)
+Skipped: Large language model is already saved
+Error: Qwxzzy: Wikipedia answered 404
+Skipped: Mercury has several meanings. Try a more specific title.
+Notes in notes.json: 2</pre><p class="small">Try <code>"Mercury (planet)"</code> next. Titles that redirect, such as a plural, are saved under the page's real title.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Make it yours</h3><p>Pick at least one. Use an AI assistant if you like, then make sure you can explain every line it wrote.</p><ul><li>Print the description next to each saved title.</li><li>After saving, print the title of the longest summary in <code>notes.json</code>.</li><li>Read the topics from a file called <code>topics.txt</code>, one per line, when none are typed.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">8</span><div class="lab-b"><h3>Commit and push</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add .</span><span class="ln">git commit -m "Add Wikipedia notes script"</span><span class="ln">git push</span></pre></div><p>Your repo now has a script that calls a real web API. In E3 you'll call an LLM the same way.</p></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>ModuleNotFoundError: No module named 'httpx'</code></dt><dd>You ran <code>python wiki_notes.py</code> instead of <code>uv run wiki_notes.py</code>, or skipped <code>uv add httpx</code>.</dd><dt><code>Error: …: Wikipedia answered 403</code></dt><dd>Wikipedia refused the request. Put your real email or GitHub link in <code>HEADERS</code>, save, and run again.</dd><dt><code>Error: …: could not reach Wikipedia (ConnectError)</code></dt><dd>No internet, or a work network or VPN is blocking it. Try another network.</dd><dt><code>json.decoder.JSONDecodeError</code></dt><dd><code>notes.json</code> was edited by hand and is no longer valid JSON. Fix it, or delete it; the script makes a new one.</dd></dl></div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s9">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E2 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="e2"><li><label><input type="checkbox"><span><code>wiki_notes.py</code> has saved at least three notes to <code>notes.json</code></span></label></li><li><label><input type="checkbox"><span>You can say in one sentence what each of its functions does</span></label></li><li><label><input type="checkbox"><span>You ran the awkward cases (already saved, 404, several meanings) and understood each line of output</span></label></li><li><label><input type="checkbox"><span>You finished at least one “Make it yours” change and pushed it to GitHub</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s10">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula"><em>Request</em> (httpx) → <em>check the status</em> → <em>JSON to dict</em> → <em>keep what you need</em> → <em>save</em>. Handle the errors you expect.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>Shapes</h3><ul>
+        <li><code>"text"</code> str, <code>42</code> int, <code>0.5</code> float</li>
+        <li><code>True</code> / <code>False</code>, <code>None</code></li>
+        <li><code>[a, b]</code> list, <code>x[0]</code> first item</li>
+        <li><code>{"k": v}</code> dict, <code>d["k"]</code>, <code>d.get("k", default)</code></li>
+        <li><code>f"{name} …"</code> fills in values</li>
+      </ul></div>
+      <div class="blk"><h3>Patterns</h3><ul>
+        <li><code>def name(args): return …</code></li>
+        <li><code>for item in items:</code></li>
+        <li><code>json.loads(text)</code>, <code>json.dumps(data)</code></li>
+        <li><code>httpx.get(url, timeout=10)</code></li>
+        <li><code>response.raise_for_status()</code></li>
+        <li><code>try: … except KeyError: …</code></li>
+      </ul></div>
+      <div class="blk"><h3>Status codes</h3><ul>
+        <li>200 OK</li>
+        <li>400 fix the request</li>
+        <li>401 / 403 check the key</li>
+        <li>404 not found</li>
+        <li>429, 5xx: wait and retry</li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s11">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s11">3 common beginner mistakes in AI code</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>Assuming the shape of the data</h3><dl>
+      <dt>What it looks like</dt><dd><code>KeyError: 'description'</code> on the one page that has no description, after twenty that worked.</dd>
+      <dt>Fix</dt><dd>Print the JSON once and look at it. Use <code>.get()</code> for fields that can be missing.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>Network calls with no timeout or error handling</h3><dl>
+      <dt>What it looks like</dt><dd>The script hangs for minutes on a slow server, or one bad topic crashes a run of fifty.</dd>
+      <dt>Fix</dt><dd>Always pass a timeout, call <code>raise_for_status()</code>, and handle errors per item so one failure doesn't stop the rest.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>Pasting code you can't explain</h3><dl>
+      <dt>What it looks like</dt><dd>It works today. Next week it breaks and you can't tell which of the forty pasted lines matters.</dd>
+      <dt>Fix</dt><dd>Don't commit a line you can't explain. Ask the assistant to explain it, or change it and see what breaks.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="eng-setup.html" data-site-link>← Module E1 · Your dev setup</a>
+  <a href="engineer.html" data-site-link>E3 · Your first LLM call is coming next. See the track →</a>
+</div>
+
+<footer>
+  <p>The stepper demo is a simulation of what Python does; nothing runs in your browser. The lab calls Wikipedia's public API from your own laptop. Its summaries change over time, so your word counts will differ.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with the Wikimedia Foundation.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "repl": {
+  "t": "Interactive Python (REPL)",
+  "d": "Python waiting at a >>> prompt for one line at a time, showing each result. Open it with uv run python; leave with exit()."
+ },
+ "variable": {
+  "t": "Variable",
+  "d": "A name that points to a value, such as words = 120. Change the value and the name points to the new one."
+ },
+ "string": {
+  "t": "String (str)",
+  "d": "Text in quotes, such as \"RAG\". Prompts, model answers and web pages all arrive as strings."
+ },
+ "fstring": {
+  "t": "f-string",
+  "d": "A string with f before the quotes, which fills in each {name} with that variable's value: f\"{words} words\"."
+ },
+ "list": {
+  "t": "List",
+  "d": "Items in order, in square brackets: [\"agents\", \"RAG\"]. Counting starts at 0, so the first item is topics[0]."
+ },
+ "dict": {
+  "t": "Dictionary (dict)",
+  "d": "Values looked up by a key, in curly braces: {\"role\": \"user\"}. JSON objects become dicts in Python."
+ },
+ "function": {
+  "t": "Function",
+  "d": "A named, reusable piece of code defined with def. It takes inputs (arguments) and can give back a result with return."
+ },
+ "loop": {
+  "t": "Loop (for)",
+  "d": "Code that runs once for each item in a list: for topic in topics: …"
+ },
+ "json": {
+  "t": "JSON",
+  "d": "A text format for data that almost every web API uses. Objects, lists, strings, numbers, true/false and null map straight onto Python types."
+ },
+ "exception": {
+  "t": "Exception",
+  "d": "An error raised while the program runs, such as KeyError. Unless try/except handles it, the program stops and prints a traceback."
+ },
+ "api": {
+  "t": "API",
+  "d": "A way for programs to talk to each other. A web API answers requests sent to a URL, usually with JSON."
+ },
+ "status": {
+  "t": "HTTP status code",
+  "d": "The number a web server sends back with every answer: 200 means OK, 404 not found, 429 too many requests, 500 a server problem."
+ },
+ "user_agent": {
+  "t": "User-Agent",
+  "d": "A request header saying which program is asking. Many APIs, including Wikipedia's, expect a descriptive one with contact details."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Predict the output (scripted) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SNIPS = [
+ {k:"1 · Variables", code:['topic = "RAG"', 'words = 120', 'words = words + 30', 'print(f"{topic}: {words} words")'], steps:[
+   {ln:0, v:{topic:["str", '"RAG"']}, why:"topic now points to the text \"RAG\"."},
+   {ln:1, v:{words:["int", "120"]}},
+   {ln:2, v:{words:["int", "150"]}, why:"Python works out the right side first (120 + 30), then points words at the result."},
+   {ln:3, out:"RAG: 150 words", q:{o:["{topic}: {words} words", "RAG: 150 words", "RAG: 120 words"], a:1, why:"The f before the quotes fills in each {…} with the variable's value now. words has been 150 since the line before."}}
+ ]},
+ {k:"2 · Lists and loops", code:['topics = ["agents", "RAG"]', 'topics.append("evals")', 'for t in topics:', '    print(t.upper())', 'print(len(topics))'], steps:[
+   {ln:0, v:{topics:["list", "['agents', 'RAG']"]}},
+   {ln:1, v:{topics:["list", "['agents', 'RAG', 'evals']"]}, why:".append adds an item to the end of the list."},
+   {ln:2, v:{t:["str", "'agents'"]}, why:"The loop gives t each item in turn, starting with the first."},
+   {ln:3, out:"AGENTS", q:{o:["agents", "AGENTS", "['agents', 'RAG', 'evals']"], a:1, why:".upper() gives back the text in capitals. t holds one item at a time, not the whole list."}},
+   {ln:2, v:{t:["str", "'RAG'"]}},
+   {ln:3, out:"RAG"},
+   {ln:2, v:{t:["str", "'evals'"]}},
+   {ln:3, out:"EVALS", why:"That was the last item, so the loop ends and Python moves to the next unindented line."},
+   {ln:4, out:"3", q:{o:["2", "3", "evals"], a:1, why:"len counts the items. There were 2, and append made it 3."}}
+ ]},
+ {k:"3 · Dicts", code:['msg = {"role": "user", "content": "Hi"}', 'msg["content"] = "What is RAG?"', 'print(msg["role"])', 'print(msg.get("name", "no name"))'], steps:[
+   {ln:0, v:{msg:["dict", "{'role': 'user', 'content': 'Hi'}"]}, why:"A dict of two key: value pairs. This is one message in the format LLM APIs use."},
+   {ln:1, v:{msg:["dict", "{'role': 'user', 'content': 'What is RAG?'}"]}, why:"Square brackets with a key read or change that key's value."},
+   {ln:2, out:"user", q:{o:["role", "user", "{'role': 'user'}"], a:1, why:"msg[\"role\"] looks up the key \"role\" and gives its value."}},
+   {ln:3, out:"no name", q:{o:["KeyError", "None", "no name"], a:2, why:".get gives back the second value when the key is missing. msg[\"name\"] would have raised KeyError."}}
+ ]},
+ {k:"4 · Functions", code:['def cost(tokens, price=3.0):', '    return tokens / 1_000_000 * price', '', 'a = cost(2000)', 'b = cost(2000, price=15.0)', 'print(f"${a + b:.3f}")'], steps:[
+   {ln:0, v:{cost:["function", "cost(tokens, price=3.0)"]}, why:"def only defines the function. Its indented body runs later, each time it's called."},
+   {ln:3, why:"Calling cost(2000) jumps into the function with tokens = 2000."},
+   {ln:1, v:{"tokens (in cost)":["int", "2000"], "price (in cost)":["float", "3.0"]}, why:"price wasn't given, so it uses the default, 3.0. 2000 ÷ 1,000,000 × 3.0 = 0.006, which return sends back."},
+   {ln:3, v:{"tokens (in cost)":null, "price (in cost)":null, a:["float", "0.006"]}, why:"The function's own variables disappear when it returns. a keeps the result."},
+   {ln:4, why:"This time price is given, so the default is ignored."},
+   {ln:1, v:{"tokens (in cost)":["int", "2000"], "price (in cost)":["float", "15.0"]}},
+   {ln:4, v:{"tokens (in cost)":null, "price (in cost)":null, b:["float", "0.03"]}},
+   {ln:5, out:"$0.036", q:{o:["$0.036", "$0.006", "$2015.0"], a:0, why:":.3f rounds to 3 decimal places, and 0.006 + 0.03 = 0.036. LLM prices work exactly like this: dollars per million tokens (E3)."}}
+ ]},
+ {k:"5 · Errors", code:['note = {"title": "RAG"}', 'try:', '    print(note["url"])', 'except KeyError:', '    print("No url saved")', 'print("Still running")'], steps:[
+   {ln:0, v:{note:["dict", "{'title': 'RAG'}"]}},
+   {ln:1, why:"try: means: run the indented lines, and if one of them raises an error listed under except, jump there."},
+   {ln:2, qt:"What happens on this line?", q:{o:["It prints None", "It raises KeyError, so Python jumps to except", "It prints url"], a:1, why:"There's no \"url\" key, so note[\"url\"] raises KeyError. Nothing prints; Python jumps to the matching except."}},
+   {ln:3, why:"The error was a KeyError, so this except matches."},
+   {ln:4, out:"No url saved"},
+   {ln:5, out:"Still running", why:"Because the error was handled, the program carries on. Without try/except it would have stopped here with a traceback."}
+ ]}
+];
+let cur = 0, idx = -1, vars = {}, changed = [], out = [], asked = false, right = 0, total = 0;
+const doneSnips = new Set(), answered = new Set();
+
+const KW = new Set(["def", "for", "in", "return", "try", "except", "if", "else"]);
+function hl(s){
+  return s.split(/("[^"]*"|\b\w+\b)/).map(t => !t ? "" : t[0] === '"' ? '<span class="s">' + esc(t) + "</span>" : KW.has(t) ? '<span class="k">' + t + "</span>" : esc(t)).join("");
+}
+function tabs(){
+  $("psTabs").innerHTML = SNIPS.map((s, i) => '<button type="button" aria-pressed="' + (i === cur) + '"' + (doneSnips.has(i) ? ' class="is-ok"' : "") + ' data-i="' + i + '">' + esc(s.k) + "</button>").join("");
+}
+function codeView(ln){
+  $("psCode").innerHTML = SNIPS[cur].code.map((l, i) => '<span class="ln' + (i === ln ? " is-on" : "") + '">' + (l ? hl(l) : " ") + "</span>").join("");
+}
+function view(){
+  const S = SNIPS[cur], st = S.steps[idx];
+  codeView(asked ? S.steps[idx + 1].ln : (st ? st.ln : -1));
+  const names = Object.keys(vars);
+  $("psVars").innerHTML = names.length ? '<table class="ps-vars"><tbody>' + names.map(n =>
+    '<tr' + (changed.includes(n) ? ' class="new"' : "") + "><td>" + esc(n) + "</td><td>" + esc(vars[n][0]) + "</td><td>" + esc(vars[n][1]) + "</td></tr>").join("") + "</tbody></table>"
+    : '<p class="ps-empty">None yet. Run the first line.</p>';
+  $("psOut").textContent = out.length ? out.join("\n") : "";
+  const end = idx >= S.steps.length - 1;
+  $("psNext").disabled = asked || end;
+  $("psNext").textContent = end ? "Finished ✓" : "Run the next line ▶";
+  $("psScore").textContent = "Predictions right: " + right + " of " + total;
+  tabs();
+}
+function apply(st){
+  changed = [];
+  if(st.v) for(const [k, v] of Object.entries(st.v)){ if(v === null) delete vars[k]; else { vars[k] = v; changed.push(k); } }
+  if(st.out) out.push(st.out);
+}
+function next(){
+  const S = SNIPS[cur], st = S.steps[idx + 1]; if(!st) return;
+  if(st.q && !asked){
+    asked = true;
+    $("psQt").textContent = st.qt || "Predict: what will this line print?";
+    $("psOpts").innerHTML = st.q.o.map((o, i) => '<button type="button" class="opt" data-i="' + i + '"><span class="l">' + "ABC"[i] + "</span><span>" + esc(o) + "</span></button>").join("");
+    $("psQ").hidden = false; $("psWhy").textContent = "";
+    view(); return;
+  }
+  idx++; apply(st);
+  $("psWhy").textContent = st.why || "";
+  if(idx === S.steps.length - 1) doneSnips.add(cur);
+  view();
+}
+function answer(i){
+  const S = SNIPS[cur], st = S.steps[idx + 1], ok = i === st.q.a, key = cur + ":" + (idx + 1);
+  if(!answered.has(key)){ answered.add(key); total++; if(ok) right++; }
+  [...$("psOpts").children].forEach((b, j) => { b.disabled = true; b.classList.toggle("right", j === st.q.a); b.classList.toggle("wrong", j === i && !ok); });
+  asked = false; idx++; apply(st);
+  $("psWhy").textContent = (ok ? "Right. " : "Not quite. ") + st.q.why;
+  if(idx === S.steps.length - 1) doneSnips.add(cur);
+  view();
+}
+function restart(i){
+  cur = i; idx = -1; vars = {}; changed = []; out = []; asked = false;
+  $("psQ").hidden = true; $("psWhy").textContent = "";
+  view();
+}
+$("psNext").addEventListener("click", next);
+$("psRestart").addEventListener("click", () => restart(cur));
+$("psTabs").addEventListener("click", e => { const b = e.target.closest("button"); if(b) restart(+b.dataset.i); });
+$("psOpts").addEventListener("click", e => { const b = e.target.closest("button"); if(b && !b.disabled) answer(+b.dataset.i); });
+restart(0);
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e2";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>

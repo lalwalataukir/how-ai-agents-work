@@ -18,6 +18,18 @@ Interactive guides for product managers, built around one running example: a res
 | **10 · Evals in practice**: error analysis, building a dataset, code checks, LLM judges and people, judge calibration, pass@k and pass^k, CI gates and online evals, comparing versions and a weekly ritual, with a grade-the-grader demo | https://lalwalataukir.github.io/how-ai-agents-work/evals.html |
 | **Reference**: every glossary term from the modules, searchable, plus further reading | https://lalwalataukir.github.io/how-ai-agents-work/reference.html |
 
+## AI engineer track
+
+A hands-on track for beginners who want to build agents, not just understand them. Each module has concepts, an in-browser demo, and a lab you run on your own laptop. Every lab grows one project: the research assistant, built for real.
+
+| Module | Live link |
+|---|---|
+| **Track home**: the roadmap of all 12 modules, what you need before you start, and your progress | https://lalwalataukir.github.io/how-ai-agents-work/engineer.html |
+| **E1 · Your dev setup**: the terminal, Python with uv, VS Code, git and GitHub, and reading errors, with a terminal-practice demo and a lab that puts your first program on GitHub | https://lalwalataukir.github.io/how-ai-agents-work/eng-setup.html |
+| **E2 · Python for AI work**: values, lists and dicts, functions and loops, files and JSON, errors, web APIs and pairing with an AI assistant, with a predict-the-output demo and a lab that saves Wikipedia notes | https://lalwalataukir.github.io/how-ai-agents-work/eng-python.html |
+
+The finished code for each lab is in [`labs/`](labs/), with offline tests: `uv run --with httpx python labs/run_tests.py`.
+
 **Demo lab:** https://lalwalataukir.github.io/how-ai-agents-work/demo-lab.html has the LangChain, LangGraph and Langfuse demos in one page, with tabs. Each tab loads the demo from its module page, so there's only one copy of each demo.
 
 Everything in the demos is a scripted simulation. No AI model, search engine, framework or tracing service is contacted, and the example addresses are made up. These pages are independent explainers and aren't affiliated with LangChain, LangGraph, LangSmith or Langfuse.

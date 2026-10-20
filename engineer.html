@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>AI Engineer Track</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: the cover of the AI engineer track. The promise, your progress, the 12-module roadmap in five phases, what you need, how each module works and what you'll be able to do. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track home ---------- */
+.eng-stats{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
+.eng-prog{display:grid;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.eng-prog-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
+.eng-bar{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.eng-bar span{display:block;height:100%;width:0;background:var(--final);transition:width .3s}
+.eng-next{font-family:var(--font-display);font-weight:700;text-decoration:none}
+.rm-phase{display:grid;gap:12px}
+.phase+.rm-phase{margin-top:22px}
+.rm-phase-h{display:grid;gap:2px}
+.rm-phase-h .eyebrow b{color:var(--accent);font-weight:500}
+.rm-phase-h p{color:var(--muted)}
+.rm-row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:6px 16px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.rm-row.soon{background:transparent;border-style:dashed}
+.rm-row.soon .rm-num,.rm-row.soon h3{color:var(--muted)}
+.rm-row.is-done{border-color:var(--final)}
+.rm-num{font-family:var(--font-display);font-weight:800;font-size:1.5rem;line-height:1;color:var(--accent);padding-top:2px}
+.rm-txt{display:grid;gap:4px;min-width:0}
+.rm-txt h3{font-size:1.1rem}
+.rm-txt h3 a{color:inherit}
+.rm-txt p{color:var(--muted);font-size:.92rem}
+.rm-txt .rm-build{color:var(--ink)}
+.rm-side{display:grid;gap:6px;justify-items:end;text-align:right}
+.rm-time{font-family:var(--font-mono);font-size:.8rem;color:var(--muted)}
+.rm-done{display:flex;gap:6px;align-items:center;font-size:.85rem;cursor:pointer}
+.rm-done input{accent-color:var(--final);width:17px;height:17px}
+.rm-soon{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+@media (max-width:600px){
+  .rm-row{grid-template-columns:40px minmax(0,1fr)}
+  .rm-num{font-size:1.25rem}
+  .rm-side{grid-column:2;display:flex;flex-wrap:wrap;gap:6px 14px;justify-items:start;text-align:left;align-items:center}
+}
+.how-list{margin:0;padding-left:1.3em;display:grid;gap:8px;max-width:76ch}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="./" data-site-link>← All guides</a>
+    <a class="brand" href="#top">AI engineer track</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#roadmap" data-nav="roadmap">Roadmap</a>
+      <a href="#before" data-nav="before">Before you start</a>
+      <a href="#how" data-nav="how">How it works</a>
+      <a href="#skills" data-nav="skills">What you'll be able to do</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">AI engineer track · for beginners</p>
+  <h1>From PM to AI engineer: build a real agent, one module at a time</h1>
+  <p class="lede">The PM modules explain how agents work. This track has you <strong>build one</strong>. You start at the terminal with no coding experience assumed, write Python, call models, add tools, retrieval and evals, and finish with the <strong>research assistant</strong> from the PM modules running at a public URL, as a project you can show.</p>
+  <div class="eng-stats">
+    <div class="metric"><span class="v">12</span><span class="k">modules in 5 phases</span></div>
+    <div class="metric"><span class="v">46 h</span><span class="k">at a beginner's pace</span></div>
+    <div class="metric"><span class="v">1</span><span class="k">project, grown in every lab</span></div>
+    <div class="metric"><span class="v">&lt; $5</span><span class="k">API spend for all labs</span></div>
+  </div>
+  <div class="eng-prog" aria-live="polite">
+    <div class="eng-prog-top"><b id="engCount">0 of 12 modules done</b><a class="eng-next" id="engNext" href="eng-setup.html" data-site-link>Start with E1 · Your dev setup →</a></div>
+    <div class="eng-bar"><span id="engBar"></span></div>
+    <p class="small muted">Saved in this browser. A module is marked done when you tick everything in its "Done when" list, or tick it here.</p>
+  </div>
+</div>
+
+<!-- ============ ROADMAP ============ -->
+<section class="stage" id="roadmap" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow">The plan</p>
+    <h2 id="s1">Roadmap</h2>
+    <p>Do the modules in order: each lab adds to the code from the one before. New modules are released a few at a time; the ones marked "coming soon" are next.</p>
+  </div>
+  <div class="rm-phase"><div class="rm-phase-h"><p class="eyebrow"><b>Phase 1</b> · Foundations</p><p>Set up your machine and learn the Python that AI code uses.</p></div><article class="rm-row" data-mod="e1"><span class="rm-num">E1</span><div class="rm-txt"><h3><a href="eng-setup.html" data-site-link>Your dev setup</a></h3><p>Terminal, Python with uv, VS Code, git and GitHub, reading errors.</p><p class="small rm-build"><b>You build:</b> your repo and first program<span class="muted"></span></p></div><div class="rm-side"><span class="rm-time">2 h</span><label class="rm-done"><input type="checkbox" data-mod="e1"> Done</label></div></article><article class="rm-row" data-mod="e2"><span class="rm-num">E2</span><div class="rm-txt"><h3><a href="eng-python.html" data-site-link>Python for AI work</a></h3><p>Lists and dicts, functions and loops, files and JSON, errors, web APIs, pairing with an AI assistant.</p><p class="small rm-build"><b>You build:</b> a script that saves Wikipedia notes<span class="muted"></span></p></div><div class="rm-side"><span class="rm-time">4 h</span><label class="rm-done"><input type="checkbox" data-mod="e2"> Done</label></div></article></div><div class="rm-phase"><div class="rm-phase-h"><p class="eyebrow"><b>Phase 2</b> · Working with models</p><p>Call an LLM from code, get structured answers, and let it use tools.</p></div><article class="rm-row soon" data-mod="e3"><span class="rm-num">E3</span><div class="rm-txt"><h3>Your first LLM call</h3><p>API keys, the Messages API, system prompts, tokens and cost, streaming, retries.</p><p class="small rm-build"><b>You build:</b> a terminal chatbot that prints its cost<span class="muted"> · builds on PM modules 1, 8</span></p></div><div class="rm-side"><span class="rm-time">3 h</span><span class="rm-soon">Coming soon</span></div></article><article class="rm-row soon" data-mod="e4"><span class="rm-num">E4</span><div class="rm-txt"><h3>Prompts and structured output</h3><p>Prompt templates, few-shot examples, JSON output checked with Pydantic.</p><p class="small rm-build"><b>You build:</b> an article extractor<span class="muted"> · builds on PM module 8</span></p></div><div class="rm-side"><span class="rm-time">3 h</span><span class="rm-soon">Coming soon</span></div></article><article class="rm-row soon" data-mod="e5"><span class="rm-num">E5</span><div class="rm-txt"><h3>Tool calling</h3><p>Tool definitions and the tool-use loop, written by hand.</p><p class="small rm-build"><b>You build:</b> a chatbot that searches and cites<span class="muted"> · builds on PM module 1</span></p></div><div class="rm-side"><span class="rm-time">4 h</span><span class="rm-soon">Coming soon</span></div></article></div><div class="rm-phase"><div class="rm-phase-h"><p class="eyebrow"><b>Phase 3</b> · Knowledge and agents</p><p>Answer from your own documents, then build a real agent.</p></div><article class="rm-row soon" data-mod="e6"><span class="rm-num">E6</span><div class="rm-txt"><h3>Embeddings and RAG</h3><p>Embeddings, chunking, vector search, citations, when RAG fails.</p><p class="small rm-build"><b>You build:</b> questions over your own PDFs<span class="muted"> · builds on PM module 8</span></p></div><div class="rm-side"><span class="rm-time">4 h</span><span class="rm-soon">Coming soon</span></div></article><article class="rm-row soon" data-mod="e7"><span class="rm-num">E7</span><div class="rm-txt"><h3>Building agents</h3><p>The agent loop, memory and state, stop conditions, approval, LangGraph, a small MCP server.</p><p class="small rm-build"><b>You build:</b> the research assistant as an agent<span class="muted"> · builds on PM modules 1, 3, 4</span></p></div><div class="rm-side"><span class="rm-time">5 h</span><span class="rm-soon">Coming soon</span></div></article></div><div class="rm-phase"><div class="rm-phase-h"><p class="eyebrow"><b>Phase 4</b> · Quality and production</p><p>Measure it, ship it, and make it safe.</p></div><article class="rm-row soon" data-mod="e8"><span class="rm-num">E8</span><div class="rm-txt"><h3>Tracing and evals in code</h3><p>Langfuse tracing, an eval set in code, LLM judges, evals in GitHub Actions.</p><p class="small rm-build"><b>You build:</b> evals that run on every push<span class="muted"> · builds on PM modules 5, 10</span></p></div><div class="rm-side"><span class="rm-time">4 h</span><span class="rm-soon">Coming soon</span></div></article><article class="rm-row soon" data-mod="e9"><span class="rm-num">E9</span><div class="rm-txt"><h3>Shipping it</h3><p>FastAPI, a small web page, streaming, secrets, rate limits, cost caps, caching.</p><p class="small rm-build"><b>You build:</b> a live app at a public URL<span class="muted"> · builds on PM modules 7, 8</span></p></div><div class="rm-side"><span class="rm-time">5 h</span><span class="rm-soon">Coming soon</span></div></article><article class="rm-row soon" data-mod="e10"><span class="rm-num">E10</span><div class="rm-txt"><h3>Security in code</h3><p>Prompt-injection defences, tool permissions, sandboxing, keeping PII out of logs.</p><p class="small rm-build"><b>You build:</b> a hardened agent<span class="muted"> · builds on PM module 9</span></p></div><div class="rm-side"><span class="rm-time">3 h</span><span class="rm-soon">Coming soon</span></div></article></div><div class="rm-phase"><div class="rm-phase-h"><p class="eyebrow"><b>Phase 5</b> · Judgement and capstone</p><p>Choose models with evidence, and finish a project you can show.</p></div><article class="rm-row soon" data-mod="e11"><span class="rm-num">E11</span><div class="rm-txt"><h3>Choosing models</h3><p>Cost, latency and quality; open and local models; when fine-tuning is worth it.</p><p class="small rm-build"><b>You build:</b> a written model choice backed by evals<span class="muted"> · builds on PM modules 6, 10</span></p></div><div class="rm-side"><span class="rm-time">3 h</span><span class="rm-soon">Coming soon</span></div></article><article class="rm-row soon" data-mod="e12"><span class="rm-num">E12</span><div class="rm-txt"><h3>Capstone and portfolio</h3><p>A spec, a README that sells the project, a demo video, a skills check.</p><p class="small rm-build"><b>You build:</b> your finished, deployed agent<span class="muted"> · builds on all the PM modules</span></p></div><div class="rm-side"><span class="rm-time">6 h</span><span class="rm-soon">Coming soon</span></div></article></div>
+</section>
+
+<!-- ============ BEFORE YOU START ============ -->
+<section class="stage" id="before" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow">Checklist</p>
+    <h2 id="s2">Before you start</h2>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>A laptop you can install software on</h4><p class="small">Mac or Windows, with admin rights. Any laptop from the last five years is fine. Linux works too: follow the Mac commands.</p></div>
+    <div class="box"><h4>A GitHub account</h4><p class="small">Free, at github.com. Your project lives there, and at the end it's your portfolio.</p></div>
+    <div class="box"><h4>An API key, from E3 on</h4><p class="small">You'll create one in E3. Set a monthly spending limit when you do: $10 is plenty, and all the labs together cost under $5.</p></div>
+    <div class="box"><h4>About 5 hours a week</h4><p class="small">At that pace the track takes 9 to 10 weeks. Short, regular sessions beat one long weekend: you'll remember more between modules.</p></div>
+    <div class="box"><h4>No coding experience needed</h4><p class="small">E1 starts from opening a terminal. If you can follow a recipe and read an error message carefully, you can do this.</p></div>
+    <div class="box tint"><h4>The PM modules are optional</h4><p class="small">Each E-module links to the PM module it builds on. <a href="how-ai-agents-work.html" data-site-link>Module 1</a> is the best primer if agents are new to you.</p></div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="stage" id="how" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow">Format</p>
+    <h2 id="s3">How each module works</h2>
+  </div>
+  <ol class="how-list">
+    <li><b>What you'll build</b>: the result of the lab, up front.</li>
+    <li><b>Concepts</b>, with tap-to-define terms and links to the PM modules.</li>
+    <li><b>A demo in the browser</b> that needs no setup or API key, so you see the idea working before you code it.</li>
+    <li><b>A lab on your laptop</b>: numbered steps, code with a Copy button, the output you should see after each step, and an "If it breaks" box for the usual errors.</li>
+    <li><b>Done when</b>: a short checklist. Tick everything and the module is marked done here.</li>
+    <li><b>Three quizzes, a cheat sheet and three common mistakes</b>, like the PM modules.</li>
+  </ol>
+  <p class="callout"><b>Stuck?</b> Every lab's finished code is in the <a href="https://github.com/lalwalataukir/how-ai-agents-work/tree/main/labs" target="_blank" rel="noopener">labs folder on GitHub</a>, tested on every change. Compare it with yours, line by line, before reaching for the answer.</p>
+</section>
+
+<!-- ============ SKILLS ============ -->
+<section class="stage" id="skills" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow">Outcome</p>
+    <h2 id="s4">What you'll be able to do</h2>
+    <p>These are the skills AI engineering job descriptions ask for, and the evidence for each one will be in your repo.</p>
+  </div>
+  <div class="grid g2">
+    <div class="box"><h4>Build</h4><ul class="small" style="margin:0;padding-left:1.2em;display:grid;gap:4px">
+      <li>Write and debug Python, and work in a terminal with git</li>
+      <li>Call LLM APIs, get structured output, and handle errors and retries</li>
+      <li>Give models tools, and build agents with plain code or LangGraph</li>
+      <li>Answer questions from documents with retrieval (RAG)</li>
+    </ul></div>
+    <div class="box"><h4>Ship</h4><ul class="small" style="margin:0;padding-left:1.2em;display:grid;gap:4px">
+      <li>Trace runs, write evals and gate changes in CI</li>
+      <li>Deploy an AI app with sensible limits on cost and rate</li>
+      <li>Defend against prompt injection and data leaks</li>
+      <li>Choose a model with evidence: cost, speed and quality</li>
+    </ul></div>
+  </div>
+  <div class="box tint"><h4>Your portfolio at the end</h4><p class="small">A public GitHub repo with a clear README, evals that run on every push, a live URL, and a two-minute demo video. Plus the PM judgement from the other modules: you'll be able to explain why it's built the way it is.</p></div>
+</section>
+
+<div class="next-module">
+  <a href="./" data-site-link>← All guides</a>
+  <a href="eng-setup.html" data-site-link>Start E1 · Your dev setup →</a>
+</div>
+
+<div id="glossary" hidden></div>
+
+<footer>
+  <p>Part of the Agent Field Guides, independent explainers for product managers. Time estimates are for beginners and include the labs. API costs assume the cheapest current model and the lab sizes in each module.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Track progress ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+function load(){ try{ return JSON.parse(localStorage.getItem("guides.eng.progress") || "{}") || {}; }catch(e){ return {}; } }
+function save(p){ try{ localStorage.setItem("guides.eng.progress", JSON.stringify(p)); }catch(e){} }
+const rows = [...document.querySelectorAll(".rm-row")];
+const boxes = [...document.querySelectorAll(".rm-done input")];
+let prog = load();
+function render(){
+  boxes.forEach(b => { b.checked = !!prog[b.dataset.mod]; b.closest(".rm-row").classList.toggle("is-done", b.checked); });
+  const n = rows.filter(r => prog[r.dataset.mod]).length;
+  $("engCount").textContent = n + " of " + rows.length + " modules done";
+  $("engBar").style.width = (n / rows.length * 100) + "%";
+  const next = rows.find(r => !prog[r.dataset.mod]), a = $("engNext");
+  const link = next && next.querySelector("h3 a");
+  if(link){ a.hidden = false; a.href = link.href; a.textContent = (n ? "Continue with " : "Start with ") + next.dataset.mod.toUpperCase() + " · " + link.textContent + " →"; }
+  else if(next){ a.hidden = false; a.removeAttribute("href"); a.textContent = "You're up to date. " + next.dataset.mod.toUpperCase() + " is coming soon."; }
+  else { a.hidden = true; }
+}
+boxes.forEach(b => b.addEventListener("change", () => { prog[b.dataset.mod] = b.checked; save(prog); render(); }));
+window.addEventListener("storage", e => { if(e.key === "guides.eng.progress"){ prog = load(); render(); } });
+render();
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.eng";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>
