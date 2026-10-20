@@ -1,0 +1,12 @@
+[project]
+name = "research-team"
+version = "0.1.0"
+description = "Multi-agent research report"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=1.15",
+    "httpx>=0.28",
+    "langfuse>=5.0",
+    "pydantic>=2.10",
+    "python-dotenv>=1.0",
+]

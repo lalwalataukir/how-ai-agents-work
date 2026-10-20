@@ -1,0 +1,7 @@
+[
+  {"topic": "The Dartmouth workshop and the birth of artificial intelligence", "must_mention": ["1956", "McCarthy", "Minsky", "Dartmouth"]},
+  {"topic": "How vaccines train the immune system", "must_mention": ["antibod", "antigen", "memory", "immun"]},
+  {"topic": "How the James Webb Space Telescope works", "must_mention": ["infrared", "mirror", "sunshield|sun shield", "Lagrange|L2"]},
+  {"topic": "The invention and spread of the printing press", "must_mention": ["Gutenberg", "movable type", "Mainz", "Bible"]},
+  {"topic": "The causes of the 2008 financial crisis", "must_mention": ["subprime", "mortgage", "Lehman", "housing"]}
+]

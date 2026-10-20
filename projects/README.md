@@ -7,6 +7,7 @@ The finished code for the AI engineer track's [guided projects](https://lalwalat
 | `p1-code-review/` | [P1 · AI code reviewer](https://lalwalataukir.github.io/how-ai-agents-work/proj-code-review.html) | `p1-code-review-starter.zip` |
 | `p2-data-agent/` | [P2 · Data-analysis agent](https://lalwalataukir.github.io/how-ai-agents-work/proj-data-agent.html) | `p2-data-agent-starter.zip` |
 | `p3-code-qa/` | [P3 · Codebase Q&A assistant](https://lalwalataukir.github.io/how-ai-agents-work/proj-code-qa.html) | `p3-code-qa-starter.zip` |
+| `p4-research-team/` | [P4 · Multi-agent research report](https://lalwalataukir.github.io/how-ai-agents-work/proj-research-team.html) | `p4-research-team-starter.zip` |
 
 ## How a starter is made
 

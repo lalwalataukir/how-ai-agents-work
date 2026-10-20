@@ -66,13 +66,13 @@ class StarterTest(unittest.TestCase):
 class FakeAPI:
     """Answers like the Messages API, in order, and keeps the JSON body of every request."""
 
-    def __init__(self, *contents):
-        self.contents, self.bodies = list(contents), []
+    def __init__(self, *contents, respond=None):
+        self.contents, self.bodies, self.respond = list(contents), [], respond  # respond(body) -> content, for any order
 
     def __call__(self, request):
         body = json.loads(request.content)
         self.bodies.append(body)
-        content = self.contents.pop(0)
+        content = self.respond(body) if self.respond else self.contents.pop(0)
         stop = "tool_use" if any(block["type"] == "tool_use" for block in content) else "end_turn"
         return httpx2.Response(200, json={
             "id": f"msg_{len(self.bodies)}", "type": "message", "role": "assistant", "model": body["model"],
@@ -181,6 +181,94 @@ class CodeQaSDKTest(unittest.TestCase):
         done = events[-1]
         self.assertEqual((done["citations"], done["warnings"], done["calls"]),
                          ([{"path": "tinyshop/auth.py", "start": 31, "end": 35}], [], 3))
+
+
+TRACE_SCRIPT = r'''
+import gzip, http.server, json, os, sys, threading
+SPANS = []
+
+class FakeLangfuse(http.server.BaseHTTPRequestHandler):
+    def do_POST(self):
+        from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import ExportTraceServiceRequest
+        body = self.rfile.read(int(self.headers["Content-Length"]))
+        if self.path.endswith("/otel/v1/traces"):
+            if self.headers.get("Content-Encoding") == "gzip":
+                body = gzip.decompress(body)
+            request = ExportTraceServiceRequest()
+            request.ParseFromString(body)
+            for resource in request.resource_spans:
+                for scope in resource.scope_spans:
+                    for span in scope.spans:
+                        SPANS.append({"name": span.name, "id": span.span_id.hex(), "parent": span.parent_span_id.hex(),
+                                      "trace": span.trace_id.hex()})
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(b"{}")
+
+    def log_message(self, *args):
+        pass
+
+server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), FakeLangfuse)
+threading.Thread(target=server.serve_forever, daemon=True).start()
+os.environ.update(LANGFUSE_PUBLIC_KEY="pk-lf-test", LANGFUSE_SECRET_KEY="sk-lf-test", LANGFUSE_TRACING_ENABLED="true",
+                  LANGFUSE_BASE_URL=f"http://127.0.0.1:{server.server_port}", ANTHROPIC_API_KEY="test-key")
+sys.path[:0] = [sys.argv[1], sys.argv[1] + "/tests"]
+import fakes, team, wiki
+wiki.search_wikipedia, wiki.read_page = fakes.search_wikipedia, fakes.read_page
+team.client = fakes.FakeClaude(delay=0.05)
+team.run("The Dartmouth workshop")
+team.langfuse.flush()
+print(json.dumps(SPANS))
+'''
+
+
+class ResearchTeamTest(unittest.TestCase):
+    def test_workers_in_threads_still_nest_under_the_run_in_one_trace(self):
+        run = subprocess.run([sys.executable, "-c", TRACE_SCRIPT, str(HERE / "p4-research-team")],
+                             capture_output=True, text=True, env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
+        self.assertEqual(run.returncode, 0, run.stderr)
+        spans = json.loads(run.stdout.strip().splitlines()[-1])
+        [root] = [s for s in spans if s["name"] == "research-team"]
+        names = sorted(s["name"] for s in spans if s["parent"] == root["id"])
+        self.assertEqual(names, ["critic", "planner", "worker", "worker", "worker", "writer"])
+        self.assertEqual({s["trace"] for s in spans}, {root["trace"]})
+
+    def test_every_role_goes_through_the_real_sdk_with_its_own_model(self):
+        sys.modules.pop("wiki", None)
+        team = load("p4-research-team", "team")
+        report = "# Title\n\nFact one [1].\n\nFact two [2]."
+
+        def respond(body):
+            system, messages = body.get("system", ""), body["messages"]
+            if system == team.PLANNER:
+                return [{"type": "text", "text": json.dumps({"questions": ["What is A?", "What is B?"]})}]
+            if system == team.CRITIC:
+                return [{"type": "text", "text": json.dumps({"issues": [], "approved": True})}]
+            if system == team.WRITER:
+                return [{"type": "text", "text": report}]
+            question = messages[0]["content"]
+            if len(messages) == 1:
+                return [{"type": "tool_use", "id": "toolu_1", "name": "read_page", "input": {"title": question[8]}}]
+            return [{"type": "text", "text": f"{question[8]} is a letter [{question[8]}]."}]
+
+        page = lambda title: {"title": title, "summary": f"{title} is a letter.", "url": f"https://en.wikipedia.org/wiki/{title}"}
+        api = FakeAPI(respond=respond)
+        with mock.patch.object(team, "client", api.client()), mock.patch.object(team.wiki, "read_page", page):
+            result = team.run("Letters")
+        by_system = {}
+        for body in api.bodies:
+            by_system.setdefault(body.get("system"), []).append(body)
+        planner, critic = by_system[team.PLANNER][0], by_system[team.CRITIC][0]
+        self.assertEqual(planner["output_config"]["format"]["type"], "json_schema")
+        self.assertEqual(set(critic["output_config"]["format"]["schema"]["properties"]), {"issues", "approved"})
+        workers = by_system[team.WORKER]
+        self.assertEqual(len(workers), 4)
+        self.assertTrue(all(w["model"] == team.ROLES["worker"] and w["tools"][0]["strict"] for w in workers))
+        self.assertEqual(by_system[team.WRITER][0]["model"], team.ROLES["writer"])
+        self.assertEqual([s["title"] for s in result.sources], ["A", "B"])
+        self.assertFalse(result.revised)
+        self.assertTrue(result.report.endswith("1. [A](https://en.wikipedia.org/wiki/A)\n2. [B](https://en.wikipedia.org/wiki/B)\n"))
 
 
 if __name__ == "__main__":
