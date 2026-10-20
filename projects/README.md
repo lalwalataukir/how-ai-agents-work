@@ -5,6 +5,7 @@ The finished code for the AI engineer track's [guided projects](https://lalwalat
 | Folder | Project | Starter |
 |---|---|---|
 | `p1-code-review/` | [P1 · AI code reviewer](https://lalwalataukir.github.io/how-ai-agents-work/proj-code-review.html) | `p1-code-review-starter.zip` |
+| `p2-data-agent/` | [P2 · Data-analysis agent](https://lalwalataukir.github.io/how-ai-agents-work/proj-data-agent.html) | `p2-data-agent-starter.zip` |
 
 ## How a starter is made
 

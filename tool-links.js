@@ -56,6 +56,8 @@ const TOOLS = [
   {names:["Loom"], url:"https://www.loom.com/", what:"Screen-recording service that gives each video a shareable link"},
   {names:["httpx"], url:"https://www.python-httpx.org/", what:"Python package for making web requests"},
   {names:["promptfoo"], url:"https://www.promptfoo.dev/docs/intro/", what:"Open-source CLI for testing prompts and running evals"},
+  {names:["SQLite"], url:"https://sqlite.org/docs.html", what:"A small database kept in one file, built into Python"},
+  {names:["matplotlib"], url:"https://matplotlib.org/stable/", what:"Python library for charts and plots"},
   {names:["PostgreSQL", "Postgres"], url:"https://www.postgresql.org/docs/", what:"Open-source relational database"}
 ];
 

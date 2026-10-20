@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>P2 Data Analysis Agent</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: guided project P2 of the AI engineer track. The brief as a ticket, a flow of the parts, setup from a starter zip, six milestones each with a real checker run, hints that end in the solution and an If-it-breaks box, then stretch goals, the write-up and a done-when list. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage p code,.stage li code,.stage td code{overflow-wrap:anywhere}
+.cb-diff pre.code .ln.d-add{background:var(--final-soft)}
+.cb-diff pre.code .ln.d-del{background:var(--bad-soft)}
+.cb-diff pre.code .ln.d-gap{color:var(--muted)}
+.cb-key{display:flex;gap:10px}
+.cb-key .k-add{color:var(--final)}
+.cb-key .k-del{color:var(--bad)}
+.whole{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.whole>summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:.92rem}
+.whole[open]>summary{border-bottom:1px solid var(--line)}
+.whole>.cb{border:0;border-radius:0 0 var(--radius) var(--radius)}
+
+/* ---------- Guided projects ---------- */
+.ticket{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.ticket-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+.ticket-b{padding:14px 16px;display:grid;gap:10px}
+.ticket-b .story{font-size:1.02rem;max-width:72ch}
+.ac{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-width:76ch}
+.ac li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:.93rem}
+.ac li::before{content:"✓";color:var(--final);font-weight:700}
+.flow{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(3,minmax(0,1fr));counter-reset:flow}
+@media (max-width:860px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.flow{grid-template-columns:minmax(0,1fr)}}
+.flow li{counter-increment:flow;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:4px;align-content:start;position:relative}
+.flow li::before{content:counter(flow);font-family:var(--font-mono);font-size:.72rem;color:var(--accent);border:1px solid var(--accent);border-radius:999px;width:22px;height:22px;display:grid;place-items:center}
+.flow li b{font-family:var(--font-display);font-size:.98rem}
+.flow li span{font-size:.86rem;color:var(--muted)}
+.flow li code{font-size:.8rem;overflow-wrap:anywhere}
+.flow li.loop{border-style:dashed;border-color:var(--act)}
+.ms-meta{display:flex;flex-wrap:wrap;gap:6px}
+.ms-meta span{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted);background:var(--surface)}
+.ms-meta a{color:var(--accent)}
+.todo-list{margin:0;padding-left:1.2em;display:grid;gap:4px;max-width:76ch}
+.todo-list code{overflow-wrap:anywhere}
+.hints{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:14px 16px}
+.hints-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.hints-h h3{font-size:1rem}
+.hint{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;border-left:3px solid var(--accent);padding:2px 0 2px 12px}
+.hint[hidden]{display:none}
+.hint .dm-h{color:var(--accent)}
+.stretch{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.stretch .box{display:grid;gap:8px;align-content:start}
+.proj-dl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.proj-fig{margin:0;display:grid;gap:6px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:10px}
+.proj-fig img{width:100%;height:auto;display:block;border-radius:6px}
+.proj-fig figcaption{font-size:.85rem;color:var(--muted)}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="eng-projects.html" data-site-link>← Guided projects</a>
+    <a class="brand" href="#top">P2 · Data-analysis agent</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#brief" data-nav="brief">Brief</a>
+      <a href="#setup" data-nav="setup">Setup</a>
+      <a href="#m1" data-nav="m1"><span class="n">1</span>Data</a>
+      <a href="#m2" data-nav="m2"><span class="n">2</span>Safe SQL</a>
+      <a href="#m3" data-nav="m3"><span class="n">3</span>Agent</a>
+      <a href="#m4" data-nav="m4"><span class="n">4</span>Charts</a>
+      <a href="#m5" data-nav="m5"><span class="n">5</span>Eval</a>
+      <a href="#m6" data-nav="m6"><span class="n">6</span>Follow-ups</a>
+      <a href="#stretch" data-nav="stretch">Stretch</a>
+      <a href="#writeup" data-nav="writeup">Write-up</a>
+      <a href="#done" data-nav="done">Done</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+<div class="hero">
+  <p class="eyebrow">Guided project P2 · after E7 · 5 hours</p>
+  <h1>Build a data-analysis agent</h1>
+  <p class="lede">Ask a sales database questions in plain English. Your agent writes the SQL, runs it through a tool that can only read, draws charts, remembers follow-ups, and shows the query behind every number. It's <button type="button" class="term" data-term="textsql" aria-expanded="false">text-to-SQL</button>, one of the most asked-for AI features in companies, built so that you can trust the answers and nothing can break the data.</p>
+  <div class="lab-meta"><span>Time <b>5 hours</b></span><span>API cost <b>about $0.10</b></span><span>You need <b>E1 to E7 done</b></span><span>Uses <b>E2, E4, E5, E7, E8, E10</b></span></div>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">A conversation in the terminal. The second question only makes sense after the first, and every answer shows its SQL. The format is exact; a real model words things its own way. The <code>-&gt;</code> lines for each tool call are left out here.</p>
+    <pre class="out">Ask about the shop's sales. Type quit to stop.
+
+You: What was revenue from the South region last year?
+Customers in the South region spent $32,577.18 on completed orders in 2025.
+  SQL: SELECT SUM(i.quantity * i.unit_cents) / 100.0 FROM order_items i JOIN orders o ON o.id = i.order_id JOIN customers c ON c.id = o.customer_id WHERE o.status = 'completed' AND c.region = 'South'
+
+You: Now split that by region
+Revenue from completed orders by region: North $34,534.91, South $32,577.18, East $32,033.78, West $24,975.36.
+  SQL: SELECT c.region, SUM(i.quantity * i.unit_cents) / 100.0 AS revenue FROM order_items i JOIN orders o ON o.id = i.order_id JOIN customers c ON c.id = o.customer_id WHERE o.status = 'completed' GROUP BY c.region ORDER BY revenue DESC
+
+You: quit
+[4 model calls, $0.0012]</pre>
+  </div>
+</div>
+<section class="stage" id="brief" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow">The brief</p>
+    <h2 id="s1">The ticket you're picking up</h2>
+    <p>Every criterion below has a check in the starter's tests, or a number your eval measures.</p>
+  </div>
+  <div class="ticket"><div class="ticket-h"><span>P2 · data-agent</span><span>Estimate: 5 hours · Labels: python, claude-api, sql</span></div><div class="ticket-b"><p class="story">As a shop manager, I want to ask questions about our sales in plain English and see how each answer was worked out, so that I can trust the numbers without writing SQL.</p><p class="dm-h">Acceptance criteria</p><ul class="ac"><li><span>Answers questions about orders, products and customers from <code>shop.db</code>, with the key number</span></li><li><span>Every answer lists the SQL that produced it</span></li><li><span>Nothing can change the data: writes, attached databases and settings are refused, and a slow query stops after 2 seconds</span></li><li><span>Draws a chart when the user asks for one, or when the answer is a trend</span></li><li><span>Follow-ups such as "now split that by region" work</span></li><li><span>Gets at least 9 of 10 eval questions exactly right, for about a cent a run</span></li></ul></div></div>
+  <div class="grid g2">
+    <div class="box"><h4>What you practise</h4><ul class="small" style="margin:0;padding-left:1.1em;display:grid;gap:4px">
+      <li>Giving the model the context it needs: the schema and its values (<a href="context.html" data-site-link>PM module 8</a>)</li>
+      <li>A tool that touches real data, with three layers of protection (<a href="eng-security.html" data-site-link>E10</a>)</li>
+      <li>An agent loop with stop conditions and memory (<a href="eng-agents.html" data-site-link>E7</a>)</li>
+      <li>An eval checked by code, because the answers are numbers (<a href="eng-evals.html" data-site-link>E8</a>)</li>
+    </ul></div>
+    <div class="box tint"><h4>Why this project</h4><p class="small">"Ask the data" is everywhere: dashboards with a question box, support tools, internal analytics. The hard part isn't getting SQL from a model. It's making sure a wrong or hostile query can't do damage, and knowing how often the numbers are right. That's what you'll be able to explain.</p></div>
+  </div>
+</section>
+<section class="stage" id="how" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow">Architecture</p>
+    <h2 id="s2">How the parts fit</h2>
+    <p>Most of it is in <code>analyst.py</code>; the eval is <code>evals.py</code>. The milestone that builds each part is in brackets, and dashed boxes can repeat.</p>
+  </div>
+  <ol class="flow"><li><b>Know the data</b><span><code>describe_schema</code>: tables, columns and values, in the system prompt (1)</span></li><li><b>Ask Claude</b><span><code>ask</code>: the tool loop, with <code>output_format=Answer</code> (3)</span></li><li class="loop"><b>Run SQL safely</b><span><code>run_sql</code>: read-only file, an authorizer, time and row limits (2)</span></li><li class="loop"><b>Draw a chart</b><span><code>make_chart</code>, through the same safe path (4)</span></li><li><b>Answer, with the SQL</b><span><code>Result</code>: the answer, its value, every query (3)</span></li><li><b>Remember</b><span><code>Session</code>: earlier questions, answers and SQL (6)</span></li></ol>
+  <p class="prose">Claude never touches the database. It writes text that looks like SQL; your code decides whether that text runs, how long for, and how much comes back.</p>
+</section>
+<section class="stage" id="setup" aria-labelledby="h-setup"><div class="stage-head"><p class="eyebrow">Before you start</p><h2 id="h-setup">Set up the starter</h2><p>Download the starter, install what it needs, make the database, and run the checker.</p><div class="ms-meta"><span>About 20 minutes</span><span>Uses <a href="eng-setup.html" data-site-link>E1</a>, <a href="eng-first-call.html" data-site-link>E3</a></span></div></div><div class="proj-dl"><a class="btn" href="projects/p2-data-agent-starter.zip" download data-site-link>Download the starter (.zip)</a><a href="https://github.com/lalwalataukir/how-ai-agents-work/tree/main/projects/p2-data-agent" target="_blank" rel="noopener">See the finished code on GitHub ↗</a></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Download and unzip it into your projects folder</h3><div class="ost"><div class="ost-tabs" role="group" aria-label="Your computer"><button type="button" data-os="mac" aria-selected="true">Mac</button><button type="button" data-os="win" aria-selected="false">Windows</button></div><div class="ost-p" data-os="mac"><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">cd ~/projects</span><span class="ln">curl -LO https://lalwalataukir.github.io/how-ai-agents-work/projects/p2-data-agent-starter.zip</span><span class="ln">unzip p2-data-agent-starter.zip</span><span class="ln">cd data-agent</span></pre></div></div><div class="ost-p" data-os="win" hidden><div class="cb"><div class="cb-h"><span>PowerShell</span><button type="button" class="cb-copy" aria-label="Copy PowerShell">Copy</button></div><pre class="code"><span class="ln">cd ~\projects</span><span class="ln">curl.exe -LO https://lalwalataukir.github.io/how-ai-agents-work/projects/p2-data-agent-starter.zip</span><span class="ln">Expand-Archive p2-data-agent-starter.zip .</span><span class="ln">cd data-agent</span></pre></div></div></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Install, and add your API key</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv sync</span><span class="ln">cp .env.example .env</span><span class="ln">code .</span></pre></div><p>Open <code>.env</code> in VS Code and put in your API key. This project installs <a href="https://matplotlib.org" target="_blank" rel="noopener">matplotlib</a> for charts, so <code>uv sync</code> takes a minute.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Make the database</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run make_data.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Wrote shop.db: 300 customers, 40 products, 2000 orders, 3771 order_items</pre></div><p><code>shop.db</code> is a <button type="button" class="term" data-term="sqlite" aria-expanded="false">SQLite</button> file: a year of made-up sales for a small online shop, the same for everyone so the eval's answers match. Four tables: <code>customers</code>, <code>products</code>, <code>orders</code> and <code>order_items</code>. Prices are in cents.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Run the checker</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [ ] 1  Know the data: not started
+         test_every_column_with_its_type: NotImplementedError: milestone 1: describe_schema
+         Hint: SELECT name FROM sqlite_master WHERE type = 'table' lists the tables; PRAGMA
+               table_info("orders") gives each column's name and type. For TEXT columns, SELECT
+               DISTINCT ... LIMIT 9: if 8 or fewer come back, list them.
+  [ ] 2  A safe SQL tool: not started
+  [ ] 3  The agent: not started
+  [ ] 4  Charts: not started
+  [ ] 5  An eval with exact answers: not started
+  [ ] 6  Follow-up questions: not started
+0 of 6 milestones done. Next: milestone 1.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Make it a git repo</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git init</span><span class="ln">git add -A</span><span class="ln">git commit -m "Starter"</span></pre></div><p><code>.gitignore</code> leaves out <code>shop.db</code> and <code>charts/</code>: anyone can make them again.</p></div></li></ol></section>
+<section class="stage" id="m1" aria-labelledby="h-m1"><div class="stage-head"><p class="eyebrow"><b>1</b> · Milestone 1 of 6</p><h2 id="h-m1">Know the data</h2><p>Describe the database in a few lines of text: every table, column and type, and the values of short text columns. This goes in Claude's system prompt.</p><div class="ms-meta"><span>About 45 minutes</span><span>Uses <a href="eng-python.html" data-site-link>E2</a>, <a href="context.html" data-site-link>PM 8</a></span></div></div><p class="prose">Claude can only write correct SQL for tables it knows about. Give it the <button type="button" class="term" data-term="dbschema" aria-expanded="false">schema</button> and it knows <code>ordered_at</code>, not <code>order_date</code>. Give it the values too and it writes <code>status = 'completed'</code>, not <code>'complete'</code>: the kind of mistake that returns zero rows and a confident wrong answer. Deciding what the model always needs to see is context engineering (<a href="context.html" data-site-link>PM module 8</a>).</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>describe_schema(db)</code>: each table with its row count, then one line per column.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Peek at the data</h3><p>Python has SQLite built in:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run python -c "import sqlite3; print(sqlite3.connect('shop.db').execute('SELECT * FROM orders LIMIT 3').fetchall())"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">[(1, 182, '2025-05-31', 'completed'), (2, 226, '2025-12-21', 'completed'), (3, 3, '2025-08-18', 'completed')]</pre><p class="small">Each order has an id, a customer, a date as text and a status.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write describe_schema</h3><div class="cb"><div class="cb-h"><span>analyst.py (the starter)</span><button type="button" class="cb-copy" aria-label="Copy analyst.py (the starter)">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> describe_schema(db=DB):</span><span class="ln">    <span class="s">"""Each table with its row count and columns. Text columns with a few distinct values list them,</span></span><span class="ln"><span class="s">    so Claude knows to write status = 'completed', not 'complete'."""</span></span><span class="ln">    <span class="c"># TODO milestone 1: for each table, a line like "orders (2000 rows)", then one line per column,</span></span><span class="ln">    <span class="c"># such as "  status TEXT: cancelled, completed, refunded". List values only when there are 8 or fewer.</span></span><span class="ln">    <span class="k">raise</span> NotImplementedError(<span class="s">"milestone 1: describe_schema"</span>)</span></pre></div><ul><li>The tables: <code>SELECT name FROM sqlite_master WHERE type = 'table'</code>.</li><li>The columns: <code>PRAGMA table_info("orders")</code> gives one row per column; the name and type are the second and third items.</li><li>For a <code>TEXT</code> column, ask for up to 9 distinct values. If 8 or fewer come back, list them; more means it's free text, like names.</li></ul><p>This function is your code, not the model's, so it can use any SQL. Only the queries Claude writes go through the safe path you build next.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 1</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Know the data: 5 checks pass
+1 of 1 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>See what Claude will know</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run analyst.py --schema</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">customers (300 rows)
+  id INTEGER
+  name TEXT
+  region TEXT: East, North, South, West
+  joined TEXT
+products (40 rows)
+  id INTEGER
+  name TEXT
+  category TEXT: Books, Games, Garden, Home, Toys
+  price_cents INTEGER
+orders (2000 rows)
+  id INTEGER
+  customer_id INTEGER
+  ordered_at TEXT
+  status TEXT: cancelled, completed, refunded
+order_items (3771 rows)
+  order_id INTEGER
+  product_id INTEGER
+  quantity INTEGER
+  unit_cents INTEGER</pre><p class="small">About 120 tokens: cheap to send with every call.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 1: know the data"</span></pre></div></div></li></ol><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p>Two loops: one over the tables, and inside it one over <code>conn.execute(f'PRAGMA table_info("{table}")')</code>. Each row is <code>(position, name, type, notnull, default, pk)</code>.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p><code>SELECT DISTINCT "region" FROM "customers" ORDER BY 1 LIMIT 9</code>. Then <code>", ".join(values)</code> when there are 8 or fewer.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>analyst.py</span><button type="button" class="cb-copy" aria-label="Copy analyst.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> describe_schema(db=DB):</span><span class="ln">    <span class="s">"""Each table with its row count and columns. Text columns with a few distinct values list them,</span></span><span class="ln"><span class="s">    so Claude knows to write status = 'completed', not 'complete'."""</span></span><span class="ln">    conn = sqlite3.connect(db)</span><span class="ln">    lines = []</span><span class="ln">    tables = [row[0] <span class="k">for</span> row <span class="k">in</span> conn.execute(<span class="s">"SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY rowid"</span>)]</span><span class="ln">    <span class="k">for</span> table <span class="k">in</span> tables:</span><span class="ln">        count = conn.execute(<span class="s">f'SELECT COUNT(*) FROM "{table}"'</span>).fetchone()[0]</span><span class="ln">        lines.append(<span class="s">f"{table} ({count} rows)"</span>)</span><span class="ln">        <span class="k">for</span> _, column, kind, *_ <span class="k">in</span> conn.execute(<span class="s">f'PRAGMA table_info("{table}")'</span>):</span><span class="ln">            line = <span class="s">f"  {column} {kind}"</span></span><span class="ln">            <span class="k">if</span> kind == <span class="s">"TEXT"</span>:</span><span class="ln">                values = [row[0] <span class="k">for</span> row <span class="k">in</span> conn.execute(<span class="s">f'SELECT DISTINCT "{column}" FROM "{table}" ORDER BY 1 LIMIT 9'</span>)]</span><span class="ln">                <span class="k">if</span> len(values) &lt;= 8:</span><span class="ln">                    line += <span class="s">": "</span> + <span class="s">", "</span>.join(values)</span><span class="ln">            lines.append(line)</span><span class="ln">    conn.close()</span><span class="ln">    <span class="k">return</span> <span class="s">"\n"</span>.join(lines)</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>sqlite3.OperationalError: no such table: sqlite_master</code></dt><dd>Check the path: <code>sqlite3.connect</code> makes a new, empty file when the one you name doesn't exist. Run <code>uv run make_data.py</code> in this folder.</dd><dt><code>test_every_table_with_its_row_count</code></dt><dd>Keep the tables in the order they were made (<code>ORDER BY rowid</code>), and write <code>orders (2000 rows)</code> exactly.</dd></dl></div></section>
+<section class="stage" id="m2" aria-labelledby="h-m2"><div class="stage-head"><p class="eyebrow"><b>2</b> · Milestone 2 of 6</p><h2 id="h-m2">A safe SQL tool</h2><p>The tool Claude's SQL runs through. It can only read, it stops slow queries, and it never sends back more than 200 rows.</p><div class="ms-meta"><span>About 1 hour</span><span>Uses <a href="eng-tools.html" data-site-link>E5</a>, <a href="eng-security.html" data-site-link>E10</a>, <a href="security.html" data-site-link>PM 9</a></span></div></div><p class="prose">Giving a model a database is the riskiest step in this project. A prompt injection hidden in a product name could ask for <code>DROP TABLE orders</code>; a careless join can run for minutes; <code>SELECT *</code> on a big table can send back a million tokens. You'll stop all three, in layers, so one mistake isn't enough: <button type="button" class="term" data-term="depth" aria-expanded="false">defence in depth</button>.</p><div class="tablewrap"><table><thead><tr><th>Layer</th><th>Stops</th><th>How</th></tr></thead><tbody><tr><td>Read-only file</td><td>Any write, even if another check misses it</td><td><code>mode=ro</code> when connecting</td></tr><tr><td>An <button type="button" class="term" data-term="authorizer" aria-expanded="false">authorizer</button></td><td>Everything that isn't reading: writes, <code>ATTACH</code>, <code>PRAGMA</code>, extensions</td><td><code>conn.set_authorizer(only_reads)</code></td></tr><tr><td>A time limit</td><td>Queries that run too long, by mistake or on purpose</td><td>A progress handler that stops the query after 2 seconds</td></tr><tr><td>A row limit</td><td>Huge results that cost money and fill the context</td><td><code>fetchmany(MAX_ROWS + 1)</code></td></tr></tbody></table></div><p class="dm-h">What you write</p><ul class="todo-list"><li><code>run_sql(db, sql, max_rows, seconds)</code>: returns <code>{"columns", "rows", "truncated"}</code>, or raises <code>ValueError</code>.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Open the file read-only</h3><div class="cb"><div class="cb-h"><span>Read-only, by URI</span><button type="button" class="cb-copy" aria-label="Copy Read-only, by URI">Copy</button></div><pre class="code"><span class="ln">conn = sqlite3.connect(Path(db).resolve().as_uri() + <span class="s">"?mode=ro"</span>, uri=<span class="k">True</span>)</span></pre></div><p><code>as_uri()</code> turns the path into <code>file:///…/shop.db</code>, which works on Mac and Windows. Check the file exists first: in read-only mode SQLite can't create it, and the error is clearer from you.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Refuse anything but reading</h3><p><code>only_reads</code> is written for you. SQLite calls it before every step of a statement, and it allows only <code>SELECT</code>, reading columns, functions and recursive queries. Set it on the connection.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Stop slow queries</h3><div class="cb"><div class="cb-h"><span>A time limit</span><button type="button" class="cb-copy" aria-label="Copy A time limit">Copy</button></div><pre class="code"><span class="ln">deadline = time.monotonic() + seconds</span><span class="ln">conn.set_progress_handler(<span class="k">lambda</span>: time.monotonic() &gt; deadline, 10_000)</span></pre></div><p>SQLite calls the handler every 10,000 steps; returning <code>True</code> stops the query with an "interrupted" error.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Return a little, explain a lot</h3><p>Fetch <code>max_rows + 1</code> rows: if you get the extra one, set <code>truncated</code>. Catch <code>sqlite3.Error</code> and raise <code>ValueError</code> with a message Claude can act on: "Only SELECT queries are allowed", "The query took longer than 2 seconds. Make it simpler.", or SQLite's own message for a typo. Close the connection whatever happens.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 2</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Know the data: 5 checks pass
+  [x] 2  A safe SQL tool: 9 checks pass
+2 of 2 milestones done.</pre></div><p>The tests are attacks: <code>DROP</code>, <code>DELETE</code>, <code>ATTACH</code>, <code>PRAGMA</code>, two statements in one, and a query that never ends. Each must fail, and the file must be unchanged afterwards. That's E10's habit: every defence has a test.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Try an attack yourself</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run python -c "import analyst; analyst.run_sql(analyst.DB, 'DROP TABLE orders')"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">ValueError: Only SELECT queries are allowed: nothing can be changed or attached.</pre><p class="small">The last line of the error. The table is still there.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 2: a safe SQL tool"</span></pre></div></div></li></ol><div class="quiz" data-quiz="qp2a">
+    <p class="quiz-label">Check your understanding · Defence in depth</p>
+    <p class="quiz-q">The authorizer already refuses DROP and DELETE. Why open the file read-only as well?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Speed isn&#x27;t the reason."><span class="l">A</span><span>It makes queries faster</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Independent layers mean one mistake isn&#x27;t enough to lose data."><span class="l">B</span><span>If one check has a gap, such as a statement type you didn't think of, the other still stops writes</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A normal connection runs SELECT fine; the layers are for safety."><span class="l">C</span><span>SQLite needs both to run SELECT</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p>Put <code>execute</code> and <code>fetchmany</code> inside <code>try</code>, and <code>conn.close()</code> in <code>finally</code>. Read the column names from <code>cursor.description</code> before closing.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>SQLite's error text tells you which case you're in: it contains <code>"interrupted"</code> for the time limit and <code>"not authorized"</code> for the authorizer. <code>cursor.description</code> is <code>None</code> when the statement wasn't a query.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>analyst.py</span><button type="button" class="cb-copy" aria-label="Copy analyst.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> run_sql(db, sql, max_rows=MAX_ROWS, seconds=MAX_SECONDS):</span><span class="ln">    <span class="s">"""Run one query, read-only. Returns {"columns", "rows", "truncated"}.</span></span><span class="ln"><span class="s">    Raises ValueError, with a message Claude can act on, for anything that isn't allowed or fails."""</span></span><span class="ln">    <span class="k">if</span> <span class="k">not</span> Path(db).is_file():</span><span class="ln">        <span class="k">raise</span> ValueError(<span class="s">f"{Path(db).name} doesn't exist. Run: uv run make_data.py"</span>)</span><span class="ln">    conn = sqlite3.connect(Path(db).resolve().as_uri() + <span class="s">"?mode=ro"</span>, uri=<span class="k">True</span>)  <span class="c"># the file itself is read-only</span></span><span class="ln">    conn.set_authorizer(only_reads)  <span class="c"># and so is every statement</span></span><span class="ln">    deadline = time.monotonic() + seconds</span><span class="ln">    conn.set_progress_handler(<span class="k">lambda</span>: time.monotonic() &gt; deadline, 10_000)  <span class="c"># True stops the query</span></span><span class="ln">    <span class="k">try</span>:</span><span class="ln">        cursor = conn.execute(sql)</span><span class="ln">        <span class="k">if</span> cursor.description <span class="k">is</span> <span class="k">None</span>:</span><span class="ln">            <span class="k">raise</span> ValueError(<span class="s">"That isn't a query. Write one SELECT statement."</span>)</span><span class="ln">        columns = [column[0] <span class="k">for</span> column <span class="k">in</span> cursor.description]</span><span class="ln">        rows = cursor.fetchmany(max_rows + 1)</span><span class="ln">    <span class="k">except</span> sqlite3.Error <span class="k">as</span> error:</span><span class="ln">        <span class="k">if</span> <span class="s">"interrupted"</span> <span class="k">in</span> str(error):</span><span class="ln">            <span class="k">raise</span> ValueError(<span class="s">f"The query took longer than {seconds} seconds. Make it simpler."</span>) <span class="k">from</span> <span class="k">None</span></span><span class="ln">        <span class="k">if</span> <span class="s">"not authorized"</span> <span class="k">in</span> str(error):</span><span class="ln">            <span class="k">raise</span> ValueError(<span class="s">"Only SELECT queries are allowed: nothing can be changed or attached."</span>) <span class="k">from</span> <span class="k">None</span></span><span class="ln">        <span class="k">raise</span> ValueError(<span class="s">f"SQLite: {error}"</span>) <span class="k">from</span> <span class="k">None</span></span><span class="ln">    <span class="k">finally</span>:</span><span class="ln">        conn.close()</span><span class="ln">    <span class="k">return</span> {<span class="s">"columns"</span>: columns, <span class="s">"rows"</span>: [list(row) <span class="k">for</span> row <span class="k">in</span> rows[:max_rows]], <span class="s">"truncated"</span>: len(rows) &gt; max_rows}</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>sqlite3.OperationalError: unable to open database file</code></dt><dd>With <code>mode=ro</code>, SQLite won't create a missing file. Check the path, and pass <code>uri=True</code>.</dd><dt><code>test_a_query_that_never_ends_is_stopped</code></dt><dd>The progress handler must return <code>True</code> to stop. Set the deadline before <code>execute</code>, and keep <code>fetchmany</code> inside the <code>try</code>: slow queries often spend their time there.</dd><dt><code>test_one_statement_at_a_time</code></dt><dd>Python's <code>execute</code> already refuses two statements with a <code>ProgrammingError</code>. Make sure you catch <code>sqlite3.Error</code>, which covers it, not only <code>OperationalError</code>.</dd></dl></div></section>
+<section class="stage" id="m3" aria-labelledby="h-m3"><div class="stage-head"><p class="eyebrow"><b>3</b> · Milestone 3 of 6</p><h2 id="h-m3">The agent</h2><p>Connect Claude to the tool. It writes queries, reads the results or the errors, tries again if needed, and answers with the main number on its own.</p><div class="ms-meta"><span>About 1 hour</span><span>Uses <a href="eng-first-call.html" data-site-link>E3</a>, <a href="eng-structured.html" data-site-link>E4</a>, <a href="eng-tools.html" data-site-link>E5</a>, <a href="eng-agents.html" data-site-link>E7</a></span></div></div><p class="prose">This is E7's loop with one change: the answer comes back as an <code>Answer</code>, with the main number in <code>value</code>. That number is what your eval checks in milestone 5, so you don't have to fish it out of a sentence. Errors go back to Claude as tool results: a wrong column name becomes a second, better query rather than a crash.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>run_tool(name, args, db, result)</code>: runs <code>run_sql</code> (or passes <code>make_chart</code> on to <code>chart_tool</code>) and records every query.</li><li><code>ask(question, memory, db, cost)</code>: the loop. Returns a <code>Result</code> with the answer and the queries.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Read what's given</h3><p><code>SYSTEM</code> has the rules a careful analyst would follow: get every number from a query, money is in cents, only completed orders count as sales. <code>{schema}</code> is where <code>describe_schema</code> goes. <code>TOOLS</code> offers <code>run_sql</code> and <code>make_chart</code>; <code>Answer</code>, <code>Cost</code> and <code>Result</code> are ready.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write run_tool</h3><p>Record the query in <code>result.queries</code> before running it, so attempts that fail are in the record too. Return the rows as JSON with <code>json.dumps(..., default=str)</code>. A <code>ValueError</code> becomes its message, with <code>True</code> for failed.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Write ask</h3><p>Build the system prompt with <code>SYSTEM.format(schema=describe_schema(db))</code>. Start the messages with <code>memory</code>, then the question. Then, at most <code>MAX_CALLS</code> times:</p><ul><li>Call <code>client.messages.parse</code> with <code>tools=TOOLS</code> and <code>output_format=Answer</code>, and add the usage to <code>cost</code>.</li><li>Append the reply. If <code>stop_reason</code> is <code>"end_turn"</code>, the answer is <code>response.parsed_output</code>; any other stop that isn't <code>"tool_use"</code> means it was cut off.</li><li>Otherwise run every tool call and send all the results back in one message.</li></ul><p>If the loop runs out, return a <code>Result</code> that says it stopped. A stop condition is a promise about cost: one question can never make more than 8 calls.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 3</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Know the data: 5 checks pass
+  [x] 2  A safe SQL tool: 9 checks pass
+  [x] 3  The agent: 7 checks pass
+3 of 3 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Ask your first question</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run analyst.py "How many completed orders were there in 2025?"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  -&gt; run_sql: SELECT COUNT(*) FROM orders WHERE status = 'completed' AND order_date LIKE '2025-%'
+  -&gt; run_sql: SELECT COUNT(*) FROM orders WHERE status = 'completed' AND ordered_at LIKE '2025-%'
+There were 1,755 completed orders in 2025.
+  SQL: SELECT COUNT(*) FROM orders WHERE status = 'completed' AND order_date LIKE '2025-%'
+  SQL: SELECT COUNT(*) FROM orders WHERE status = 'completed' AND ordered_at LIKE '2025-%'
+[3 model calls, $0.0010]</pre><p class="small">An example run against a scripted stand-in for Claude: the format is exact, but a real model words things its own way, and may write different SQL. Here the first query used a column that doesn't exist; the error went back, and the second query worked.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 3: the agent"</span></pre></div></div></li></ol><div class="quiz" data-quiz="qp2b">
+    <p class="quiz-label">Check your understanding · Errors in the loop</p>
+    <p class="quiz-q">Claude's query fails with "no such column: order_date". What should the code do?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. That&#x27;s a mistake Claude can fix itself in one more call."><span class="l">A</span><span>Stop and show the user the error</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The schema says the column is ordered_at; with the error in front of it, the next query is usually right."><span class="l">B</span><span>Send the error back as a tool result marked as an error, so Claude can correct the query</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Code can&#x27;t guess every mistake; let the model fix its own query, within the call limit."><span class="l">C</span><span>Rewrite the SQL in code, replacing order_date with ordered_at</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>run_tool</code> is E5's: one <code>if</code> per tool name, and <code>try</code>/<code>except ValueError</code> around the call.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p><code>ask</code> is E7's <code>steps</code> without the plan: a <code>for _ in range(MAX_CALLS):</code> loop, a <code>Result</code> made before it, and <code>result.answer</code> set when Claude answers.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>analyst.py</span><button type="button" class="cb-copy" aria-label="Copy analyst.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> run_tool(name, args, db, result):</span><span class="ln">    <span class="s">"""Run one tool call, and keep a record of it in result. Returns the text to send back, and</span></span><span class="ln"><span class="s">    whether it failed. Errors go back to Claude so it can fix its query."""</span></span><span class="ln">    <span class="k">if</span> name == <span class="s">"make_chart"</span>:</span><span class="ln">        <span class="k">return</span> chart_tool(args, db, result)</span><span class="ln">    <span class="k">if</span> name != <span class="s">"run_sql"</span>:</span><span class="ln">        <span class="k">return</span> <span class="s">f"There is no tool called {name}."</span>, <span class="k">True</span></span><span class="ln">    result.queries.append(args[<span class="s">"sql"</span>])</span><span class="ln">    <span class="k">try</span>:</span><span class="ln">        <span class="k">return</span> json.dumps(run_sql(db, args[<span class="s">"sql"</span>]), default=str), <span class="k">False</span></span><span class="ln">    <span class="k">except</span> ValueError <span class="k">as</span> error:</span><span class="ln">        <span class="k">return</span> str(error), <span class="k">True</span></span></pre></div><div class="cb"><div class="cb-h"><span>analyst.py</span><button type="button" class="cb-copy" aria-label="Copy analyst.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> ask(question, memory=(), db=DB, cost=<span class="k">None</span>):</span><span class="ln">    <span class="s">"""Answer one question: Claude writes queries, the code runs them, until Claude answers.</span></span><span class="ln"><span class="s">    memory holds earlier questions and answers; cost adds up what every call costs."""</span></span><span class="ln">    cost = cost <span class="k">if</span> cost <span class="k">is</span> <span class="k">not</span> <span class="k">None</span> <span class="k">else</span> Cost()</span><span class="ln">    result = Result(answer=Answer(answer=<span class="s">f"Stopped after {MAX_CALLS} model calls without an answer."</span>, value=<span class="k">None</span>))</span><span class="ln">    system = SYSTEM.format(schema=describe_schema(db))</span><span class="ln">    messages = list(memory) + [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}]</span><span class="ln">    <span class="k">for</span> _ <span class="k">in</span> range(MAX_CALLS):  <span class="c"># stop condition, as in E7</span></span><span class="ln">        response = client.messages.parse(</span><span class="ln">            model=MODEL, max_tokens=8000, system=system, tools=TOOLS, messages=messages, output_format=Answer,</span><span class="ln">        )</span><span class="ln">        cost.add(response.usage)</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: response.content})</span><span class="ln">        <span class="k">if</span> response.stop_reason != <span class="s">"tool_use"</span>:</span><span class="ln">            <span class="k">if</span> response.stop_reason == <span class="s">"end_turn"</span>:</span><span class="ln">                result.answer = response.parsed_output</span><span class="ln">            <span class="k">else</span>:</span><span class="ln">                result.answer = Answer(answer=<span class="s">f"Stopped early ({response.stop_reason})."</span>, value=<span class="k">None</span>)</span><span class="ln">            <span class="k">return</span> result</span><span class="ln">        results = []</span><span class="ln">        <span class="k">for</span> block <span class="k">in</span> response.content:</span><span class="ln">            <span class="k">if</span> block.type == <span class="s">"tool_use"</span>:</span><span class="ln">                print(<span class="s">f"  -&gt; {block.name}: {block.input.get('sql', '')}"</span>, file=sys.stderr)</span><span class="ln">                text, failed = run_tool(block.name, block.input, db, result)</span><span class="ln">                results.append({<span class="s">"type"</span>: <span class="s">"tool_result"</span>, <span class="s">"tool_use_id"</span>: block.id, <span class="s">"content"</span>: text, <span class="s">"is_error"</span>: failed})</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: results})</span><span class="ln">    <span class="k">return</span> result</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>KeyError: 'schema'</code></dt><dd>The system prompt needs <code>SYSTEM.format(schema=...)</code>. Without <code>.format</code>, Claude sees the text <code>{schema}</code>.</dd><dt><code>TypeError: Object of type ... is not JSON serializable</code></dt><dd>Pass <code>default=str</code> to <code>json.dumps</code>, so dates and other values become text.</dd><dt><code>Stopped after 8 model calls without an answer.</code></dt><dd>Claude kept querying. Print the queries: usually it can't find a column. Check the schema in the system prompt.</dd></dl></div></section>
+<section class="stage" id="m4" aria-labelledby="h-m4"><div class="stage-head"><p class="eyebrow"><b>4</b> · Milestone 4 of 6</p><h2 id="h-m4">Charts</h2><p>Some answers are trends. Give Claude a tool that draws a query's result as a bar or line chart, through the same safe path as every other query.</p><div class="ms-meta"><span>About 45 minutes</span><span>Uses <a href="eng-python.html" data-site-link>E2</a>, <a href="eng-security.html" data-site-link>E10</a></span></div></div><p class="prose">The chart tool takes SQL too, so it must go through <code>run_sql</code>: a second way to run queries is a second door to guard, and the one people forget. Checking the result's shape (two columns, numbers in the second) and sending clear errors back lets Claude fix a bad chart request the way it fixes a bad query.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>make_chart(db, title, kind, sql)</code>: runs the query, draws it, saves a PNG in <code>charts/</code>, returns the path.</li><li><code>chart_tool(args, db, result)</code>: the tool call, with the query and the chart recorded in <code>result</code>.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write make_chart</h3><div class="cb"><div class="cb-h"><span>matplotlib in six lines</span><button type="button" class="cb-copy" aria-label="Copy matplotlib in six lines">Copy</button></div><pre class="code"><span class="ln">fig, ax = plt.subplots(figsize=(8, 4.5))</span><span class="ln">ax.bar(labels, values)      <span class="c"># or ax.plot(labels, values, marker="o") for a line</span></span><span class="ln">ax.set_title(title)</span><span class="ln">fig.tight_layout()</span><span class="ln">fig.savefig(path, dpi=120)</span><span class="ln">plt.close(fig)              <span class="c"># free the memory: an agent can draw many</span></span></pre></div><p>Name the file after the title: lower case, with anything that isn't a letter or digit turned into <code>-</code>. Raise <code>ValueError</code> when there aren't exactly two columns, no rows, or the second column isn't numbers.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write chart_tool</h3><p>Like <code>run_tool</code>: record the query, call <code>make_chart</code>, send a <code>ValueError</code> back as an error, and on success add the chart's path, relative to the project, to <code>result.charts</code>.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 4</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Know the data: 5 checks pass
+  [x] 2  A safe SQL tool: 9 checks pass
+  [x] 3  The agent: 7 checks pass
+  [x] 4  Charts: 6 checks pass
+4 of 4 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Ask for a chart</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run analyst.py "Show completed orders per month as a chart"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  -&gt; run_sql: SELECT substr(ordered_at, 1, 7) AS month, COUNT(*) AS orders FROM orders WHERE status = 'completed' GROUP BY month ORDER BY month
+  -&gt; make_chart: SELECT substr(ordered_at, 1, 7) AS month, COUNT(*) AS orders FROM orders WHERE status = 'completed' GROUP BY month ORDER BY month
+Orders peaked in 2025-12 with 195 completed orders; the quietest month was 2025-11 with 96.
+  SQL: SELECT substr(ordered_at, 1, 7) AS month, COUNT(*) AS orders FROM orders WHERE status = 'completed' GROUP BY month ORDER BY month
+  Chart saved: charts/completed-orders-per-month-2025.png
+[2 model calls, $0.0006]</pre><p class="small">An example run against a scripted stand-in for Claude: the format is exact, but a real model words things its own way, and may write different SQL.</p></div><figure class="proj-fig"><img src="projects/p2-data-agent-chart.png" alt="A line chart of completed orders per month in 2025: between about 130 and 170 most months, a dip to 96 in November and a peak of 195 in December." width="960" height="540" loading="lazy"><figcaption>charts/completed-orders-per-month-2025.png, drawn by the finished code from the real data.</figcaption></figure></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 4: charts"</span></pre></div></div></li></ol><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>data = run_sql(db, sql)</code> first. Labels are <code>[str(row[0]) for row in data["rows"]]</code>; check the values with <code>isinstance(value, (int, float))</code>.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p><code>re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")</code> makes a safe file name. <code>path.relative_to(HERE).as_posix()</code> gives <code>charts/…png</code> on every system.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>analyst.py</span><button type="button" class="cb-copy" aria-label="Copy analyst.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> make_chart(db, title, kind, sql):</span><span class="ln">    <span class="s">"""Draw a two-column query (labels, numbers) as a bar or line chart. Returns the PNG's path."""</span></span><span class="ln">    data = run_sql(db, sql)  <span class="c"># the same safe path as every other query</span></span><span class="ln">    <span class="k">if</span> len(data[<span class="s">"columns"</span>]) != 2 <span class="k">or</span> <span class="k">not</span> data[<span class="s">"rows"</span>]:</span><span class="ln">        <span class="k">raise</span> ValueError(<span class="s">"A chart needs a query with two columns, labels then numbers, and at least one row."</span>)</span><span class="ln">    labels = [str(row[0]) <span class="k">for</span> row <span class="k">in</span> data[<span class="s">"rows"</span>]]</span><span class="ln">    values = [row[1] <span class="k">for</span> row <span class="k">in</span> data[<span class="s">"rows"</span>]]</span><span class="ln">    <span class="k">if</span> <span class="k">not</span> all(isinstance(value, (int, float)) <span class="k">for</span> value <span class="k">in</span> values):</span><span class="ln">        <span class="k">raise</span> ValueError(<span class="s">"The second column must be numbers."</span>)</span><span class="ln">    fig, ax = plt.subplots(figsize=(8, 4.5))</span><span class="ln">    <span class="k">if</span> kind == <span class="s">"line"</span>:</span><span class="ln">        ax.plot(labels, values, marker=<span class="s">"o"</span>)</span><span class="ln">    <span class="k">else</span>:</span><span class="ln">        ax.bar(labels, values)</span><span class="ln">    ax.set_title(title)</span><span class="ln">    ax.set_ylabel(data[<span class="s">"columns"</span>][1])</span><span class="ln">    ax.tick_params(axis=<span class="s">"x"</span>, labelrotation=45 <span class="k">if</span> len(labels) &gt; 6 <span class="k">else</span> 0)</span><span class="ln">    fig.tight_layout()</span><span class="ln">    CHARTS.mkdir(exist_ok=<span class="k">True</span>)</span><span class="ln">    path = CHARTS / (re.sub(<span class="s">r"[^a-z0-9]+"</span>, <span class="s">"-"</span>, title.lower()).strip(<span class="s">"-"</span>)[:60] + <span class="s">".png"</span>)</span><span class="ln">    fig.savefig(path, dpi=120)</span><span class="ln">    plt.close(fig)</span><span class="ln">    <span class="k">return</span> path</span></pre></div><div class="cb"><div class="cb-h"><span>analyst.py</span><button type="button" class="cb-copy" aria-label="Copy analyst.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> chart_tool(args, db, result):</span><span class="ln">    <span class="s">"""The make_chart tool call: returns the text to send back, and whether it failed."""</span></span><span class="ln">    result.queries.append(args[<span class="s">"sql"</span>])</span><span class="ln">    <span class="k">try</span>:</span><span class="ln">        path = make_chart(db, args[<span class="s">"title"</span>], args[<span class="s">"kind"</span>], args[<span class="s">"sql"</span>])</span><span class="ln">    <span class="k">except</span> ValueError <span class="k">as</span> error:</span><span class="ln">        <span class="k">return</span> str(error), <span class="k">True</span></span><span class="ln">    result.charts.append(path.relative_to(HERE).as_posix())</span><span class="ln">    <span class="k">return</span> json.dumps({<span class="s">"saved"</span>: path.name}), <span class="k">False</span></span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>A window opens, or the run hangs</code></dt><dd>The file sets <code>matplotlib.use("Agg")</code> before importing <code>pyplot</code>, so charts go to files only. Keep that order.</dd><dt><code>test_the_query_needs_labels_and_numbers</code></dt><dd>Check the row count too: a query that matches nothing can't be drawn.</dd></dl></div></section>
+<section class="stage" id="m5" aria-labelledby="h-m5"><div class="stage-head"><p class="eyebrow"><b>5</b> · Milestone 5 of 6</p><h2 id="h-m5">An eval with exact answers</h2><p>Ten questions whose right answers are known, checked by code. Run it after every change to the prompt, the tools or the model.</p><div class="ms-meta"><span>About 45 minutes</span><span>Uses <a href="eng-evals.html" data-site-link>E8</a></span></div></div><p class="prose">In E8 you used an LLM judge, because "is this answer good?" needs judgement. Here the answers are numbers, so code can check them exactly, for free, in milliseconds. Use a judge only when you have to. A small <button type="button" class="term" data-term="tolerance" aria-expanded="false">tolerance</button> allows for rounding: $70.72 for $70.7243 is right.</p><p class="prose"><code>eval_questions.json</code> holds each question, the expected value, and the SQL that produced it, so you can check any answer yourself. A test runs every one of those queries against <code>shop.db</code>, so the expected values can't drift from the data.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>grade(answer, case)</code> in <code>evals.py</code>: right or wrong, and why.</li><li><code>main(limit)</code>: asks every question with a fresh memory, grades it, prints a line each and a summary.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write grade</h3><p>No value: wrong. A value further than <code>max(0.01, 0.5% of the expected)</code> away: wrong, saying both numbers. A case with <code>contains</code>, such as the best-selling product, also needs that name in the answer's text. Otherwise right.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write main</h3><p>One <code>analyst.Cost()</code> for the whole run, passed to every <code>analyst.ask</code>, so the summary shows what the eval cost. An empty memory for each question: an eval case must not depend on the one before.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 5</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Know the data: 5 checks pass
+  [x] 2  A safe SQL tool: 9 checks pass
+  [x] 3  The agent: 7 checks pass
+  [x] 4  Charts: 6 checks pass
+  [x] 5  An eval with exact answers: 7 checks pass
+5 of 5 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Run the eval</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run evals.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x]  1. How many completed orders were there in 2025?  (right; SQL queries: 2)
+  [x]  2. What was the revenue from completed orders in March 2025, in dollars?  (right; SQL queries: 1)
+  [x]  3. Which product category brought in the most revenue from completed orders, and how much in dollars?  (right; SQL queries: 1)
+  [x]  4. How many customers are in the West region?  (right; SQL queries: 1)
+  [x]  5. What is the average value of a completed order, in dollars?  (right; SQL queries: 1)
+  [x]  6. What percentage of all orders were refunded?  (right; SQL queries: 1)
+  [x]  7. How many different customers placed at least one completed order between October and December 2025?  (right; SQL queries: 1)
+  [x]  8. Which product sold the most units in completed orders, and how many units?  (right; SQL queries: 1)
+  [x]  9. What was the revenue from completed orders by customers in the South region, in dollars?  (right; SQL queries: 1)
+  [x] 10. How many orders had three or more different products in them?  (right; SQL queries: 1)
+10 of 10 right (100%). 21 model calls, $0.0064</pre><p class="small">An example run against a scripted stand-in for Claude: the format is exact, but a real model words things its own way, and may write different SQL. Expect 8 to 10 right with Haiku 5.5. Run it three times before trusting a change.</p></div><p>For a wrong answer, run its question with <code>analyst.py</code> and read the SQL. Most misses are one of three things: counting all orders instead of completed ones, forgetting to divide cents by 100, or a date range off by a day. Each one is a rule to add to <code>SYSTEM</code>, and the eval tells you whether it helped.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 5: an eval with exact answers"</span></pre></div></div></li></ol><div class="quiz" data-quiz="qp2c">
+    <p class="quiz-label">Check your understanding · Checking answers</p>
+    <p class="quiz-q">Why does this eval check answers with code, when E8 used an LLM judge?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. They can, but they&#x27;re slower, cost money and can be wrong."><span class="l">A</span><span>Judges can't read numbers</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Use the cheapest grader that&#x27;s reliable for the question: code for facts, a judge for qualities like tone or completeness."><span class="l">B</span><span>The right answers are exact numbers, so code can check them for free and without mistakes</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. It&#x27;s a choice based on what the answers look like."><span class="l">C</span><span>Code checks are required for SQL</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>tolerance = max(0.01, abs(case["value"]) * 0.005)</code>, then <code>abs(answer.value - case["value"]) &gt; tolerance</code> means wrong.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p><code>for n, case in enumerate(CASES[:limit], 1):</code>. <code>CASES[:None]</code> is the whole list, so one line handles both.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>evals.py</span><button type="button" class="cb-copy" aria-label="Copy evals.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> grade(answer, case):</span><span class="ln">    <span class="s">"""(passed, why) for one answer. The value must be within 0.5% of the right number (or 0.01),</span></span><span class="ln"><span class="s">    and the answer must name the thing asked for, when the case says what that is."""</span></span><span class="ln">    <span class="k">if</span> answer.value <span class="k">is</span> <span class="k">None</span>:</span><span class="ln">        <span class="k">return</span> <span class="k">False</span>, <span class="s">"no value"</span></span><span class="ln">    <span class="k">if</span> abs(answer.value - case[<span class="s">"value"</span>]) &gt; max(0.01, abs(case[<span class="s">"value"</span>]) * 0.005):</span><span class="ln">        <span class="k">return</span> <span class="k">False</span>, <span class="s">f"value {answer.value}, expected {case['value']}"</span></span><span class="ln">    <span class="k">if</span> <span class="s">"contains"</span> <span class="k">in</span> case <span class="k">and</span> case[<span class="s">"contains"</span>].lower() <span class="k">not</span> <span class="k">in</span> answer.answer.lower():</span><span class="ln">        <span class="k">return</span> <span class="k">False</span>, <span class="s">f"doesn't mention {case['contains']}"</span></span><span class="ln">    <span class="k">return</span> <span class="k">True</span>, <span class="s">"right"</span></span></pre></div><div class="cb"><div class="cb-h"><span>evals.py</span><button type="button" class="cb-copy" aria-label="Copy evals.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> main(limit=<span class="k">None</span>):</span><span class="ln">    <span class="s">"""Ask every question with a fresh memory, grade it, and print a line each and a summary."""</span></span><span class="ln">    cost, passed = analyst.Cost(), 0</span><span class="ln">    <span class="k">for</span> n, case <span class="k">in</span> enumerate(CASES[:limit], 1):</span><span class="ln">        result = analyst.ask(case[<span class="s">"question"</span>], [], analyst.DB, cost)</span><span class="ln">        ok, why = grade(result.answer, case)</span><span class="ln">        passed += ok</span><span class="ln">        print(<span class="s">f"  [{'x' if ok else ' '}] {n:&gt;2}. {case['question']}  ({why}; SQL queries: {len(result.queries)})"</span>)</span><span class="ln">    total = len(CASES[:limit])</span><span class="ln">    print(<span class="s">f"{passed} of {total} right ({passed / total:.0%}). {cost.calls} model calls, ${cost.dollars():.4f}"</span>)</span><span class="ln">    <span class="k">return</span> passed, total</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>TypeError: unsupported operand type(s) for -: 'NoneType' and 'float'</code></dt><dd>Check <code>answer.value is None</code> before subtracting.</dd><dt><code>ZeroDivisionError</code></dt><dd><code>evals.py 0</code> asks no questions. Use a number from 1 to 10.</dd></dl></div></section>
+<section class="stage" id="m6" aria-labelledby="h-m6"><div class="stage-head"><p class="eyebrow"><b>6</b> · Milestone 6 of 6</p><h2 id="h-m6">Follow-up questions</h2><p>Remember the conversation, so "now split that by region" works, without letting it grow forever.</p><div class="ms-meta"><span>About 30 minutes</span><span>Uses <a href="eng-agents.html" data-site-link>E7</a></span></div></div><p class="prose">"Split that by region" means nothing on its own. Claude needs the previous question, its answer and, most usefully, its SQL: changing a query is easier and more reliable than writing a new one from the words. But memory is resent with every call, so it costs more each turn. Keep the last few turns, and only the parts that help.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>Session.remember(question, result)</code>: adds two messages to <code>self.memory</code>, then trims it.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write remember</h3><div class="cb"><div class="cb-h"><span>The two messages to add</span><button type="button" class="cb-copy" aria-label="Copy The two messages to add">Copy</button></div><pre class="code"><span class="ln">{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}</span><span class="ln">{<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: answer + <span class="s">"\n\n&lt;sql&gt;\n"</span> + last_3_queries + <span class="s">"\n&lt;/sql&gt;"</span>}</span></pre></div><p>Then keep only <code>self.memory[-2 * MAX_TURNS:]</code>: two messages per turn. Memory keeps answers and SQL, not the tool results: the rows were for answering, and they would fill the context.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Know the data: 5 checks pass
+  [x] 2  A safe SQL tool: 9 checks pass
+  [x] 3  The agent: 7 checks pass
+  [x] 4  Charts: 6 checks pass
+  [x] 5  An eval with exact answers: 7 checks pass
+  [x] 6  Follow-up questions: 3 checks pass
+6 of 6 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Have a conversation</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run analyst.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Ask about the shop's sales. Type quit to stop.
+
+You: What was revenue from the South region last year?
+Customers in the South region spent $32,577.18 on completed orders in 2025.
+  SQL: SELECT SUM(i.quantity * i.unit_cents) / 100.0 FROM order_items i JOIN orders o ON o.id = i.order_id JOIN customers c ON c.id = o.customer_id WHERE o.status = 'completed' AND c.region = 'South'
+
+You: Now split that by region
+Revenue from completed orders by region: North $34,534.91, South $32,577.18, East $32,033.78, West $24,975.36.
+  SQL: SELECT c.region, SUM(i.quantity * i.unit_cents) / 100.0 AS revenue FROM order_items i JOIN orders o ON o.id = i.order_id JOIN customers c ON c.id = o.customer_id WHERE o.status = 'completed' GROUP BY c.region ORDER BY revenue DESC
+
+You: quit
+[4 model calls, $0.0012]</pre><p class="small">An example run against a scripted stand-in for Claude: the format is exact, but a real model words things its own way, and may write different SQL. The <code>-&gt;</code> lines for each tool call are left out.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 6: follow-up questions"</span></pre></div></div></li></ol><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>self.memory += [..., ...]</code> adds both at once. <code>"\n".join(result.queries[-3:])</code> is the last three queries, and <code>or "(no queries)"</code> covers an answer without any.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>Trimming by slicing keeps whole turns, because you always add two messages: a user, then an assistant.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>analyst.py</span><button type="button" class="cb-copy" aria-label="Copy analyst.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">class</span> Session:</span><span class="ln">    <span class="s">"""A conversation: each question can refer back to earlier ones ("now split that by region")."""</span></span><span class="ln"> </span><span class="ln">    <span class="k">def</span> __init__(self, db=DB):</span><span class="ln">        self.db, self.memory, self.cost = db, [], Cost()</span><span class="ln"> </span><span class="ln">    <span class="k">def</span> ask(self, question):</span><span class="ln">        result = ask(question, self.memory, self.db, self.cost)</span><span class="ln">        self.remember(question, result)</span><span class="ln">        <span class="k">return</span> result</span><span class="ln"> </span><span class="ln">    <span class="k">def</span> remember(self, question, result):</span><span class="ln">        <span class="s">"""Keep the question, the answer and the last queries, for at most MAX_TURNS turns."""</span></span><span class="ln">        sql = <span class="s">"\n"</span>.join(result.queries[-3:]) <span class="k">or</span> <span class="s">"(no queries)"</span></span><span class="ln">        self.memory += [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question},</span><span class="ln">                        {<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: <span class="s">f"{result.answer.answer}\n\n&lt;sql&gt;\n{sql}\n&lt;/sql&gt;"</span>}]</span><span class="ln">        self.memory = self.memory[-2 * MAX_TURNS:]</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>anthropic.BadRequestError: ... roles must alternate</code></dt><dd>Memory must go user, assistant, user, assistant. Add both messages every time, and trim an even number.</dd><dt><code>The follow-up answers a different question</code></dt><dd>Check the SQL is in the assistant message: without it, Claude has to guess what "that" was.</dd></dl></div></section>
+<section class="stage" id="stretch" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Go further</p>
+    <h2 id="s9">Stretch goals</h2>
+    <p>Pick one or two. Run the eval before and after each.</p>
+  </div>
+  <div class="stretch">
+    <div class="box"><h4>Your own CSV</h4><p class="small">Add <code>load_csv.py</code>: read a CSV with Python's <code>csv</code> module, create a table with a column per header, and insert the rows. <code>describe_schema</code> picks it up with no other change. Write five eval questions for it.</p></div>
+    <div class="box"><h4>A web page</h4><p class="small">Put <code>Session</code> behind FastAPI, as in E9: one endpoint for a question, one that serves a chart by name. Add a rate limit before you share it: every question costs money.</p></div>
+    <div class="box"><h4>Check the SQL before it runs</h4><p class="small">Ask a second, cheap call to review each query against the question ("does this count only completed orders?") and run the eval to see if it catches more mistakes than it costs.</p></div>
+    <div class="box"><h4>A LangGraph version</h4><p class="small">Rebuild the loop as a graph, as in E7: a node that writes SQL, one that runs it, one that answers, with a checkpoint so a long analysis can pause for approval before an expensive query.</p></div>
+  </div>
+</section>
+<section class="stage" id="writeup" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Show it</p>
+    <h2 id="s10">Write it up</h2>
+    <p>Push it to a public GitHub repo, then replace <code>README.md</code> with this, keeping every line true. Add your chart as an image: it's the first thing people look at.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>README.md</span><button type="button" class="cb-copy" aria-label="Copy README.md">Copy</button></div><pre class="code"><span class="ln"><span class="c"># Data agent</span></span><span class="ln"> </span><span class="ln">Ask questions about a shop's sales in plain English. Claude writes the SQL, a read-only tool</span><span class="ln">runs it, and every answer shows the queries behind it, with charts for trends.</span><span class="ln"> </span><span class="ln"><span class="c">## What it does</span></span><span class="ln"> </span><span class="ln">&lt;a short conversation: two questions and a follow-up, with the SQL shown&gt;</span><span class="ln"> </span><span class="ln"><span class="c">## How it works</span></span><span class="ln"> </span><span class="ln">- The schema, with the values of short text columns, goes in the system prompt</span><span class="ln">- Claude (Haiku 5.5) writes SQL through a run_sql tool, in a loop of at most 8 calls</span><span class="ln">- run_sql opens the database read-only, refuses anything but reading with an authorizer,</span><span class="ln">  stops queries after 2 seconds and returns at most 200 rows; every defence has a test</span><span class="ln">- make_chart draws trends with matplotlib, through the same safe path</span><span class="ln">- Follow-ups remember the last 6 turns, with the SQL behind each answer</span><span class="ln"> </span><span class="ln"><span class="c">## Evals</span></span><span class="ln"> </span><span class="ln">10 questions with exact answers, checked by code: &lt;score&gt; of 10, for about $&lt;cost&gt; a run.</span><span class="ln">&lt;what you changed after looking at the misses, and what it did to the score&gt;</span><span class="ln"> </span><span class="ln"><span class="c">## Run it yourself</span></span><span class="ln"> </span><span class="ln">uv sync</span><span class="ln">cp .env.example .env    # add your API key</span><span class="ln">uv run make_data.py</span><span class="ln">uv run analyst.py</span><span class="ln">uv run check.py         # the offline tests</span><span class="ln"> </span><span class="ln"><span class="c">## What I'd do next</span></span><span class="ln"> </span><span class="ln">- &lt;two honest improvements&gt;</span></pre></div>
+  <div class="grid g2">
+    <div class="box"><h4>One line for your CV</h4><p class="small">"Built a text-to-SQL data agent in Python on the Claude API: a read-only, time-limited SQL tool with attack tests, charts, conversation memory, and an exact-answer eval (<score>/10, about a cent a run)."</p></div>
+    <div class="box"><h4>Be ready to explain</h4><ul class="small" style="margin:0;padding-left:1.1em;display:grid;gap:4px">
+      <li>The four layers of protection around the SQL, and what each one stops</li>
+      <li>Why the column values go in the system prompt</li>
+      <li>Why the eval checks numbers with code instead of a judge</li>
+      <li>What memory keeps, what it drops, and why the SQL matters</li>
+      <li>One answer that was wrong, why, and what fixed it</li>
+    </ul></div>
+  </div>
+</section>
+<section class="stage" id="done" aria-labelledby="s11">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s11">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, P2 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="p2" data-what="Project"><li><label><input type="checkbox"><span><code>uv run check.py</code> says 6 of 6 milestones done</span></label></li><li><label><input type="checkbox"><span><code>uv run evals.py</code> gets at least 9 of 10 right</span></label></li><li><label><input type="checkbox"><span>You tried <code>DROP TABLE</code> and <code>ATTACH</code> yourself, and saw both refused</span></label></li><li><label><input type="checkbox"><span>One conversation had a chart and a follow-up that worked</span></label></li><li><label><input type="checkbox"><span>The repo is on GitHub with your README and chart, and <code>.env</code> isn't in it</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+  <p class="score" id="quizScore"></p>
+  <div class="box" style="display:grid;gap:10px"><h3>Words used in this project</h3><div class="gloss" id="glossary"></div></div>
+</section>
+
+<div class="next-module">
+  <a href="eng-agents.html" data-site-link>← E7 · Building agents</a>
+  <a href="eng-evals.html" data-site-link>Next: E8 · Tracing and evals in code →</a>
+</div>
+
+<footer>
+  <p>The example outputs come from running the finished code against a scripted stand-in for the Claude API that writes the reference SQL, so the format and the numbers are exact; a real model words things its own way. The shop, its customers and its sales are made up.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "textsql": {
+  "t": "Text-to-SQL",
+  "d": "Turning a question in plain language into a database query. The model writes the SQL; your code decides whether and how it runs."
+ },
+ "sqlite": {
+  "t": "SQLite",
+  "d": "A small database kept in one file, built into Python. There's no server to install or run."
+ },
+ "dbschema": {
+  "t": "Database schema",
+  "d": "The structure of a database: its tables, their columns and the type of each."
+ },
+ "authorizer": {
+  "t": "Authorizer",
+  "d": "A function SQLite calls before each step of a query, which can refuse that step. Here it refuses anything that isn't reading."
+ },
+ "depth": {
+  "t": "Defence in depth",
+  "d": "Several independent safeguards, so that one failing doesn't expose everything."
+ },
+ "tolerance": {
+  "t": "Tolerance",
+  "d": "How far an answer may be from the expected number and still count as right, such as 0.5%."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Hints: one at a time, the last one is the solution ---------- */
+(function(){
+"use strict";
+document.querySelectorAll(".hints").forEach(box => {
+  const hints = [...box.querySelectorAll(".hint")], btn = box.querySelector(".hint-next");
+  let shown = 0;
+  function label(){
+    if(shown >= hints.length){ btn.hidden = true; return; }
+    btn.textContent = shown === hints.length - 1 ? "Show the solution" : "Show hint " + (shown + 1) + " of " + (hints.length - 1);
+  }
+  btn.addEventListener("click", () => {
+    hints[shown].hidden = false; shown++;
+    label();
+    const focus = hints[shown - 1].querySelector(".dm-h"); if(focus){ focus.setAttribute("tabindex", "-1"); focus.focus(); }
+  });
+  label();
+})
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  if(!btn) return;  /* diffs have no copy button: copy the whole file instead */
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? (list.dataset.what || "Module") + " marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.p2";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>

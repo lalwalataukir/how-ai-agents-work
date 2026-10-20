@@ -5,6 +5,7 @@ fastapi
 httpx
 langfuse
 langgraph
+matplotlib
 mcp
 pydantic
 pypdf

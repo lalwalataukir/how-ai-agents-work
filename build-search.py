@@ -35,6 +35,7 @@ PAGES = [
     ("eng-capstone.html", "E12 · Capstone and portfolio"),
     ("eng-projects.html", "Guided projects"),
     ("proj-code-review.html", "P1 · AI code reviewer"),
+    ("proj-data-agent.html", "P2 · Data-analysis agent"),
     ("reference.html", "Glossary"),
 ]
 
