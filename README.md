@@ -27,8 +27,11 @@ A hands-on track for beginners who want to build agents, not just understand the
 | **Track home**: the roadmap of all 12 modules, what you need before you start, and your progress | https://lalwalataukir.github.io/how-ai-agents-work/engineer.html |
 | **E1 · Your dev setup**: the terminal, Python with uv, VS Code, git and GitHub, and reading errors, with a terminal-practice demo and a lab that puts your first program on GitHub | https://lalwalataukir.github.io/how-ai-agents-work/eng-setup.html |
 | **E2 · Python for AI work**: values, lists and dicts, functions and loops, files and JSON, errors, web APIs and pairing with an AI assistant, with a predict-the-output demo and a lab that saves Wikipedia notes | https://lalwalataukir.github.io/how-ai-agents-work/eng-python.html |
+| **E3 · Your first LLM call**: API keys, the Messages API, system prompts and effort, tokens and cost, streaming, and errors and retries, with a request-builder demo and a chatbot lab that prints its cost | https://lalwalataukir.github.io/how-ai-agents-work/eng-first-call.html |
+| **E4 · Prompts and structured output**: templates, clear instructions, few-shot examples, structured outputs with Pydantic, and check-and-retry, with a schema-check demo and an article-extractor lab | https://lalwalataukir.github.io/how-ai-agents-work/eng-structured.html |
+| **E5 · Tool calling**: defining tools, the tool-use loop by hand, running tools safely, and what loops cost, with a loop-stepper demo and a Wikipedia research-bot lab | https://lalwalataukir.github.io/how-ai-agents-work/eng-tools.html |
 
-The finished code for each lab is in [`labs/`](labs/), with offline tests: `uv run --with httpx python labs/run_tests.py`.
+The finished code for each lab is in [`labs/`](labs/), with offline tests: `uv run --with httpx --with anthropic --with python-dotenv --with pydantic python labs/run_tests.py`.
 
 **Demo lab:** https://lalwalataukir.github.io/how-ai-agents-work/demo-lab.html has the LangChain, LangGraph and Langfuse demos in one page, with tabs. Each tab loads the demo from its module page, so there's only one copy of each demo.
 

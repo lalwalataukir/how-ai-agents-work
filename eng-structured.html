@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E4 Structured Output</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E4 of the AI engineer track. A schema-check demo up top, then templates, clear instructions, few-shot examples, structured outputs, Pydantic and check-and-retry, an extractor lab, a done-when checklist and the cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- E4: schema check demo ---------- */
+.sc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:860px){.sc-body{grid-template-columns:minmax(0,1fr)}}
+.sc-col{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:start;min-width:0}
+.sc-col+.sc-col{border-left:1px solid var(--line)}
+@media (max-width:860px){.sc-col+.sc-col{border-left:0;border-top:1px solid var(--line)}}
+.sc-checks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.sc-checks li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;align-items:start;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--surface)}
+.sc-checks .ic{font-family:var(--font-mono);font-size:.8rem;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);color:var(--muted)}
+.sc-checks li.pass{border-color:var(--final)}
+.sc-checks li.pass .ic{border-color:var(--final);color:var(--final);background:var(--final-soft)}
+.sc-checks li.fail{border-color:var(--bad)}
+.sc-checks li.fail .ic{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
+.sc-checks li.skip{opacity:.6}
+.sc-checks b{font-size:.92rem}
+.sc-checks .msg{display:block;font-family:var(--font-mono);font-size:.78rem;color:var(--muted);overflow-wrap:anywhere;margin-top:2px}
+.sc-checks li.fail .msg{color:var(--bad)}
+.vague-table td:first-child{color:var(--muted)}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E4 · Prompts and structured output</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#templates" data-nav="templates"><span class="n">1</span>Templates</a>
+      <a href="#instructions" data-nav="instructions"><span class="n">2</span>Clear instructions</a>
+      <a href="#fewshot" data-nav="fewshot"><span class="n">3</span>Few-shot examples</a>
+      <a href="#json" data-nav="json"><span class="n">4</span>Getting JSON</a>
+      <a href="#pydantic" data-nav="pydantic"><span class="n">5</span>Pydantic</a>
+      <a href="#checks" data-nav="checks"><span class="n">6</span>Check and retry</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E4 · AI engineer track · about 3 hours</p>
+  <h1>Prompts and structured output: answers your code can use</h1>
+  <p class="lede">A chatbot can reply in free text. Most AI features can't: the answer has to go into a database, a dashboard or the next step of an agent. This module covers writing prompts as <button type="button" class="term" data-term="template" aria-expanded="false">templates</button>, showing examples, and getting back JSON in an exact shape with <button type="button" class="term" data-term="structured" aria-expanded="false">structured outputs</button> and <button type="button" class="term" data-term="pydantic" aria-expanded="false">Pydantic</button>. Then you check that the content is right, not just the shape. You'll build an extractor that turns any article into checked data for the <strong>research assistant</strong>.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="grounding" aria-expanded="false">grounding check</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">A script that reads an article and saves its title, key claims with supporting quotes, and sources, after checking every quote is really in the article:</p>
+    <pre class="out">% uv run extract.py article.txt
+Checks passed on attempt 1.
+{ "title": "Riverside Library pilots an AI research helper",
+  "claims": [ { "claim": "…", "quote": "…" }, … ],
+  "sources": [ "Maria Okafor, head librarian", … ] }</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">Schema check</h2>
+    <p>The research assistant asked a model to pull the title, 3 to 5 claims with supporting quotes, and the sources from a short news article. Here are four replies it could get back. Run each through three layers of checks, then turn on structured outputs and see which problems can no longer happen.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>The article is invented and the replies are scripted. The error messages are the ones Python and Pydantic really give.</span></div>
+    <div class="demo-top">
+      <div class="ctl"><span>Reply</span><div class="seg" id="scPick" role="group" aria-label="Which reply"></div></div>
+      <div class="ctl"><span>Structured outputs</span><div class="seg" id="scSO" role="group" aria-label="Structured outputs"></div></div>
+      <p class="dm-note" id="scNote" aria-live="polite"></p>
+    </div>
+    <div class="sc-body">
+      <div class="sc-col"><p class="dm-h">What came back</p><pre class="out" id="scRaw"></pre></div>
+      <div class="sc-col">
+        <p class="dm-h">Checks, in order</p>
+        <ol class="sc-checks" id="scChecks"></ol>
+        <p class="dm-h" id="scRetryH">What your code sends back</p>
+        <pre class="out" id="scRetry"></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. TEMPLATES ============ -->
+<section class="stage" id="templates" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · Prompt templates</p>
+    <h2 id="s1">Write the prompt once, fill it in each time</h2>
+    <p>In an app, the instructions stay the same and the material changes: a different article, question or customer each time. Write the prompt once with a gap, and let the code fill it in.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>A template</span><button type="button" class="cb-copy" aria-label="Copy A template">Copy</button></div><pre class="code"><span class="ln">PROMPT = <span class="s">"""Summarise the article below for a busy product manager.</span></span><span class="ln"> </span><span class="ln"><span class="s">Rules:</span></span><span class="ln"><span class="s">- At most 3 bullet points.</span></span><span class="ln"><span class="s">- Give any numbers exactly as the article does.</span></span><span class="ln"><span class="s">- If the article reaches no clear conclusion, say so.</span></span><span class="ln"> </span><span class="ln"><span class="s">&lt;article&gt;</span></span><span class="ln"><span class="s">{article}</span></span><span class="ln"><span class="s">&lt;/article&gt;"""</span></span><span class="ln"> </span><span class="ln">prompt = PROMPT.format(article=text)   <span class="c"># fill the gap for this article</span></span></pre></div>
+  <div class="grid g2">
+    <div class="box tint"><h4>Wrap the material in tags</h4><p class="small"><button type="button" class="term" data-term="tags" aria-expanded="false">Tags</button> like <code>&lt;article&gt;</code> mark where pasted content starts and ends, so the model doesn't mistake a sentence in the article for an instruction to follow. Module 9 explains why that matters for security.</p></div>
+    <div class="box tint"><h4>Stable parts first</h4><p class="small">Put the fixed instructions before the changing material. It reads more clearly, and it's what prompt caching needs to save money (module 8).</p></div>
+  </div>
+  <p class="small muted"><code>.format()</code> fills in <code>{article}</code>. An f-string would try to fill the gap when the template is written, before you have an article.</p>
+</section>
+
+<!-- ============ 2. CLEAR INSTRUCTIONS ============ -->
+<section class="stage" id="instructions" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · Clear instructions</p>
+    <h2 id="s2">Say exactly what you want, and what to do when it's unclear</h2>
+    <p>Models follow instructions closely, including vague ones. Most prompt problems are missing details: how many, how long, in what form, and what to do when the material doesn't fit.</p>
+  </div>
+  <div class="tablewrap">
+    <table class="vague-table">
+      <thead><tr><th>Vague</th><th>Specific</th></tr></thead>
+      <tbody>
+        <tr><td>Summarise this article.</td><td>Summarise this article in at most 3 bullet points for a product manager.</td></tr>
+        <tr><td>List the key claims.</td><td>List the 3 to 5 most important factual claims, each in one sentence.</td></tr>
+        <tr><td>Include sources.</td><td>For each claim, copy the exact words from the article that support it.</td></tr>
+        <tr><td>(nothing)</td><td>If the article cites no sources, return an empty list. Don't invent any.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="prose">Giving the reason helps too: "so a reviewer can check each claim quickly" tells the model what matters when the rules don't cover a case.</p>
+</section>
+
+<!-- ============ 3. FEW-SHOT ============ -->
+<section class="stage" id="fewshot" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · Few-shot examples</p>
+    <h2 id="s3">Show, don't only tell</h2>
+    <p><button type="button" class="term" data-term="few_shot" aria-expanded="false">Few-shot examples</button> are worked examples in the prompt. A model copies their format, length and style more reliably than it follows a description of them.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Few-shot examples, added to the prompt</span><button type="button" class="cb-copy" aria-label="Copy Few-shot examples, added to the prompt">Copy</button></div><pre class="code"><span class="ln">EXAMPLES = <span class="s">"""Two examples of the claims and quotes I want:</span></span><span class="ln"> </span><span class="ln"><span class="s">&lt;example&gt;</span></span><span class="ln"><span class="s">Article: The council approved a new cycle lane on Main Street, costing 2 million pounds.</span></span><span class="ln"><span class="s">Claim: The council approved a 2 million pound cycle lane on Main Street.</span></span><span class="ln"><span class="s">Quote: approved a new cycle lane on Main Street, costing 2 million pounds</span></span><span class="ln"><span class="s">&lt;/example&gt;</span></span><span class="ln"> </span><span class="ln"><span class="s">&lt;example&gt;</span></span><span class="ln"><span class="s">Article: Sales rose 4% in March, the company said, after a weak February.</span></span><span class="ln"><span class="s">Claim: The company reported 4% sales growth in March.</span></span><span class="ln"><span class="s">Quote: Sales rose 4% in March</span></span><span class="ln"><span class="s">&lt;/example&gt;"""</span></span></pre></div>
+  <div class="grid g3">
+    <div class="box"><h4>One to three is enough</h4><p class="small">Each example is sent, and paid for, with every request.</p></div>
+    <div class="box"><h4>Make them differ</h4><p class="small">If every example is about money, the model may think every claim should be. Vary the topic, and keep the form the same.</p></div>
+    <div class="box"><h4>Keep them correct</h4><p class="small">A mistake in an example gets copied faithfully. Examples teach more strongly than rules do.</p></div>
+  </div>
+  <div class="quiz" data-quiz="qe4a">
+    <p class="quiz-label">Check your understanding · Few-shot examples</p>
+    <p class="quiz-q">What do few-shot examples in a prompt mainly do?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Nothing is learned permanently. The examples only affect requests that include them."><span class="l">A</span><span>Retrain the model permanently on your examples</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. That&#x27;s why they need to be varied and correct: mistakes get copied too."><span class="l">B</span><span>Show the format and style you want, which the model copies closely</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Examples add input tokens to every request. They&#x27;re worth it for consistency, not for cost."><span class="l">C</span><span>Make the request cheaper</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 4. GETTING JSON ============ -->
+<section class="stage" id="json" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Getting JSON back</p>
+    <h2 id="s4">Ask nicely, or have the API guarantee it</h2>
+    <p>Asking for JSON in the prompt usually works, and "usually" isn't good enough when your code breaks on the exceptions. Structured outputs make the API itself constrain the reply to your <button type="button" class="term" data-term="schema" aria-expanded="false">schema</button>.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Approach</th><th>What can still go wrong</th></tr></thead>
+      <tbody>
+        <tr><td>"Reply in JSON" in the prompt</td><td>Text before the JSON, a missing field, a list where you wanted objects. Your parsing code breaks now and then.</td></tr>
+        <tr><td><b>Structured outputs</b>: <code>messages.parse(…, output_format=YourClass)</code></td><td>The reply always parses and fits the shape. The content can still be wrong: an invented quote is still a string.</td></tr>
+        <tr><td>Structured outputs <b>plus checks in your code</b></td><td>What's left is what your checks don't cover. This is what the lab builds.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Structured outputs</span><button type="button" class="cb-copy" aria-label="Copy Structured outputs">Copy</button></div><pre class="code"><span class="ln">response = client.messages.parse(</span><span class="ln">    model=<span class="s">"claude-haiku-5-5"</span>,</span><span class="ln">    max_tokens=4000,</span><span class="ln">    messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: prompt}],</span><span class="ln">    output_format=Extract,              <span class="c"># your Pydantic class (section 5)</span></span><span class="ln">)</span><span class="ln"><span class="k">if</span> response.stop_reason == <span class="s">"end_turn"</span>:</span><span class="ln">    result = response.parsed_output     <span class="c"># an Extract object, already checked against the class</span></span><span class="ln">    print(result.title)</span></pre></div>
+</section>
+
+<!-- ============ 5. PYDANTIC ============ -->
+<section class="stage" id="pydantic" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Pydantic</p>
+    <h2 id="s5">Describe your data as a class</h2>
+    <p>Pydantic lets you write the shape of your data as a Python class with typed fields. It checks data against the class and tells you exactly what doesn't fit, by field name. The Anthropic SDK reads the same class to build the schema for structured outputs.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Try it in uv run python (after lab step 1)</span><button type="button" class="cb-copy" aria-label="Copy Try it in uv run python (after lab step 1)">Copy</button></div><pre class="code"><span class="ln"><span class="k">from</span> pydantic <span class="k">import</span> BaseModel, ValidationError</span><span class="ln"> </span><span class="ln"><span class="k">class</span> Claim(BaseModel):</span><span class="ln">    claim: str</span><span class="ln">    quote: str</span><span class="ln"> </span><span class="ln">item = Claim.model_validate_json(<span class="s">'{"claim": "Sales rose 4%", "quote": "Sales rose 4% in March"}'</span>)</span><span class="ln">print(item.claim)                     <span class="c"># Sales rose 4%</span></span><span class="ln"> </span><span class="ln"><span class="k">try</span>:</span><span class="ln">    Claim.model_validate_json(<span class="s">'{"claim": "Sales rose"}'</span>)</span><span class="ln"><span class="k">except</span> ValidationError <span class="k">as</span> error:</span><span class="ln">    print(error)                      <span class="c"># 1 validation error for Claim</span></span><span class="ln">                                      <span class="c"># quote</span></span><span class="ln">                                      <span class="c">#   Field required [type=missing, ...]</span></span></pre></div>
+  <p class="prose">That message is a <button type="button" class="term" data-term="validation" aria-expanded="false">validation error</button>. Messages like it make good retry feedback: they name the field and the problem. You'll use Pydantic again for tool inputs (E5) and web APIs (E9).</p>
+</section>
+
+<!-- ============ 6. CHECK AND RETRY ============ -->
+<section class="stage" id="checks" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · Check, then retry</p>
+    <h2 id="s6">The right shape isn't the same as the right answer</h2>
+    <p>Structured outputs guarantee the format. Whether the claims are true and the quotes real is still on you. Write checks in code for the rules you can state, and when one fails, send the problem back.</p>
+  </div>
+  <ol class="steps-list">
+    <li><b>Check what code can check.</b> Each quote appears in the source word for word. Counts are in range. Dates parse. Every number appears in the source.</li>
+    <li><b>Retry with the specific problem.</b> "This quote is not in the article: '…'" works better than "try again". This is <button type="button" class="term" data-term="feedback_retry" aria-expanded="false">retry with feedback</button>.</li>
+    <li><b>Limit the attempts.</b> Two or three, then fail with a clear error. Endless retries hide a broken prompt and run up the bill.</li>
+    <li><b>Count the failures.</b> If 1 in 10 needs a retry, the prompt needs work. These checks are also your first evals (module 10, E8).</li>
+  </ol>
+  <div class="quiz" data-quiz="qe4b">
+    <p class="quiz-label">Check your understanding · Structured outputs</p>
+    <p class="quiz-q">With structured outputs on, what does the API guarantee about the reply?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The shape is guaranteed; whether a quote is real is up to your checks."><span class="l">A</span><span>That it's valid JSON matching your schema, not that its content is true</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A made-up claim fits a string field perfectly well."><span class="l">B</span><span>That every fact in it is correct</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The API constrains the output, so it always parses and has every required field."><span class="l">C</span><span>Nothing: it's the same as asking for JSON in the prompt</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+  <div class="quiz" data-quiz="qe4c">
+    <p class="quiz-label">Check your understanding · Check and retry</p>
+    <p class="quiz-q">A check finds a quote that isn't in the article. What should the code do?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Valid JSON with an invented quote is exactly the error checks exist to catch."><span class="l">A</span><span>Save it anyway: the JSON is valid</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Feedback that names the problem fixes it most of the time, and the limit keeps cost and failures visible."><span class="l">B</span><span>Send the specific problem back and ask again, at most once or twice, then fail with a clear error</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Without feedback the model may repeat the mistake, and without a limit the cost has no ceiling."><span class="l">C</span><span>Retry with the same prompt until a reply passes</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · on your laptop</p>
+    <h2 id="s7">Turn an article into checked data</h2>
+    <p>In E6 and E7 the research assistant will read many pages. This extractor is how it will turn each one into claims it can cite.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>2–3 hours</b></span><span>API cost <b>under $0.010</b></span><span>You need <b>E3 done</b></span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Add Pydantic</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv add pydantic</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out"> + pydantic==2.14.1
+ ...</pre><p class="small">It may say it's already installed: the anthropic package uses it too.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Save an article to work on</h3><p>Create <code>article.txt</code> and paste in this short news story. It's invented, so you can check every answer against it. Later, try any real article.</p><div class="cb"><div class="cb-h"><span>article.txt</span><button type="button" class="cb-copy" aria-label="Copy article.txt">Copy</button></div><pre class="code"><span class="ln">Riverside Library pilots an AI research helper</span><span class="ln"> </span><span class="ln">Riverside Public Library has started a six-month trial of an AI assistant that helps visitors find sources for school and work projects. The assistant answers questions using only the library's catalogue and licensed databases, and every answer links to the books or articles it used.</span><span class="ln"> </span><span class="ln">"We wanted something that sends people to sources, not something that replaces them," said head librarian Maria Okafor.</span><span class="ln"> </span><span class="ln">In the first month, the assistant answered 4,200 questions, and librarians reviewed a random sample of 300. They rated 81% of the reviewed answers as accurate and complete, and found that 6% cited a source that did not support the claim.</span><span class="ln"> </span><span class="ln">The library's board approved the trial in January with a budget of $18,000, mostly for software licences and staff time for reviews. A report by the Regional Libraries Council last year found that only one in five library users could name a reliable database for their subject.</span><span class="ln"> </span><span class="ln">The trial ends in September. The board will decide in October whether to keep the assistant, based on accuracy, cost per question and visitor feedback.</span></pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Write the extractor</h3><p>Create <code>extract.py</code>. The Pydantic classes describe the data you want, and the template holds the instructions. <code>check</code> covers what a schema can't, and <code>extract</code> asks again when a check fails.</p><div class="cb"><div class="cb-h"><span>extract.py</span><button type="button" class="cb-copy" aria-label="Copy extract.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E4 lab: turn an article into checked, structured data.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run extract.py article.txt</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> sys</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"> </span><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"><span class="k">from</span> dotenv <span class="k">import</span> load_dotenv</span><span class="ln"><span class="k">from</span> pydantic <span class="k">import</span> BaseModel</span><span class="ln"> </span><span class="ln">load_dotenv()</span><span class="ln"> </span><span class="ln">MODEL = <span class="s">"claude-haiku-5-5"</span></span><span class="ln">client = anthropic.Anthropic()</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">class</span> Claim(BaseModel):</span><span class="ln">    claim: str  <span class="c"># the claim, in one sentence</span></span><span class="ln">    quote: str  <span class="c"># the exact words in the article that support it</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">class</span> Extract(BaseModel):</span><span class="ln">    title: str</span><span class="ln">    claims: list[Claim]</span><span class="ln">    sources: list[str]  <span class="c"># people, organisations or documents the article cites</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln">PROMPT = <span class="s">"""Extract the key facts from the article below.</span></span><span class="ln"> </span><span class="ln"><span class="s">Rules:</span></span><span class="ln"><span class="s">- title: the article's headline, or a short title if it has none.</span></span><span class="ln"><span class="s">- claims: the 3 to 5 most important factual claims. Write each claim in one sentence,</span></span><span class="ln"><span class="s">  and copy the exact words from the article that support it into quote.</span></span><span class="ln"><span class="s">- sources: every person, organisation or document the article cites. Use an empty list if none.</span></span><span class="ln"> </span><span class="ln"><span class="s">&lt;article&gt;</span></span><span class="ln"><span class="s">{article}</span></span><span class="ln"><span class="s">&lt;/article&gt;"""</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> check(result, article):</span><span class="ln">    <span class="s">"""Rules the schema can't enforce. Returns a list of problems; an empty list means all good."""</span></span><span class="ln">    problems = []</span><span class="ln">    <span class="k">if</span> <span class="k">not</span> 3 &lt;= len(result.claims) &lt;= 5:</span><span class="ln">        problems.append(<span class="s">f"There are {len(result.claims)} claims. Give 3 to 5."</span>)</span><span class="ln">    text = <span class="s">" "</span>.join(article.split())  <span class="c"># ignore differences in line breaks and spacing</span></span><span class="ln">    <span class="k">for</span> item <span class="k">in</span> result.claims:</span><span class="ln">        <span class="k">if</span> <span class="s">" "</span>.join(item.quote.split()) <span class="k">not</span> <span class="k">in</span> text:</span><span class="ln">            problems.append(<span class="s">f"This quote is not in the article word for word: {item.quote!r}"</span>)</span><span class="ln">    <span class="k">return</span> problems</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> extract(article, attempts=2):</span><span class="ln">    <span class="s">"""Ask for structured data, check it, and ask again with the problems listed if it fails."""</span></span><span class="ln">    messages = [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: PROMPT.format(article=article)}]</span><span class="ln">    <span class="k">for</span> attempt <span class="k">in</span> range(1, attempts + 1):</span><span class="ln">        response = client.messages.parse(</span><span class="ln">            model=MODEL,</span><span class="ln">            max_tokens=4000,</span><span class="ln">            messages=messages,</span><span class="ln">            output_format=Extract,  <span class="c"># the API guarantees JSON in this shape</span></span><span class="ln">            output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>},</span><span class="ln">        )</span><span class="ln">        <span class="k">if</span> response.stop_reason != <span class="s">"end_turn"</span>:  <span class="c"># cut off or declined: no complete answer</span></span><span class="ln">            <span class="k">raise</span> RuntimeError(<span class="s">f"The model stopped early ({response.stop_reason})."</span>)</span><span class="ln">        result = response.parsed_output  <span class="c"># an Extract object, already validated</span></span><span class="ln">        problems = check(result, article)</span><span class="ln">        <span class="k">if</span> <span class="k">not</span> problems:</span><span class="ln">            print(<span class="s">f"Checks passed on attempt {attempt}."</span>)</span><span class="ln">            <span class="k">return</span> result</span><span class="ln">        print(<span class="s">f"Attempt {attempt}: {len(problems)} problem(s). Asking again."</span>)</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: response.content})</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Fix these problems and answer again:\n"</span> + <span class="s">"\n"</span>.join(problems)})</span><span class="ln">    <span class="k">raise</span> ValueError(<span class="s">"Still failing the checks:\n"</span> + <span class="s">"\n"</span>.join(problems))</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main(path):</span><span class="ln">    article = Path(path).read_text(encoding=<span class="s">"utf-8"</span>)</span><span class="ln">    result = extract(article)</span><span class="ln">    output = result.model_dump_json(indent=2)</span><span class="ln">    print(output)</span><span class="ln">    Path(<span class="s">"extract.json"</span>).write_text(output, encoding=<span class="s">"utf-8"</span>)</span><span class="ln">    print(<span class="s">"Saved to extract.json"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    main(sys.argv[1] <span class="k">if</span> len(sys.argv) &gt; 1 <span class="k">else</span> <span class="s">"article.txt"</span>)</span></pre></div><ul><li><b><code>Claim</code> and <code>Extract</code></b> are the schema. The SDK turns them into a JSON schema, and the API guarantees the reply fits it.</li><li><b><code>PROMPT</code></b> is a template: rules first, then the article inside <code>&lt;article&gt;</code> tags.</li><li><b><code>check</code></b> tests what the schema can't: how many claims there are, and whether each quote is really in the article.</li><li><b><code>extract</code></b> sends the problems back and asks again, at most twice, then gives up with a clear error.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Run it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run extract.py article.txt</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Checks passed on attempt 1.
+{
+  "title": "Riverside Library pilots an AI research helper",
+  "claims": [
+    {
+      "claim": "Riverside Public Library has begun a six-month trial of an AI research assistant.",
+      "quote": "Riverside Public Library has started a six-month trial of an AI assistant"
+    },
+    ...
+  ],
+  "sources": [
+    "Maria Okafor, head librarian",
+    "Regional Libraries Council report"
+  ]
+}
+Saved to extract.json</pre><p class="small">Your wording will differ. Check two of the quotes against the article yourself.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Break it on purpose</h3><p>In <code>PROMPT</code>, change "copy the exact words from the article" to "summarise the words from the article". Run it again. The quotes are no longer word for word, so the check fails and the script asks again:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run extract.py article.txt</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Attempt 1: 3 problem(s). Asking again.
+Attempt 2: 2 problem(s). Asking again.
+Traceback (most recent call last):
+  ...
+ValueError: Still failing the checks:
+This quote is not in the article word for word: 'about 4,200 questions in month one'</pre><p class="small">The exact numbers will differ. The point: valid JSON is not the same as a correct answer. Put the instruction back afterwards.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Make it yours</h3><p>Pick at least one:</p><ul><li>Add a field such as <code>numbers: list[str]</code> for every figure in the article, and a check that each one appears in it.</li><li>Add one few-shot example of a good claim and quote to <code>PROMPT</code>, and compare the results.</li><li>Run it on a real article from a news site, saved as <code>real.txt</code>.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Commit and push</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add extract.py article.txt pyproject.toml uv.lock</span><span class="ln">git commit -m "Add structured article extractor"</span><span class="ln">git push</span></pre></div></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>ModuleNotFoundError: No module named 'pydantic'</code></dt><dd>Run <code>uv add pydantic</code>, and use <code>uv run</code>.</dd><dt><code>FileNotFoundError: [Errno 2] No such file or directory: 'article.txt'</code></dt><dd>The file isn't in the folder you're running from, or has a different name. <code>ls</code> to check.</dd><dt><code>RuntimeError: The model stopped early (max_tokens).</code></dt><dd>The article is long and the reply didn't fit. Raise <code>max_tokens</code> in <code>extract</code>.</dd><dt><code>ValueError: Still failing the checks: …</code></dt><dd>Read the listed problems. Often a quote differs only in punctuation, such as curly and straight quote marks. Fix the article or the prompt, or make the check tidy punctuation first.</dd></dl></div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s8">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E4 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="e4"><li><label><input type="checkbox"><span><code>extract.py</code> turns <code>article.txt</code> into <code>extract.json</code>, and you checked two quotes yourself</span></label></li><li><label><input type="checkbox"><span>You broke the prompt on purpose and saw the check catch it and the retry try to fix it</span></label></li><li><label><input type="checkbox"><span>You can explain what structured outputs guarantee, and what they don't</span></label></li><li><label><input type="checkbox"><span>You finished one “Make it yours” change and pushed everything to GitHub</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s9">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula"><em>Template</em> with clear rules and tagged material → <em>structured outputs</em> for the shape → <em>checks in code</em> for the content → <em>retry with the problems</em>, a limited number of times.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>Prompts</h3><ul>
+        <li>Fixed instructions first, material in tags</li>
+        <li>Say how many, how long, what form</li>
+        <li>Say what to do when unsure</li>
+        <li>1 to 3 varied, correct examples</li>
+      </ul></div>
+      <div class="blk"><h3>Structured output</h3><ul>
+        <li><code>class X(BaseModel): field: type</code></li>
+        <li><code>client.messages.parse(…, output_format=X)</code></li>
+        <li><code>response.parsed_output</code></li>
+        <li>Check <code>stop_reason</code> first</li>
+      </ul></div>
+      <div class="blk"><h3>Checks</h3><ul>
+        <li>Quotes and numbers appear in the source</li>
+        <li>Counts and ranges</li>
+        <li>Retry with the specific problems</li>
+        <li>Two or three attempts, then fail loudly</li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s10">3 common structured-output mistakes</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>Parsing free text with string tricks</h3><dl>
+      <dt>What it looks like</dt><dd>Code that splits the reply on "Title:" and newlines, and breaks the first time the model words it differently.</dd>
+      <dt>Fix</dt><dd>Use structured outputs with a Pydantic class, and read <code>parsed_output</code>.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>Treating valid JSON as a correct answer</h3><dl>
+      <dt>What it looks like</dt><dd>A dashboard full of neatly formatted claims, some of which no source ever made.</dd>
+      <dt>Fix</dt><dd>Add grounding checks for anything you can check in code, and review a sample by hand.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>Retrying forever, or failing silently</h3><dl>
+      <dt>What it looks like</dt><dd>A loop that retries until it passes and quietly costs ten times as much, or bad data saved because the error was caught and ignored.</dd>
+      <dt>Fix</dt><dd>Two or three attempts with feedback, then a clear error, and count how often it happens.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="eng-first-call.html" data-site-link>← Module E3 · Your first LLM call</a>
+  <a href="eng-tools.html" data-site-link>Module E5 · Tool calling →</a>
+</div>
+
+<footer>
+  <p>The schema-check demo is a simulation with an invented article. The lab calls the real Claude API from your laptop, billed to your account.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic or Pydantic.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "template": {
+  "t": "Prompt template",
+  "d": "A prompt written once with gaps, such as {article}, that your code fills in for each request."
+ },
+ "tags": {
+  "t": "XML-style tags",
+  "d": "Labels such as <article>…</article> around pasted content, so the model can tell your instructions apart from the material they apply to."
+ },
+ "few_shot": {
+  "t": "Few-shot examples",
+  "d": "One to three worked examples in the prompt showing the input and the output you want. Models copy their format and style closely."
+ },
+ "structured": {
+  "t": "Structured outputs",
+  "d": "An API feature that forces the reply to be valid JSON in a schema you give, so it always parses and has every required field."
+ },
+ "schema": {
+  "t": "JSON schema",
+  "d": "A description of the shape data must have: which fields, their types, which are required. The SDK builds one from your Pydantic class."
+ },
+ "pydantic": {
+  "t": "Pydantic",
+  "d": "A Python package for describing data as classes with typed fields. It checks data against them and explains exactly what's wrong when it doesn't fit."
+ },
+ "validation": {
+  "t": "Validation error",
+  "d": "Pydantic's report that data doesn't fit the class: a field missing, or the wrong type, with the field's name."
+ },
+ "grounding": {
+  "t": "Grounding check",
+  "d": "A check that the model's output is supported by the source, such as each quote appearing word for word in the article."
+ },
+ "feedback_retry": {
+  "t": "Retry with feedback",
+  "d": "Sending the model its own answer back with the specific problems listed and asking again, a limited number of times."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Schema check (scripted) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const GOOD = '{\n  "title": "Riverside Library pilots an AI research helper",\n  "claims": [\n    {"claim": "The library began a six-month AI trial.",\n     "quote": "has started a six-month trial of an AI assistant"},\n    {"claim": "It answered 4,200 questions in its first month.",\n     "quote": "the assistant answered 4,200 questions"},\n    {"claim": "Reviewers rated 81% of answers accurate.",\n     "quote": "They rated 81% of the reviewed answers as accurate and complete"}\n  ],\n  "sources": ["Maria Okafor, head librarian",\n              "Regional Libraries Council report"]\n}';
+const REPLIES = [
+  {k:"A · Good", raw:GOOD, fails:null,
+   note:"Valid JSON, the right shape, and every quote is in the article. This is the reply your code can save."},
+  {k:"B · Chatty", raw:"Here is the JSON you asked for:\n\n" + GOOD, fails:{at:0, msg:"json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)"}, so:true,
+   retry:"Your reply was not valid JSON (Expecting value: line 1 column 1). Reply with only the JSON object, no other text.",
+   note:"The JSON is fine, but the sentence in front of it breaks json.loads. Asking for JSON in the prompt fails like this now and then."},
+  {k:"C · Wrong shape", raw:'{\n  "title": "Riverside Library pilots an AI research helper",\n  "claims": [\n    "The library began a six-month AI trial.",\n    "It answered 4,200 questions."\n  ]\n}', so:true,
+   fails:{at:1, msg:"3 validation errors for Extract\nclaims.0\n  Input should be an object [type=model_type, ...]\nclaims.1\n  Input should be an object [type=model_type, ...]\nsources\n  Field required [type=missing, ...]"},
+   retry:"Your JSON didn't match the schema:\n- claims.0 and claims.1: each claim must be an object with claim and quote\n- sources: field required\nAnswer again with every field.",
+   note:"It parses, but the claims are plain strings and sources is missing. Pydantic names each problem by field."},
+  {k:"D · Invented quote", raw:GOOD.replace('the assistant answered 4,200 questions', 'visitors loved the new assistant').replace('It answered 4,200 questions in its first month.', 'Visitors loved the assistant.'),
+   fails:{at:2, msg:"This quote is not in the article word for word: 'visitors loved the new assistant'"},
+   retry:"Fix these problems and answer again:\nThis quote is not in the article word for word: 'visitors loved the new assistant'",
+   note:"Perfect JSON, perfect shape, and an invented claim. Structured outputs can't catch this; only a check against the source can."}
+];
+const CHECKS = [
+  ["Valid JSON?", "json.loads"],
+  ["Right shape?", "Pydantic: Extract.model_validate_json"],
+  ["Passes our checks?", "3 to 5 claims; every quote in the article"]
+];
+let pick = 0, so = false;
+function render(){
+  $("scPick").querySelectorAll("button").forEach((b, i) => { b.setAttribute("aria-pressed", String(i === pick)); b.disabled = so && REPLIES[i].so; });
+  $("scSO").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.v === "on") === so)));
+  const r = REPLIES[pick];
+  $("scRaw").textContent = r.raw;
+  const failAt = r.fails ? r.fails.at : 99;
+  $("scChecks").innerHTML = CHECKS.map(([t, how], i) => {
+    let cls = "pass", ic = "✓", msg = how;
+    if(so && i < 2){ msg = "Guaranteed by the API with structured outputs"; }
+    if(i === failAt){ cls = "fail"; ic = "✗"; msg = r.fails.msg; }
+    else if(i > failAt){ cls = "skip"; ic = "–"; msg = "Not reached"; }
+    return '<li class="' + cls + '"><span class="ic" aria-hidden="true">' + ic + "</span><span><b>" + esc(t) + '</b><span class="visually-hidden"> ' + (cls === "pass" ? "passed" : cls === "fail" ? "failed" : "not reached") + '</span><span class="msg">' + esc(msg).replace(/\n/g, "<br>") + "</span></span></li>";
+  }).join("");
+  $("scRetry").textContent = r.retry || "Nothing: save the result.";
+  $("scNote").textContent = r.note + (so && pick === 3 ? " Structured outputs are on, and this one still gets through to your checks." : "");
+}
+$("scPick").innerHTML = REPLIES.map((r, i) => '<button type="button" data-i="' + i + '" aria-pressed="false">' + esc(r.k) + "</button>").join("");
+$("scSO").innerHTML = '<button type="button" data-v="off" aria-pressed="true">Off</button><button type="button" data-v="on" aria-pressed="false">On</button>';
+$("scPick").addEventListener("click", e => { const b = e.target.closest("button"); if(b && !b.disabled){ pick = +b.dataset.i; render(); } });
+$("scSO").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; so = b.dataset.v === "on"; if(so && REPLIES[pick].so) pick = 0; render(); });
+render();
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e4";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>
