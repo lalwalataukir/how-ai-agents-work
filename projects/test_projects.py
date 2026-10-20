@@ -129,5 +129,32 @@ class CodeReviewerSDKTest(unittest.TestCase):
         self.assertEqual([(e.file, e.line) for e in extra], [("shop/cart.py", 30)])
 
 
+class DataAgentSDKTest(unittest.TestCase):
+    def test_a_question_with_a_query_and_a_chart_goes_through_the_real_sdk(self):
+        analyst = load("p2-data-agent", "analyst")
+        make_data = load("p2-data-agent", "make_data")
+        tmp = Path(tempfile.mkdtemp())
+        make_data.build(tmp / "shop.db")
+        count = "SELECT COUNT(*) FROM orders WHERE status = 'completed'"
+        monthly = "SELECT substr(ordered_at, 1, 7), COUNT(*) FROM orders GROUP BY 1"
+        api = FakeAPI([{"type": "tool_use", "id": "toolu_1", "name": "run_sql", "input": {"sql": count}},
+                       {"type": "tool_use", "id": "toolu_2", "name": "make_chart",
+                        "input": {"title": "Orders by month", "kind": "line", "sql": monthly}}],
+                      [{"type": "text", "text": json.dumps({"answer": "1,755 completed orders.", "value": 1755})}])
+        with mock.patch.object(analyst, "client", api.client()), mock.patch.object(analyst, "HERE", tmp), \
+             mock.patch.object(analyst, "CHARTS", tmp / "charts"), redirect_stderr(io.StringIO()):
+            result = analyst.ask("How many completed orders?", [], tmp / "shop.db", analyst.Cost())
+        first, second = api.bodies
+        schema = first["output_config"]["format"]["schema"]
+        self.assertEqual(set(schema["properties"]), {"answer", "value"})
+        self.assertEqual([t["name"] for t in first["tools"]], ["run_sql", "make_chart"])
+        self.assertIn("orders (2000 rows)", first["system"])
+        sent = second["messages"][-1]["content"]
+        self.assertEqual([(r["tool_use_id"], r["is_error"]) for r in sent], [("toolu_1", False), ("toolu_2", False)])
+        self.assertEqual(json.loads(sent[0]["content"])["rows"], [[1755]])
+        self.assertEqual((result.answer.value, result.charts), (1755.0, ["charts/orders-by-month.png"]))
+        self.assertTrue((tmp / "charts" / "orders-by-month.png").is_file())
+
+
 if __name__ == "__main__":
     unittest.main()

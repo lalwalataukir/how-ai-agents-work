@@ -1,0 +1,11 @@
+[project]
+name = "data-agent"
+version = "0.1.0"
+description = "Data-analysis agent"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=1.15",
+    "matplotlib>=3.10",
+    "pydantic>=2.10",
+    "python-dotenv>=1.0",
+]

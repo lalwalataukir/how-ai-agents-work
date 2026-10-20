@@ -1,0 +1,54 @@
+[
+  {
+    "question": "How many completed orders were there in 2025?",
+    "sql": "SELECT COUNT(*) FROM orders WHERE status = 'completed'",
+    "value": 1755
+  },
+  {
+    "question": "What was the revenue from completed orders in March 2025, in dollars?",
+    "sql": "SELECT SUM(i.quantity * i.unit_cents) / 100.0 FROM order_items i JOIN orders o ON o.id = i.order_id WHERE o.status = 'completed' AND o.ordered_at LIKE '2025-03-%'",
+    "value": 11490.84
+  },
+  {
+    "question": "Which product category brought in the most revenue from completed orders, and how much in dollars?",
+    "sql": "SELECT p.category, SUM(i.quantity * i.unit_cents) / 100.0 AS revenue FROM order_items i JOIN orders o ON o.id = i.order_id JOIN products p ON p.id = i.product_id WHERE o.status = 'completed' GROUP BY p.category ORDER BY revenue DESC LIMIT 1",
+    "contains": "Garden",
+    "value": 28417.55
+  },
+  {
+    "question": "How many customers are in the West region?",
+    "sql": "SELECT COUNT(*) FROM customers WHERE region = 'West'",
+    "value": 66
+  },
+  {
+    "question": "What is the average value of a completed order, in dollars?",
+    "sql": "SELECT AVG(total) / 100.0 FROM (SELECT SUM(i.quantity * i.unit_cents) AS total FROM order_items i JOIN orders o ON o.id = i.order_id WHERE o.status = 'completed' GROUP BY o.id)",
+    "value": 70.72
+  },
+  {
+    "question": "What percentage of all orders were refunded?",
+    "sql": "SELECT 100.0 * SUM(status = 'refunded') / COUNT(*) FROM orders",
+    "value": 7.1
+  },
+  {
+    "question": "How many different customers placed at least one completed order between October and December 2025?",
+    "sql": "SELECT COUNT(DISTINCT customer_id) FROM orders WHERE status = 'completed' AND ordered_at >= '2025-10-01'",
+    "value": 224
+  },
+  {
+    "question": "Which product sold the most units in completed orders, and how many units?",
+    "sql": "SELECT p.name, SUM(i.quantity) AS units FROM order_items i JOIN orders o ON o.id = i.order_id JOIN products p ON p.id = i.product_id WHERE o.status = 'completed' GROUP BY p.id ORDER BY units DESC LIMIT 1",
+    "contains": "Pruning Shears",
+    "value": 135
+  },
+  {
+    "question": "What was the revenue from completed orders by customers in the South region, in dollars?",
+    "sql": "SELECT SUM(i.quantity * i.unit_cents) / 100.0 FROM order_items i JOIN orders o ON o.id = i.order_id JOIN customers c ON c.id = o.customer_id WHERE o.status = 'completed' AND c.region = 'South'",
+    "value": 32577.18
+  },
+  {
+    "question": "How many orders had three or more different products in them?",
+    "sql": "SELECT COUNT(*) FROM (SELECT order_id FROM order_items GROUP BY order_id HAVING COUNT(*) >= 3)",
+    "value": 489
+  }
+]
