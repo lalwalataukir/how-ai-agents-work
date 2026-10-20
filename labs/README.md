@@ -14,6 +14,8 @@ Each folder holds the finished code for one module's lab, so you can compare it 
 | `e08/` | [E8 · Tracing and evals in code](https://lalwalataukir.github.io/how-ai-agents-work/eng-evals.html) | `agent.py` (traced), `run_evals.py`, `eval_cases.json`, `evals.yml` |
 | `e09/` | [E9 · Shipping it](https://lalwalataukir.github.io/how-ai-agents-work/eng-ship.html) | `agent.py` (streaming, cached), `app.py`, `static/index.html` |
 | `e10/` | [E10 · Security in code](https://lalwalataukir.github.io/how-ai-agents-work/eng-security.html) | `agent.py` (hardened), `guard.py`, `test_attacks.py` |
+| `e11/` | [E11 · Choosing models](https://lalwalataukir.github.io/how-ai-agents-work/eng-models.html) | `compare_models.py`, `local_rag.py`, `MODEL_CHOICE.md` |
+| `e12/` | [E12 · Capstone and portfolio](https://lalwalataukir.github.io/how-ai-agents-work/eng-capstone.html) | `check_portfolio.py`, `SPEC.md`, `README_TEMPLATE.md` |
 
 Type the code yourself in your own `research-assistant` repo rather than copying this folder: you learn more from the errors.
 

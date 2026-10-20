@@ -51,6 +51,9 @@ const TOOLS = [
   {names:["Koyeb"], url:"https://www.koyeb.com/docs", what:"Serverless hosting platform for web services"},
   {names:["Hugging Face Spaces"], url:"https://huggingface.co/docs/hub/spaces", what:"Free hosting for machine-learning demos, often built with Gradio"},
   {names:["Redis"], url:"https://redis.io/docs/latest/", what:"In-memory database often used for counters, rate limits and caches"},
+  {names:["Ollama"], url:"https://docs.ollama.com/", what:"Free app that downloads open-weight models and runs them on your computer"},
+  {names:["OBS Studio"], url:"https://obsproject.com/", what:"Free screen recorder for Mac, Windows and Linux"},
+  {names:["Loom"], url:"https://www.loom.com/", what:"Screen-recording service that gives each video a shareable link"},
   {names:["httpx"], url:"https://www.python-httpx.org/", what:"Python package for making web requests"},
   {names:["promptfoo"], url:"https://www.promptfoo.dev/docs/intro/", what:"Open-source CLI for testing prompts and running evals"},
   {names:["PostgreSQL", "Postgres"], url:"https://www.postgresql.org/docs/", what:"Open-source relational database"}

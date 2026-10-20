@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E11 Choosing Models</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E11 of the AI engineer track. A model-picker demo up top, then quality, cost and speed, evals as evidence, cheaper levers, local models, fine-tuning against prompting and RAG, and decision records, a comparison lab, a done-when checklist and the cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage p code,.stage li code,.stage td code{overflow-wrap:anywhere}
+.cb-diff pre.code .ln.d-add{background:var(--final-soft)}
+.cb-diff pre.code .ln.d-del{background:var(--bad-soft)}
+.cb-diff pre.code .ln.d-gap{color:var(--muted)}
+.cb-key{display:flex;gap:10px}
+.cb-key .k-add{color:var(--final)}
+.cb-key .k-del{color:var(--bad)}
+.whole{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.whole>summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:.92rem}
+.whole[open]>summary{border-bottom:1px solid var(--line)}
+.whole>.cb{border:0;border-radius:0 0 var(--radius) var(--radius)}
+
+/* ---------- E11: model picker ---------- */
+.mp-body{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.mp-table{width:100%;border-collapse:collapse;min-width:0;font-size:.86rem}
+.mp-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius)}
+.mp-table th,.mp-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.mp-table th{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--surface-2)}
+.mp-table tr:last-child td{border-bottom:0}
+.mp-table td.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mp-table td.bad{color:var(--bad)}
+.mp-table tr.pick td{background:var(--final-soft)}
+.mp-table tr.pick td:first-child{border-left:3px solid var(--final)}
+.mp-name{font-weight:700}
+.mp-where{display:block;font-size:.76rem;color:var(--muted)}
+.mp-verdict{font-size:.8rem}
+.mp-verdict.ok{color:var(--final);font-weight:700}
+@media (max-width:600px){.mp-table th:nth-child(4),.mp-table td:nth-child(4){display:none}}
+.dec-table td:first-child{font-weight:600}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E11 · Choosing models</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#numbers" data-nav="numbers"><span class="n">1</span>Three numbers</a>
+      <a href="#evidence" data-nav="evidence"><span class="n">2</span>Your evals decide</a>
+      <a href="#levers" data-nav="levers"><span class="n">3</span>Effort and routing</a>
+      <a href="#local" data-nav="local"><span class="n">4</span>Open and local models</a>
+      <a href="#finetune" data-nav="finetune"><span class="n">5</span>Fine-tune, prompt or RAG?</a>
+      <a href="#record" data-nav="record"><span class="n">6</span>Write it down</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E11 · AI engineer track · about 3 hours</p>
+  <h1>Choosing models: pick with evidence, not hype</h1>
+  <p class="lede">There's always a newer, bigger model. The right one for your product is the cheapest and fastest one that passes your evals. This module compares models on <button type="button" class="term" data-term="quality_cost_latency" aria-expanded="false">quality, cost and latency</button>, shows the levers before switching models, covers <button type="button" class="term" data-term="open_weight" aria-expanded="false">open-weight models</button> running on your own computer, and sorts out when fine-tuning, prompting or RAG is the answer. You'll run your eval set on <strong>three Claude models and a local one</strong>, and write down your choice.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="decision_record" aria-expanded="false">decision record</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">A comparison on your own eval set, and a written choice:</p>
+    <pre class="out">model               score  per 1,000 questions  median time
+claude-haiku-5-5      95%               $0.354        4.8 s
+claude-sonnet-5-5    100%               $7.075        7.9 s
+claude-opus-5-5      100%              $13.380       11.2 s
+
+Cheapest model at or above 85%: claude-haiku-5-5</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">Model picker</h2>
+    <p>Five models ran the same eval set. Set what you need, and see which models qualify and which is the cheapest that does. Then switch to a harder task and watch the answer change.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>Costs use each model's real prices with typical token counts for the research assistant. Scores and times are illustrative of what an eval run like the lab's shows; yours will differ.</span></div>
+    <div class="demo-top">
+      <div class="ctl"><span>The task</span><div class="seg" id="mpTask" role="group" aria-label="Task"></div></div>
+      <div class="ctl"><span>Eval score</span><div class="seg" id="mpMin" role="group" aria-label="Minimum eval score"></div></div>
+      <div class="ctl"><span>Budget</span><div class="seg" id="mpBudget" role="group" aria-label="Budget per 1,000 questions"></div></div>
+      <div class="ctl"><span>Answer within</span><div class="seg" id="mpTime" role="group" aria-label="Time to answer"></div></div>
+      <div class="ctl"><span>Data stays home</span><div class="seg" id="mpLocal" role="group" aria-label="Data must stay on my computer"></div></div>
+    </div>
+    <div class="mp-body">
+      <div class="mp-wrap"><table class="mp-table" aria-live="polite">
+        <thead><tr><th>Model</th><th>Eval score</th><th>Per 1,000 questions</th><th>Median time</th><th>Verdict</th></tr></thead>
+        <tbody id="mpRows"></tbody>
+      </table></div>
+      <p class="dm-note" id="mpNote"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. THREE NUMBERS ============ -->
+<section class="stage" id="numbers" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · Three numbers</p>
+    <h2 id="s1">Quality, cost and speed, for your task</h2>
+    <p>Every model choice trades the same three things. Measure all three on your own task before deciding: a model's reputation tells you little about your questions.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>Quality</h4><p class="small">Your eval score from E8, graded the same way for every model. Not a public leaderboard, which measures someone else's task.</p></div>
+    <div class="box"><h4>Cost</h4><p class="small">Per 1,000 questions, from real token counts: agent loops multiply the per-token price by every call and page.</p></div>
+    <div class="box"><h4>Speed</h4><p class="small">Time to first words and to the full answer (E9). Bigger models think and write more slowly.</p></div>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Model</th><th>Input, per million tokens</th><th>Output, per million tokens</th><th>For</th></tr></thead>
+      <tbody>
+        <tr><td>Claude Haiku 5.5</td><td>$0.10</td><td>$0.50</td><td>Fast, high-volume work, simple agents</td></tr>
+        <tr><td>Claude Sonnet 5.5</td><td>$2.00</td><td>$10.00</td><td>Everyday agents and coding</td></tr>
+        <tr><td>Claude Opus 5.5</td><td>$4.00</td><td>$20.00</td><td>Hard reasoning and long agent runs</td></tr>
+        <tr><td>Claude Fable 5.1</td><td>$10.00</td><td>$50.00</td><td>The most demanding, long-horizon problems</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="prose">Prices checked in October 2026; check the <a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">pricing page</a> before you rely on them. Cache reads cost a tenth of input on most models and a twentieth on Opus 5.5. <a href="ship.html" data-site-link>Module 7</a> covers the economics of a launch.</p>
+</section>
+
+<!-- ============ 2. YOUR EVALS DECIDE ============ -->
+<section class="stage" id="evidence" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · Your evals decide</p>
+    <h2 id="s2">Run the same evals on every candidate</h2>
+    <p>The eval set you built in E8 is your benchmark. Run it on each model with everything else fixed: same agent code, same tools, same judge.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box tint"><h4>Keep the judge fixed</h4><p class="small">If the judge changed with the model, you'd be comparing judges. The lab uses one judge for all.</p></div>
+    <div class="box tint"><h4>Mind the noise</h4><p class="small">On 20 cases, one case is 5 points. A 95% against 100% gap is one answer: read it before you pay 20 times more.</p></div>
+    <div class="box tint"><h4>Test the hard cases</h4><p class="small">Easy questions make every model look equal. Add the multi-step questions your users really ask, and the gaps appear.</p></div>
+  </div>
+  <div class="quiz" data-quiz="qe11a">
+    <p class="quiz-label">Check your understanding · Your evals decide</p>
+    <p class="quiz-q">On your 20 cases, Haiku scores 95% and Opus 100%, at about 40 times the cost. What do you do first?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. One case in twenty may be noise, and may not matter to users. Read it first."><span class="l">A</span><span>Switch to Opus: it's better</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The difference is a single answer. If a prompt or tool fix closes it, Haiku wins on cost and speed."><span class="l">B</span><span>Read the one case Haiku failed and decide whether it matters</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A benchmark measures someone else&#x27;s task. Your evals are the evidence that counts."><span class="l">C</span><span>Run a public benchmark to settle it</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 3. EFFORT AND ROUTING ============ -->
+<section class="stage" id="levers" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · Effort and routing</p>
+    <h2 id="s3">Levers to try before switching models</h2>
+    <p>Changing model is the biggest lever, and the one that most often costs quality. Try the cheaper ones first, and measure each with your evals.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Lever</th><th>What it does</th><th>Watch out for</th></tr></thead>
+      <tbody>
+        <tr><td>Better prompts and tools</td><td>Fixes the failures your traces show, on every model</td><td>Needs the eval set to prove it worked</td></tr>
+        <tr><td>Prompt caching (E9)</td><td>Cuts the cost of everything repeated, without changing answers</td><td>Anything changing at the start of the prompt breaks it</td></tr>
+        <tr><td><button type="button" class="term" data-term="effort_lever" aria-expanded="false">Effort</button></td><td>Less thinking means fewer tokens and faster replies</td><td>Hard questions may need more. A stronger model at lower effort can cost less than you'd expect and still pass</td></tr>
+        <tr><td><button type="button" class="term" data-term="routing" aria-expanded="false">Routing</button></td><td>A cheap model for easy questions, a strong one for hard ones</td><td>You need a reliable way to tell them apart, and each model keeps its own cache</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="quiz" data-quiz="qe11b">
+    <p class="quiz-label">Check your understanding · Effort and routing</p>
+    <p class="quiz-q">Sonnet passes your evals but costs too much. Which should you measure before moving to a cheaper model?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="1" data-why="Correct. A strong model thinking less can be much cheaper and still pass. Measure it before trading down."><span class="l">A</span><span>Sonnet at lower effort</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A longer prompt adds input tokens to every call."><span class="l">B</span><span>A longer system prompt</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Caching only lowers cost; it never changes the answers."><span class="l">C</span><span>Turning off caching</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 4. OPEN AND LOCAL MODELS ============ -->
+<section class="stage" id="local" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Open and local models</p>
+    <h2 id="s4">Models that run on your own computer</h2>
+    <p><button type="button" class="term" data-term="open_weight" aria-expanded="false">Open-weight models</button> such as Qwen, Gemma, Llama and gpt-oss can be downloaded and run yourself. <button type="button" class="term" data-term="ollama" aria-expanded="false">Ollama</button> makes that a two-command job, and since version 0.14 it understands the Claude Messages API, so the SDK you know works with a different address.</p>
+  </div>
+  <div class="grid g2">
+    <div class="box"><h4>What you gain</h4><p class="small">Data never leaves the machine. No bill per token. Works offline. You choose exactly which version runs, and it never changes under you.</p></div>
+    <div class="box"><h4>What it costs</h4><p class="small">Hardware: an 8-billion-parameter model wants 8 GB of free memory, and bigger ones need a strong GPU. Slower answers on a laptop. Weaker at multi-step tool use. In production, you run, scale and secure the servers.</p></div>
+  </div>
+  <p class="prose">Local models are <button type="button" class="term" data-term="quantization" aria-expanded="false">quantized</button> to fit in memory, which costs a little quality. They're a good fit for private data and simple steps, such as answering from retrieved notes. For agents that plan and use tools, check them against your evals before trusting them.</p>
+</section>
+
+<!-- ============ 5. FINE-TUNE, PROMPT OR RAG ============ -->
+<section class="stage" id="finetune" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Fine-tune, prompt or RAG?</p>
+    <h2 id="s5">Match the fix to the problem</h2>
+    <p>"Should we fine-tune?" usually means "the model doesn't do what we want". The answer depends on what exactly is missing.</p>
+  </div>
+  <div class="tablewrap">
+    <table class="dec-table">
+      <thead><tr><th>The problem</th><th>Reach for</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>It doesn't know our facts</td><td>RAG (E6)</td><td>Retrieval brings current facts, with citations, and updates the moment your documents do</td></tr>
+        <tr><td>It ignores our format or rules</td><td>Prompting, examples and structured outputs (E4)</td><td>Fast to change and test; structured outputs guarantee the shape</td></tr>
+        <tr><td>It can't do a step</td><td>A tool (E5) or a stronger model</td><td>Give it the ability, or the reasoning, it's missing</td></tr>
+        <tr><td>A narrow task at huge volume needs a particular style</td><td><button type="button" class="term" data-term="fine_tuning" aria-expanded="false">Fine-tuning</button>, maybe</td><td>Only with thousands of good examples, an eval set, and someone to retrain it as models change</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="callout"><b>Fine-tuning is the last resort, not the first.</b> It teaches style and narrow behaviour better than facts, can't cite sources, and locks you to one model version. Current Claude models aren't fine-tuned through the Claude API; open-weight models can be, with tools such as Hugging Face's.</p>
+  <div class="quiz" data-quiz="qe11c">
+    <p class="quiz-label">Check your understanding · Fine-tune, prompt or RAG?</p>
+    <p class="quiz-q">Your assistant doesn't know your company's travel policy, which changes every quarter. What fixes it?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. You&#x27;d retrain every quarter, and it still couldn&#x27;t cite the policy."><span class="l">A</span><span>Fine-tune a model on the policy</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Retrieval brings the current policy into every answer, with citations, and an edit to the document updates it at once."><span class="l">B</span><span>RAG over the policy documents</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. No model was trained on your private policy."><span class="l">C</span><span>A bigger model</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 6. WRITE IT DOWN ============ -->
+<section class="stage" id="record" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · Write it down</p>
+    <h2 id="s6">A decision record for the model</h2>
+    <p>A model choice is a product decision with numbers behind it. A short <button type="button" class="term" data-term="decision_record" aria-expanded="false">decision record</button> keeps them: the options, the evidence, the choice, what you gave up, and when to look again.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box tint"><h4>For your team</h4><p class="small">Six months on, nobody remembers why it's Haiku. The record does, with the eval results that justified it.</p></div>
+    <div class="box tint"><h4>For reviewers</h4><p class="small">In a portfolio, "I chose X because of these numbers" shows judgement, not just code. E12 uses it.</p></div>
+    <div class="box tint"><h4>For later</h4><p class="small">"Revisit when" names the triggers: a score drop, a new model, a price change, harder questions.</p></div>
+  </div>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · on your laptop</p>
+    <h2 id="s7">Compare models on your evals, and choose one</h2>
+    <p>Two new files: one runs your eval set on three Claude models, the other tries a model on your own computer. Then you write down the choice.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>3 hours</b></span><span>API cost <b>about $0.45</b> for the full comparison, or about $0.11 with 5 cases</span><span>You need <b>E8 and E10 done</b></span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write compare_models.py</h3><p>It runs the eval set from E8 against your E10 agent once per model, keeps the judge the same, and prints quality, cost and speed side by side.</p><div class="cb"><div class="cb-h"><span>compare_models.py</span><button type="button" class="cb-copy" aria-label="Copy compare_models.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E11 lab: run the eval set on several models, and compare quality, cost and speed.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run compare_models.py      # every case on every model</span></span><span class="ln"><span class="s">    uv run compare_models.py 5    # the first 5 cases: a quick, cheap look</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> json</span><span class="ln"><span class="k">import</span> statistics</span><span class="ln"><span class="k">import</span> sys</span><span class="ln"><span class="k">import</span> time</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"> </span><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"> </span><span class="ln"><span class="k">import</span> agent</span><span class="ln"><span class="k">import</span> run_evals</span><span class="ln"> </span><span class="ln"><span class="c"># Dollars per million tokens: input, output, and input read from the cache.</span></span><span class="ln"><span class="c"># Writing to the cache costs 1.25 times the input price.</span></span><span class="ln">MODELS = {</span><span class="ln">    <span class="s">"claude-haiku-5-5"</span>: (0.10, 0.50, 0.01),</span><span class="ln">    <span class="s">"claude-sonnet-5-5"</span>: (2.00, 10.00, 0.20),</span><span class="ln">    <span class="s">"claude-opus-5-5"</span>: (4.00, 20.00, 0.20),</span><span class="ln">}</span><span class="ln">REPORT = Path(__file__).parent / <span class="s">"model_report.json"</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> cost_of(model, run):</span><span class="ln">    <span class="s">"""What one run cost at this model's prices, from the token counts the agent reports."""</span></span><span class="ln">    price_in, price_out, price_read = MODELS[model]</span><span class="ln">    dollars = (run[<span class="s">"tokens_in"</span>] + 1.25 * run[<span class="s">"cache_written"</span>]) * price_in + run[<span class="s">"cache_read"</span>] * price_read</span><span class="ln">    <span class="k">return</span> (dollars + run[<span class="s">"tokens_out"</span>] * price_out) / 1_000_000</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> evaluate(model, cases):</span><span class="ln">    <span class="s">"""Run every case on one model. The judge stays the same, so only the model changes."""</span></span><span class="ln">    agent.MODEL = model</span><span class="ln">    agent.PRICE_IN, agent.PRICE_OUT = MODELS[model][:2]  <span class="c"># so the agent's own cost limit uses the right prices</span></span><span class="ln">    passed, costs, seconds = 0, [], []</span><span class="ln">    <span class="k">for</span> case <span class="k">in</span> cases:</span><span class="ln">        start = time.perf_counter()</span><span class="ln">        <span class="k">try</span>:</span><span class="ln">            <span class="k">for</span> event <span class="k">in</span> agent.steps(case[<span class="s">"question"</span>], [], approve=<span class="k">lambda</span> name, args: <span class="k">False</span>):</span><span class="ln">                <span class="k">pass</span>  <span class="c"># the last event is "done"</span></span><span class="ln">            problems = run_evals.code_checks(case, event[<span class="s">"answer"</span>])</span><span class="ln">            <span class="k">if</span> <span class="k">not</span> problems:</span><span class="ln">                verdict, _ = run_evals.judge(case, event[<span class="s">"answer"</span>])</span><span class="ln">                problems = [] <span class="k">if</span> verdict.passed <span class="k">else</span> [<span class="s">"judge: "</span> + verdict.reason]</span><span class="ln">            costs.append(cost_of(model, event))</span><span class="ln">        <span class="k">except</span> anthropic.APIError <span class="k">as</span> error:</span><span class="ln">            problems = [<span class="s">f"API error: {error}"</span>]</span><span class="ln">        seconds.append(time.perf_counter() - start)</span><span class="ln">        passed += <span class="k">not</span> problems</span><span class="ln">        print(<span class="s">f"  {model:&lt;18} {case['id']:&lt;16} {'pass' if not problems else 'FAIL'}  {seconds[-1]:5.1f} s"</span>)</span><span class="ln">    <span class="k">return</span> {<span class="s">"model"</span>: model, <span class="s">"score"</span>: passed / len(cases),</span><span class="ln">            <span class="s">"per_1000"</span>: round(1000 * statistics.mean(costs), 3) <span class="k">if</span> costs <span class="k">else</span> <span class="k">None</span>,</span><span class="ln">            <span class="s">"median_seconds"</span>: round(statistics.median(seconds), 1)}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main(limit=<span class="k">None</span>):</span><span class="ln">    cases = json.loads(run_evals.CASES.read_text(encoding=<span class="s">"utf-8"</span>))[:limit]</span><span class="ln">    rows = [evaluate(model, cases) <span class="k">for</span> model <span class="k">in</span> MODELS]</span><span class="ln">    print(<span class="s">f"\n{'model':&lt;18} {'score':&gt;6} {'per 1,000 questions':&gt;20} {'median time':&gt;12}"</span>)</span><span class="ln">    <span class="k">for</span> row <span class="k">in</span> rows:</span><span class="ln">        cost = <span class="s">f"${row['per_1000']:.3f}"</span> <span class="k">if</span> row[<span class="s">"per_1000"</span>] <span class="k">is</span> <span class="k">not</span> <span class="k">None</span> <span class="k">else</span> <span class="s">"-"</span></span><span class="ln">        print(<span class="s">f"{row['model']:&lt;18} {row['score']:&gt;6.0%} {cost:&gt;20} {row['median_seconds']:&gt;10.1f} s"</span>)</span><span class="ln">    good_enough = [row <span class="k">for</span> row <span class="k">in</span> rows <span class="k">if</span> row[<span class="s">"score"</span>] &gt;= run_evals.MIN_SCORE <span class="k">and</span> row[<span class="s">"per_1000"</span>] <span class="k">is</span> <span class="k">not</span> <span class="k">None</span>]</span><span class="ln">    best = min(good_enough, key=<span class="k">lambda</span> row: row[<span class="s">"per_1000"</span>]) <span class="k">if</span> good_enough <span class="k">else</span> <span class="k">None</span></span><span class="ln">    print(<span class="s">f"\nCheapest model at or above {run_evals.MIN_SCORE:.0%}: {best['model'] if best else 'none'}"</span>)</span><span class="ln">    REPORT.write_text(json.dumps({<span class="s">"cases"</span>: len(cases), <span class="s">"min_score"</span>: run_evals.MIN_SCORE, <span class="s">"models"</span>: rows}, indent=2), encoding=<span class="s">"utf-8"</span>)</span><span class="ln">    <span class="k">return</span> best</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    main(int(sys.argv[1]) <span class="k">if</span> len(sys.argv) &gt; 1 <span class="k">else</span> <span class="k">None</span>)</span></pre></div><ul><li><b><code>MODELS</code></b> holds each model's real prices, including cache reads, so costs are worked out at the right rate.</li><li><b><code>evaluate</code></b> points the agent at one model by changing <code>agent.MODEL</code>, which every call reads, and its prices, so the agent's own cost limit stays right.</li><li><b>The checks and the judge come from <code>run_evals.py</code>,</b> unchanged. Only the model being tested changes, so the comparison is fair.</li><li><b><code>main</code></b> prints the table, names the cheapest model at or above <code>MIN_SCORE</code>, and saves <code>model_report.json</code>.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Run it: a quick look, then the full set</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run compare_models.py 5</span></pre></div><p>Check the five-case run works, then run every case. It takes about 15 minutes, most of it on the larger models:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run compare_models.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  claude-haiku-5-5   ai-term          pass    4.1 s
+  claude-haiku-5-5   dartmouth-place  pass    4.4 s
+  ...
+  claude-opus-5-5    book-club        pass    9.6 s
+
+model               score  per 1,000 questions  median time
+claude-haiku-5-5      95%               $0.354        4.8 s
+claude-sonnet-5-5    100%               $7.075        7.9 s
+claude-opus-5-5      100%              $13.380       11.2 s
+
+Cheapest model at or above 85%: claude-haiku-5-5</pre><p class="small">Your scores, costs and times will differ. With 20 cases, one case either way is noise: compare the failures, not only the percentages.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Read the differences</h3><p>Open Langfuse and filter by the <code>eval</code> tag. For each case that passed on one model and failed on another, open both traces:</p><ul><li>Did the weaker model plan worse, read the wrong page, or misread the right one?</li><li>Would a better tool description or prompt fix it on the cheap model?</li><li>Is the failure a kind your users would notice?</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Try a model on your own computer</h3><p>Install Ollama from <a href="https://ollama.com/download" target="_blank" rel="noopener">ollama.com/download</a>, then download a model of about 5 GB. It needs 8 GB of free memory to run well:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">ollama pull qwen3:8b</span></pre></div><p>Ollama understands the same Messages API as Claude, so the same SDK can talk to it: only the address changes. Create <code>local_rag.py</code> next to <code>rag.py</code>:</p><div class="cb"><div class="cb-h"><span>local_rag.py</span><button type="button" class="cb-copy" aria-label="Copy local_rag.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E11 lab: answer from your notes with a model running on your own computer, through Ollama,</span></span><span class="ln"><span class="s">and compare it with Claude on the same question.</span></span><span class="ln"> </span><span class="ln"><span class="s">First install Ollama from ollama.com and download a model:</span></span><span class="ln"><span class="s">    ollama pull qwen3:8b</span></span><span class="ln"><span class="s">Then run:</span></span><span class="ln"><span class="s">    uv run local_rag.py "How much will I pay if I bring a book back late?"</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> sys</span><span class="ln"><span class="k">import</span> time</span><span class="ln"> </span><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"> </span><span class="ln"><span class="k">import</span> rag  <span class="c"># E6: search your notes, and answer with Claude</span></span><span class="ln"> </span><span class="ln">LOCAL_MODEL = <span class="s">"qwen3:8b"</span>  <span class="c"># any model you've pulled with Ollama</span></span><span class="ln"><span class="c"># Ollama understands the same Messages API, so the same SDK works: only the address changes.</span></span><span class="ln">local = anthropic.Anthropic(base_url=<span class="s">"http://localhost:11434"</span>, api_key=<span class="s">"ollama"</span>)  <span class="c"># Ollama ignores the key</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> answer_locally(question, hits):</span><span class="ln">    <span class="s">"""The same prompt as rag.answer, sent to the local model. No data leaves your computer."""</span></span><span class="ln">    sources = <span class="s">"\n"</span>.join(</span><span class="ln">        <span class="s">f'&lt;source file="{hit["source"]}" page="{hit["page"]}"&gt;\n{hit["text"]}\n&lt;/source&gt;'</span> <span class="k">for</span> hit <span class="k">in</span> hits</span><span class="ln">    )</span><span class="ln">    response = local.messages.create(</span><span class="ln">        model=LOCAL_MODEL, max_tokens=2000, system=rag.SYSTEM,</span><span class="ln">        messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">f"&lt;sources&gt;\n{sources}\n&lt;/sources&gt;\n\nQuestion: {question}"</span>}],</span><span class="ln">    )</span><span class="ln">    <span class="k">return</span> <span class="s">""</span>.join(block.text <span class="k">for</span> block <span class="k">in</span> response.content <span class="k">if</span> block.type == <span class="s">"text"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> compare(question):</span><span class="ln">    hits = rag.search(question)</span><span class="ln">    <span class="k">if</span> <span class="k">not</span> hits:</span><span class="ln">        print(<span class="s">"Nothing close enough in your notes."</span>)</span><span class="ln">        <span class="k">return</span></span><span class="ln">    <span class="k">for</span> name, ask <span class="k">in</span> ((<span class="s">"Claude Haiku 5.5"</span>, <span class="k">lambda</span>: rag.answer(question, hits)),</span><span class="ln">                      (<span class="s">f"{LOCAL_MODEL}, on this computer"</span>, <span class="k">lambda</span>: answer_locally(question, hits))):</span><span class="ln">        start = time.perf_counter()</span><span class="ln">        <span class="k">try</span>:</span><span class="ln">            text = ask()</span><span class="ln">        <span class="k">except</span> anthropic.APIConnectionError:</span><span class="ln">            text = <span class="s">"Could not reach Ollama. Is it running? Start the Ollama app, or run `ollama serve`."</span></span><span class="ln">        print(<span class="s">f"--- {name} ({time.perf_counter() - start:.1f} s)\n{text}\n"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    compare(<span class="s">" "</span>.join(sys.argv[1:]) <span class="k">or</span> input(<span class="s">"Question: "</span>))</span></pre></div><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run local_rag.py "How much will I pay if I bring a book back late?"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [431 tokens in, 88 out, $0.00009]
+
+--- Claude Haiku 5.5 (2.3 s)
+Late adult items cost 20 cents a day, up to a maximum of $5 per item [library-handbook.md, page 1]. Late children's books have been free since 1 March 2026 [library-handbook.md, page 1].
+
+--- qwen3:8b, on this computer (14.6 s)
+Adult items are charged 20 cents per day, with a maximum of $5 per item. There are no charges for children's books returned late.</pre><p class="small">Times depend heavily on your computer. Compare the citations as well as the facts: small local models often drop them.</p></div><p class="small">The local step uses RAG answers only, not the full agent: the agent's planning uses structured outputs, which local models served through Ollama don't reliably support.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Write down your choice</h3><p>Create <code>MODEL_CHOICE.md</code> with your own numbers. Here's an example to start from:</p><div class="cb"><div class="cb-h"><span>MODEL_CHOICE.md</span><button type="button" class="cb-copy" aria-label="Copy MODEL_CHOICE.md">Copy</button></div><pre class="code"><span class="ln"><span class="c"># Model choice: research assistant</span></span><span class="ln"> </span><span class="ln">**Decision:** Claude Haiku 5.5 (`claude-haiku-5-5`), at the default effort.</span><span class="ln">**Date:** 2026-10-20 · **Decided by:** you</span><span class="ln"> </span><span class="ln"><span class="c">## Options compared</span></span><span class="ln"> </span><span class="ln">Run with `compare_models.py` on the 20 cases in `eval_cases.json`, one judge for all.</span><span class="ln"> </span><span class="ln">| Model | Eval score | Per 1,000 questions | Median time |</span><span class="ln">|---|---|---|---|</span><span class="ln">| Claude Haiku 5.5 | 95% | $0.354 | 4.8 s |</span><span class="ln">| Claude Sonnet 5.5 | 100% | $7.075 | 7.9 s |</span><span class="ln">| Claude Opus 5.5 | 100% | $13.380 | 11.2 s |</span><span class="ln">| qwen3:8b on my laptop (RAG answers only) | not run on the full set | $0 | 19 s |</span><span class="ln"> </span><span class="ln"><span class="c">## Why</span></span><span class="ln"> </span><span class="ln">- Haiku clears our minimum score of 85% with room to spare, at about 1/20 of Sonnet's cost.</span><span class="ln">- Its one failure (`mccarthy-job`) was a wrong detail that a stronger model fixed. It isn't a pattern in our questions.</span><span class="ln">- Visitors see the first words in under 4 seconds, which matters more for the web app than the last 5%.</span><span class="ln"> </span><span class="ln"><span class="c">## What we gave up</span></span><span class="ln"> </span><span class="ln">- About one answer in twenty is less accurate than the bigger models would give.</span><span class="ln">- The local model keeps data on the laptop, but was slower and missed citations on several answers.</span><span class="ln"> </span><span class="ln"><span class="c">## Revisit when</span></span><span class="ln"> </span><span class="ln">- The eval score drops below 90% for two runs in a row.</span><span class="ln">- We add harder, multi-step questions to the eval set.</span><span class="ln">- A new model or a price change comes out.</span></pre></div><p>If you choose a different model, change <code>MODEL</code> and the prices in <code>agent.py</code>, and run the evals again before you merge.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Make it yours</h3><p>Pick at least one:</p><ul><li>Add three hard, multi-step questions to the eval set and run the comparison again. Does the cheapest good-enough model change?</li><li>Run Claude Sonnet 5.5 at <code>output_config={"effort": "low"}</code> and compare it with Haiku at the default.</li><li>Try a second local model, such as a smaller one if <code>qwen3:8b</code> was slow, and add it to your decision record.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Commit and push</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add compare_models.py local_rag.py MODEL_CHOICE.md</span><span class="ln">git commit -m "Compare models on the eval set and record the choice"</span><span class="ln">git push</span></pre></div></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>Could not reach Ollama. Is it running? Start the Ollama app, or run `ollama serve`.</code></dt><dd>Ollama isn't running, or is on another port. Open the Ollama app; on a server, run <code>ollama serve</code> in a second terminal.</dd><dt><code>anthropic.NotFoundError: Error code: 404 - … model 'qwen3:8b' not found</code></dt><dd>The model isn't downloaded yet. Run <code>ollama pull qwen3:8b</code>, or set <code>LOCAL_MODEL</code> to a model from <code>ollama list</code>.</dd><dt><code>anthropic.RateLimitError: Error code: 429</code></dt><dd>The larger models have lower rate limits on new accounts. Run fewer cases (<code>uv run compare_models.py 5</code>), or wait a minute and run again.</dd><dt><code>Cheapest model at or above 85%: none</code></dt><dd>No model met <code>MIN_SCORE</code>. Read the failures: often a prompt or tool fix helps every model more than switching does.</dd></dl></div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s8">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E11 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="e11"><li><label><input type="checkbox"><span><code>compare_models.py</code> ran your eval set on three Claude models and printed score, cost and time for each</span></label></li><li><label><input type="checkbox"><span>You read at least one case that passed on one model and failed on another, in its traces</span></label></li><li><label><input type="checkbox"><span><code>local_rag.py</code> answered from your notes with a model running on your computer</span></label></li><li><label><input type="checkbox"><span><code>MODEL_CHOICE.md</code> records your choice with numbers, what you gave up and when to revisit, and it's pushed</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s9">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula">Same <em>evals</em>, same <em>judge</em>, every <em>model</em> → compare <em>score</em>, <em>cost per 1,000</em> and <em>time</em> → pick the <em>cheapest that passes</em> → <em>write it down</em> → revisit when things change.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>Compare</h3><ul>
+        <li>Your eval set, not leaderboards</li>
+        <li>One judge for every model</li>
+        <li>Cost per 1,000 real requests</li>
+        <li>Read failures, not only scores</li>
+      </ul></div>
+      <div class="blk"><h3>Before switching</h3><ul>
+        <li>Fix prompts and tools</li>
+        <li>Cache what repeats</li>
+        <li>Try lower effort on a stronger model</li>
+        <li>Route only if you can tell hard from easy</li>
+      </ul></div>
+      <div class="blk"><h3>Which fix</h3><ul>
+        <li>Missing facts: RAG</li>
+        <li>Wrong format: prompts and structured outputs</li>
+        <li>Missing ability: tools or a stronger model</li>
+        <li>Fine-tuning: rarely, with lots of data</li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s10">3 common model-choice mistakes</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>The biggest model, by default</h3><dl>
+      <dt>What it looks like</dt><dd>The top model everywhere, 40 times the cost of one that would pass the same evals.</dd>
+      <dt>Fix</dt><dd>Start with the cheapest model that passes your evals, and move up only where the evals show you need to.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>Choosing from a leaderboard</h3><dl>
+      <dt>What it looks like</dt><dd>A model picked for its benchmark rank that does worse on your questions than the one it replaced.</dd>
+      <dt>Fix</dt><dd>Run your own eval set on the candidates. Benchmarks are a shortlist, not a decision.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>Fine-tuning to add knowledge</h3><dl>
+      <dt>What it looks like</dt><dd>Weeks spent training a model on company documents, which still makes things up and can't cite them.</dd>
+      <dt>Fix</dt><dd>Use RAG for facts. Keep fine-tuning for style or narrow behaviour, once prompting can't get there.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="eng-security.html" data-site-link>← Module E10 · Security in code</a>
+  <a href="eng-capstone.html" data-site-link>Module E12 · Capstone and portfolio →</a>
+</div>
+
+<footer>
+  <p>The model picker uses real prices with typical token counts; its scores and times are illustrative. Prices were checked in October 2026. The lab runs real comparisons with the Claude API and Ollama.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic or Ollama.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "quality_cost_latency": {
+  "t": "Quality, cost and latency",
+  "d": "The three numbers to compare models on: your eval score, the cost per 1,000 requests, and the time to answer."
+ },
+ "open_weight": {
+  "t": "Open-weight model",
+  "d": "A model whose weights you can download and run yourself, such as Qwen, Gemma, Llama or gpt-oss, instead of calling it through a company's API."
+ },
+ "ollama": {
+  "t": "Ollama",
+  "d": "A free app that downloads open-weight models and runs them on your computer, with an API your code can call."
+ },
+ "quantization": {
+  "t": "Quantization",
+  "d": "Storing a model's numbers with fewer bits so it fits in less memory and runs faster, at a small cost in quality. Most local models are quantized."
+ },
+ "fine_tuning": {
+  "t": "Fine-tuning",
+  "d": "Training an existing model further on your own examples to change how it behaves. It needs data, evals and upkeep, and teaches style better than facts."
+ },
+ "routing": {
+  "t": "Routing",
+  "d": "Sending each request to a different model by its difficulty: cheap model for easy ones, strong model for hard ones."
+ },
+ "effort_lever": {
+  "t": "Effort",
+  "d": "How much a Claude model thinks before answering, from low to max. Lowering it saves tokens and time; measure it with your evals before switching to a weaker model."
+ },
+ "decision_record": {
+  "t": "Decision record",
+  "d": "A short note of a choice: the options, the evidence, what was chosen and why, what was given up, and when to look again."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Model picker (real prices, illustrative scores and times) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const MODELS = [{"name": "Claude Haiku 5.5", "where": "Anthropic's cloud", "local": false, "facts": [95, 0.354, 4.6], "research": [75, 0.81, 10.4]}, {"name": "Claude Sonnet 5.5", "where": "Anthropic's cloud", "local": false, "facts": [100, 7.075, 7.4], "research": [90, 16.2, 17.5]}, {"name": "Claude Opus 5.5", "where": "Anthropic's cloud", "local": false, "facts": [100, 13.38, 11.0], "research": [95, 30.6, 26.0]}, {"name": "Claude Fable 5.1", "where": "Anthropic's cloud", "local": false, "facts": [100, 32.49, 14.0], "research": [100, 74.4, 33.0]}, {"name": "qwen3:8b", "where": "your laptop, through Ollama", "local": true, "facts": [70, 0.0, 19.0], "research": [40, 0.0, 45.0]}];
+let task = "facts", min = 90, budget = 10, time = 10, local = false;
+function seg(id, items, cur, on){
+  $(id).innerHTML = items.map(([v, t]) => '<button type="button" data-v="' + v + '" aria-pressed="' + (String(v) === String(cur)) + '">' + t + '</button>').join("");
+  $(id).onclick = e => { const b = e.target.closest("button"); if(b){ on(b.dataset.v); render(); } };
+}
+const money = x => x === 0 ? "$0" : "$" + x.toFixed(3);
+function render(){
+  seg("mpTask", [["facts", "Fact lookups (the lab's evals)"], ["research", "Multi-step research"]], task, v => task = v);
+  seg("mpMin", [[80, "80%"], [90, "90%"], [95, "95%"]], min, v => min = +v);
+  seg("mpBudget", [[1, "$1"], [10, "$10"], [50, "$50"]], budget, v => budget = +v);
+  seg("mpTime", [[10, "10 s"], [30, "30 s"], [999, "Any"]], time, v => time = +v);
+  seg("mpLocal", [["no", "No"], ["yes", "Yes"]], local ? "yes" : "no", v => local = v === "yes");
+  const rows = MODELS.map(m => {
+    const [score, cost, secs] = m[task], why = [];
+    if(score < min) why.push("score under " + min + "%");
+    if(cost > budget) why.push("over $" + budget);
+    if(secs > time) why.push("slower than " + time + " s");
+    if(local && !m.local) why.push("data leaves your computer");
+    return {m, score, cost, secs, why};
+  });
+  const ok = rows.filter(r => !r.why.length).sort((a, b) => a.cost - b.cost || a.secs - b.secs);
+  const pick = ok[0];
+  $("mpRows").innerHTML = rows.map(r => '<tr class="' + (r === pick ? "pick" : "") + '"><td><span class="mp-name">' + esc(r.m.name) + '</span><span class="mp-where">' + esc(r.m.where) + '</span></td>' +
+    '<td class="num' + (r.score < min ? " bad" : "") + '">' + r.score + '%</td><td class="num' + (r.cost > budget ? " bad" : "") + '">' + money(r.cost) + '</td><td class="num' + (r.secs > time ? " bad" : "") + '">' + r.secs.toFixed(1) + ' s</td>' +
+    '<td><span class="mp-verdict' + (r.why.length ? "" : " ok") + '">' + (r === pick ? "Pick: cheapest that fits" : r.why.length ? esc(r.why.join("; ")) : "Fits") + '</span></td></tr>').join("");
+  let note;
+  if(pick){
+    note = pick.m.name + " is the cheapest model that meets everything you set";
+    note += ok.length > 1 ? ", ahead of " + ok.slice(1).map(r => r.m.name).join(" and ") + "." : ".";
+    if(task === "facts" && pick.m.name.includes("Haiku")) note += " On easy questions the big models can't show what they're worth: you'd pay 20 times more for one more correct answer in twenty.";
+    if(task === "research") note += " Harder questions open up the gaps: this is why your eval set needs the hard cases your users really ask.";
+  } else if(local){
+    note = "No model running on your computer clears " + min + "% here. Choices: accept lower quality, use a bigger local model on stronger hardware, or keep only the private steps local, such as answering from your notes.";
+  } else {
+    const near = rows.filter(r => r.why.length === 1).sort((a, b) => a.cost - b.cost)[0];
+    note = "Nothing meets everything. " + (near ? near.m.name + " misses only on one count (" + near.why[0] + "): relax that, or improve the prompt and tools so a cheaper model passes." : "Relax a requirement, or improve the agent so a cheaper model passes.");
+  }
+  $("mpNote").textContent = note;
+}
+render();
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  if(!btn) return;  /* diffs have no copy button: copy the whole file instead */
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e11";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>

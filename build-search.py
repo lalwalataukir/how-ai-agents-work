@@ -31,6 +31,8 @@ PAGES = [
     ("eng-evals.html", "E8 · Tracing and evals in code"),
     ("eng-ship.html", "E9 · Shipping it"),
     ("eng-security.html", "E10 · Security in code"),
+    ("eng-models.html", "E11 · Choosing models"),
+    ("eng-capstone.html", "E12 · Capstone and portfolio"),
     ("reference.html", "Glossary"),
 ]
 
