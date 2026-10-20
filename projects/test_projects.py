@@ -156,5 +156,32 @@ class DataAgentSDKTest(unittest.TestCase):
         self.assertTrue((tmp / "charts" / "orders-by-month.png").is_file())
 
 
+class CodeQaSDKTest(unittest.TestCase):
+    def test_search_read_and_cite_go_through_the_real_sdk(self):
+        sys.path.insert(0, str(HERE / "p3-code-qa" / "tests"))
+        sys.modules.pop("fakes", None)
+        try:
+            qa = load("p3-code-qa", "qa")
+            import fakes
+        finally:
+            sys.path.remove(str(HERE / "p3-code-qa" / "tests"))
+            sys.modules.pop("fakes", None)
+        with mock.patch.object(qa, "collection", fakes.fake_collection):
+            index = qa.Index(HERE / "p3-code-qa" / "tinyshop")
+        api = FakeAPI([{"type": "tool_use", "id": "toolu_1", "name": "search_code", "input": {"query": "lock account login"}}],
+                      [{"type": "tool_use", "id": "toolu_2", "name": "read_lines", "input": {"path": "tinyshop/auth.py", "start": 27, "end": 39}}],
+                      [{"type": "text", "text": "Five wrong passwords lock it for 15 minutes [tinyshop/auth.py:31-35]."}])
+        with mock.patch.object(qa, "client", api.client()):
+            events = list(qa.steps("How does login lock an account?", index))
+        first, _, third = api.bodies
+        self.assertEqual([t["name"] for t in first["tools"]], ["search_code", "read_lines", "list_dir"])
+        self.assertTrue(all(t["strict"] for t in first["tools"]))
+        sent = third["messages"][-1]["content"][0]
+        self.assertTrue(sent["content"].startswith('<untrusted source="read_lines">'))
+        done = events[-1]
+        self.assertEqual((done["citations"], done["warnings"], done["calls"]),
+                         ([{"path": "tinyshop/auth.py", "start": 31, "end": 35}], [], 3))
+
+
 if __name__ == "__main__":
     unittest.main()

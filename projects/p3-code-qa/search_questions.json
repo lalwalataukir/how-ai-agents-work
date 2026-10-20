@@ -1,0 +1,129 @@
+[
+  {
+    "question": "Where are passwords hashed?",
+    "expect": [
+      "tinyshop/auth.py::hash_password"
+    ]
+  },
+  {
+    "question": "How does the shop stop someone guessing a password again and again?",
+    "expect": [
+      "tinyshop/auth.py::login"
+    ]
+  },
+  {
+    "question": "What does discount_for do?",
+    "expect": [
+      "tinyshop/coupons.py::discount_for"
+    ]
+  },
+  {
+    "question": "How is sales tax rounded?",
+    "expect": [
+      "tinyshop/tax.py::tax_for"
+    ]
+  },
+  {
+    "question": "When is shipping free?",
+    "expect": [
+      "tinyshop/shipping.py::shipping_cost"
+    ]
+  },
+  {
+    "question": "How do we make sure a customer isn't charged twice for one order?",
+    "expect": [
+      "tinyshop/payments.py::charge",
+      "tinyshop/checkout.py::place_order"
+    ]
+  },
+  {
+    "question": "What happens when the payment gateway times out?",
+    "expect": [
+      "tinyshop/payments.py::charge",
+      "tinyshop/utils/retry.py::retry"
+    ]
+  },
+  {
+    "question": "How long does a login last?",
+    "expect": [
+      "tinyshop/auth.py::create_session",
+      "tinyshop/config.py::(module)"
+    ]
+  },
+  {
+    "question": "Where is stock taken out during checkout?",
+    "expect": [
+      "tinyshop/inventory.py::reserve"
+    ]
+  },
+  {
+    "question": "What does the receipt email contain?",
+    "expect": [
+      "tinyshop/emails.py::send_receipt"
+    ]
+  },
+  {
+    "question": "Which handler adds a product to the cart?",
+    "expect": [
+      "tinyshop/routes.py::handle_add_to_cart"
+    ]
+  },
+  {
+    "question": "How are prices shown as dollars?",
+    "expect": [
+      "tinyshop/utils/money.py::format_cents"
+    ]
+  },
+  {
+    "question": "Can a cart have two coupons?",
+    "expect": [
+      "tinyshop/cart.py::Cart.apply_coupon"
+    ]
+  },
+  {
+    "question": "How do refunds work?",
+    "expect": [
+      "tinyshop/checkout.py::refund_order",
+      "tinyshop/payments.py::refund"
+    ]
+  },
+  {
+    "question": "What makes a failed checkout leave the database unchanged?",
+    "expect": [
+      "tinyshop/db.py::transaction",
+      "tinyshop/checkout.py::place_order"
+    ]
+  },
+  {
+    "question": "Where is FREESHIP handled?",
+    "expect": [
+      "tinyshop/shipping.py::shipping_cost",
+      "tinyshop/cart.py::Cart.apply_coupon",
+      "tinyshop/coupons.py::(module)"
+    ]
+  },
+  {
+    "question": "What uses ROUND_HALF_UP?",
+    "expect": [
+      "tinyshop/tax.py::tax_for"
+    ]
+  },
+  {
+    "question": "Where is the Idempotency-Key header sent?",
+    "expect": [
+      "tinyshop/payments.py::charge"
+    ]
+  },
+  {
+    "question": "What raises OutOfStock?",
+    "expect": [
+      "tinyshop/inventory.py::reserve"
+    ]
+  },
+  {
+    "question": "What does require_login return for a visitor who isn't logged in?",
+    "expect": [
+      "tinyshop/routes.py::require_login"
+    ]
+  }
+]

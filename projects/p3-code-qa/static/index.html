@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codebase Q&amp;A</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; line-height: 1.55; }
+    body { max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    form { display: flex; gap: 8px; }
+    input { flex: 1; font: inherit; padding: 8px 10px; min-width: 0; }
+    button { font: inherit; padding: 8px 16px; cursor: pointer; }
+    #steps { color: GrayText; font-family: ui-monospace, monospace; font-size: 0.85rem; padding-left: 1.2em; overflow-wrap: anywhere; }
+    #answer { white-space: pre-wrap; overflow-wrap: anywhere; }
+    #sources { font-family: ui-monospace, monospace; font-size: 0.85rem; padding-left: 1.2em; }
+    #warnings { color: #b45309; font-size: 0.85rem; }
+    #stats { color: GrayText; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>Ask the codebase</h1>
+  <p>Questions about the tinyshop code. Answers cite the files and lines they come from.</p>
+  <form id="form">
+    <input id="question" required minlength="3" maxlength="500" placeholder="How does login lock an account?">
+    <button>Ask</button>
+  </form>
+  <ul id="steps"></ul>
+  <div id="answer" aria-live="polite"></div>
+  <ul id="sources"></ul>
+  <p id="warnings"></p>
+  <p id="stats"></p>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const form = $("form");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      for (const id of ["steps", "sources"]) $(id).innerHTML = "";
+      for (const id of ["answer", "warnings"]) $(id).textContent = "";
+      $("stats").textContent = "Searching the code…";
+      form.querySelector("button").disabled = true;
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: $("question").value }),
+        });
+        if (!response.ok) {  // 429 too many questions, 503 budget used up, 422 a bad question
+          const error = await response.json();
+          $("stats").textContent = typeof error.detail === "string" ? error.detail : "Ask a question of 3 to 500 characters.";
+          return;
+        }
+        const reader = response.body.getReader();  // server-sent events: "data: {...}" then a blank line
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const frames = buffer.split("\n\n");
+          buffer = frames.pop();
+          for (const frame of frames) {
+            if (frame.startsWith("data: ")) show(JSON.parse(frame.slice(6)));
+          }
+        }
+      } catch (error) {
+        $("stats").textContent = "Something went wrong. Try again.";
+      } finally {
+        form.querySelector("button").disabled = false;
+      }
+    });
+
+    function show(event) {
+      if (event.type === "tool") add("steps", event.name + " " + JSON.stringify(event.input));
+      if (event.type === "done") {
+        $("answer").textContent = event.answer;  // textContent: model output is never run as HTML
+        for (const c of event.citations) add("sources", `${c.path} lines ${c.start} to ${c.end}`);
+        $("warnings").textContent = event.warnings.join(" · ");
+        $("stats").textContent = `${event.calls} model calls · ${event.seconds} s · $${event.cost.toFixed(4)}`;
+      }
+    }
+
+    function add(id, text) {
+      const item = document.createElement("li");
+      item.textContent = text;
+      $(id).append(item);
+    }
+  </script>
+</body>
+</html>

@@ -26,8 +26,9 @@ HERE = Path(__file__).parent
 PROJECTS = {  # folder here -> (folder name in the zip, number of milestones)
     "p1-code-review": ("code-reviewer", 5),
     "p2-data-agent": ("data-agent", 6),
+    "p3-code-qa": ("code-qa", 6),
 }
-SKIP = {".venv", "__pycache__", ".pytest_cache", "review.md", ".env", "shop.db", "charts"}
+SKIP = {".venv", "__pycache__", ".pytest_cache", "review.md", ".env", "shop.db", "charts", "index"}
 BEGIN = re.compile(r"^(\s*)# BEGIN m(\d+)\s*$")
 END = re.compile(r"^\s*# END m(\d+)\s*$")
 STARTER = re.compile(r"^(\s*)#>(?: (.*)|$)")
