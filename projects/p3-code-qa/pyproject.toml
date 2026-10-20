@@ -1,0 +1,13 @@
+[project]
+name = "code-qa"
+version = "0.1.0"
+description = "Codebase Q&A assistant"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=1.15",
+    "chromadb>=1.5",
+    "fastapi>=0.150",
+    "mcp[cli]>=2.3",
+    "python-dotenv>=1.0",
+    "uvicorn>=0.54",
+]

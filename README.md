@@ -49,6 +49,7 @@ Four optional projects, one after each phase of the track. Each is a new tool bu
 | **Guided projects**: the four projects, how they work, and your progress | https://lalwalataukir.github.io/how-ai-agents-work/eng-projects.html |
 | **P1 · AI code reviewer** (after E5): parse a git diff, get structured findings, check each one against the code and retry, a sandboxed read_file tool, and a pre-commit gate | https://lalwalataukir.github.io/how-ai-agents-work/proj-code-review.html |
 | **P2 · Data-analysis agent** (after E7): text-to-SQL over a sales database with a read-only, attack-tested SQL tool, charts, an eval with exact answers, and follow-up questions | https://lalwalataukir.github.io/how-ai-agents-work/proj-data-agent.html |
+| **P3 · Codebase Q&A assistant** (after E10): AST chunking, hybrid BM25 and vector search with a recall eval, checked citations, defences against prompt injection in code, a streaming web app and an MCP server | https://lalwalataukir.github.io/how-ai-agents-work/proj-code-qa.html |
 
 The finished projects and their starters are in [`projects/`](projects/). Their tests run with the lab tests above.
 
