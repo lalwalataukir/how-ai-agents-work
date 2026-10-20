@@ -33,6 +33,8 @@ PAGES = [
     ("eng-security.html", "E10 · Security in code"),
     ("eng-models.html", "E11 · Choosing models"),
     ("eng-capstone.html", "E12 · Capstone and portfolio"),
+    ("eng-projects.html", "Guided projects"),
+    ("proj-code-review.html", "P1 · AI code reviewer"),
     ("reference.html", "Glossary"),
 ]
 
