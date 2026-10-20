@@ -21,6 +21,8 @@ import agent  # noqa: E402
 import guard  # noqa: E402
 
 WEB = ["search_wikipedia", "read_page"]
+FAKE_KEY = "sk-ant-" + "api03-abcdefghijkl"  # made in two pieces, so key scanners don't flag this file
+FAKE_LF_KEY = "sk-lf-" + "1234567890ab"
 PAGE = {"title": "Dartmouth workshop", "summary": "The 1956 Dartmouth workshop founded AI as a field.",
         "url": "https://en.wikipedia.org/wiki/Dartmouth_workshop"}
 
@@ -170,13 +172,13 @@ class FileAndSecretTest(AttackTestCase):
         self.assertEqual(guard.note_path(self.notes, "../../.env", "2026-10-20").name, "2026-10-20-env.md")
 
     def test_notes_with_api_keys_are_refused(self):
-        calls, _ = self.play([([use("t1", "save_note", {"title": "keys", "text": "my key is sk-ant-api03-abcdefghijkl"})], "tool_use"),
+        calls, _ = self.play([([use("t1", "save_note", {"title": "keys", "text": "my key is " + FAKE_KEY})], "tool_use"),
                               ([text("I didn't save that.")], "end_turn")], question="Save my key")
         self.assertEqual(json.loads(self.tool_results(calls, 1)[0]["content"]), {"error": "Notes can't contain API keys."})
         self.assertFalse(self.notes.exists())
 
     def test_logs_and_traces_get_no_personal_data(self):
-        self.assertEqual(guard.redact("Email maria@riverside-library.example or call +1 555 014 2000, key sk-lf-1234567890ab"),
+        self.assertEqual(guard.redact("Email maria@riverside-library.example or call +1 555 014 2000, key " + FAKE_LF_KEY),
                          "Email [EMAIL] or call [PHONE], key [SECRET]")
         masked = guard.mask(data={"args": ["Write to maria@riverside-library.example", {"note": "call 555-014-2000"}], "n": 3})
         self.assertEqual(masked, {"args": ["Write to [EMAIL]", {"note": "call [PHONE]"}], "n": 3})

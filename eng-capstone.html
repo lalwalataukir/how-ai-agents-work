@@ -1,0 +1,1050 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E12 Capstone and Portfolio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E12 of the AI engineer track. A portfolio checklist and README builder saved in the browser up top, then choosing the project, a one-page spec, scope, the README, a demo video, a skills self-check and sharing, the capstone lab, a done-when checklist and the cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage p code,.stage li code,.stage td code{overflow-wrap:anywhere}
+.cb-diff pre.code .ln.d-add{background:var(--final-soft)}
+.cb-diff pre.code .ln.d-del{background:var(--bad-soft)}
+.cb-diff pre.code .ln.d-gap{color:var(--muted)}
+.cb-key{display:flex;gap:10px}
+.cb-key .k-add{color:var(--final)}
+.cb-key .k-del{color:var(--bad)}
+.whole{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.whole>summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:.92rem}
+.whole[open]>summary{border-bottom:1px solid var(--line)}
+.whole>.cb{border:0;border-radius:0 0 var(--radius) var(--radius)}
+
+/* ---------- E12: portfolio checklist, README builder, skills self-check ---------- */
+.pf-top{display:grid;gap:8px}
+.pf-prog-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.pf-prog-top b{font-family:var(--font-mono);font-weight:500}
+.pf-bar{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.pf-bar span{display:block;height:100%;width:0;background:var(--final);transition:width .25s}
+.pf-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
+@media (max-width:860px){.pf-body{grid-template-columns:minmax(0,1fr)}}
+.pf-col{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:start;min-width:0}
+.pf-col+.pf-col{border-left:1px solid var(--line)}
+@media (max-width:860px){.pf-col+.pf-col{border-left:0;border-top:1px solid var(--line)}}
+.pf-group{display:grid;gap:6px}
+.pf-item,.sk-item{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;align-items:start;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--surface);cursor:pointer;font-size:.86rem}
+.pf-item.on,.sk-item.on{border-color:var(--final)}
+.pf-item input,.sk-item input{accent-color:var(--final);width:17px;height:17px;margin-top:1px}
+.pf-item small,.sk-item small{display:block;color:var(--muted);font-size:.78rem}
+.pf-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+@media (max-width:520px){.pf-fields{grid-template-columns:minmax(0,1fr)}}
+.pf-fields label{display:grid;gap:3px;font-size:.8rem;font-weight:700;min-width:0}
+.pf-fields label.wide{grid-column:1/-1}
+.pf-fields input{font:inherit;font-weight:400;font-size:.88rem;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--bg);color:var(--ink);min-width:0;width:100%}
+.pf-fields input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.sk-groups{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.sk-group{display:grid;gap:6px;align-content:start}
+.sk-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.video-table td:first-child{font-family:var(--font-mono);white-space:nowrap}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E12 · Capstone and portfolio</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Checklist</a>
+      <a href="#pick" data-nav="pick"><span class="n">1</span>The project</a>
+      <a href="#spec" data-nav="spec"><span class="n">2</span>A one-page spec</a>
+      <a href="#scope" data-nav="scope"><span class="n">3</span>Scope</a>
+      <a href="#readme" data-nav="readme"><span class="n">4</span>The README</a>
+      <a href="#video" data-nav="video"><span class="n">5</span>Demo video</a>
+      <a href="#skills" data-nav="skills"><span class="n">6</span>Skills check</a>
+      <a href="#show" data-nav="show"><span class="n">7</span>Show it</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E12 · AI engineer track · about 6 hours</p>
+  <h1>Capstone and portfolio: ship it, and show it</h1>
+  <p class="lede">You've built every part of a real agent. This <button type="button" class="term" data-term="capstone" aria-expanded="false">capstone</button> turns it into a project other people can see and judge: a one-page <button type="button" class="term" data-term="spec" aria-expanded="false">spec</button>, a scope you can finish, a README that makes the case in a minute, a two-minute video, and an honest check of your skills. Finish the research assistant, or build your own idea with the same parts, and end with a <strong>public, working, tested project</strong>.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="mvp" aria-expanded="false">MVP</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">A portfolio project that passes its own readiness check:</p>
+    <pre class="out">% uv run check_portfolio.py --online
+Portfolio check for research-assistant
+  [x] README.md has all six sections
+  [x] README links the live app: https://research-assistant-xxxx.onrender.com
+  ...
+  [x] the live app answered 200
+11 of 11 ready.</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive tool</p>
+    <h2 id="demo-h">Portfolio checklist</h2>
+    <p>Everything a finished, showable project needs, in the order you'll reach it. On the right, fill in your project's details to get the top of its README, ready to copy. Your ticks and answers are saved in this browser.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Saved in this browser.</b><span>Nothing you tick or type here is sent anywhere. Clearing your browser data clears it.</span></div>
+    <div class="demo-top">
+      <div class="pf-top" aria-live="polite">
+        <div class="pf-prog-top"><b id="pfCount">0 of 13 ready</b><button type="button" class="btn btn-sm" id="pfReset">↺ Clear everything</button></div>
+        <div class="pf-bar"><span id="pfBar"></span></div>
+      </div>
+    </div>
+    <div class="pf-body">
+      <div class="pf-col" id="pfList"><div class="pf-group"><p class="dm-h">The project</p><label class="pf-item"><input type="checkbox" data-k="p0"><span>SPEC.md written and scoped<small>must, should and won't, with success measures</small></span></label><label class="pf-item"><input type="checkbox" data-k="p1"><span>One main flow works end to end<small>on your laptop and on the live site</small></span></label><label class="pf-item"><input type="checkbox" data-k="p2"><span>Code in a public GitHub repo<small>with .env and private data left out</small></span></label></div><div class="pf-group"><p class="dm-h">Quality</p><label class="pf-item"><input type="checkbox" data-k="p3"><span>Eval set of 20+ cases, check green on pull requests<small>E8</small></span></label><label class="pf-item"><input type="checkbox" data-k="p4"><span>Attack tests pass in CI<small>E10</small></span></label><label class="pf-item"><input type="checkbox" data-k="p5"><span>Model choice written down<small>MODEL_CHOICE.md, E11</small></span></label></div><div class="pf-group"><p class="dm-h">Live</p><label class="pf-item"><input type="checkbox" data-k="p6"><span>Deployed at a public URL<small>E9</small></span></label><label class="pf-item"><input type="checkbox" data-k="p7"><span>Limits in place<small>rate limit, daily cap, Console spend limit</small></span></label><label class="pf-item"><input type="checkbox" data-k="p8"><span>Production traces without personal data<small>E8 and E10</small></span></label></div><div class="pf-group"><p class="dm-h">The story</p><label class="pf-item"><input type="checkbox" data-k="p9"><span>README with the live link and all sections<small>the template below</small></span></label><label class="pf-item"><input type="checkbox" data-k="p10"><span>Two-minute demo video, linked from the README<small>the script in section 5</small></span></label><label class="pf-item"><input type="checkbox" data-k="p11"><span>check_portfolio.py --online says all ready<small>the lab, step 4</small></span></label><label class="pf-item"><input type="checkbox" data-k="p12"><span>Shared<small>release v1.0, pinned on GitHub, posted or on your CV</small></span></label></div></div>
+      <div class="pf-col">
+        <p class="dm-h">Your project</p>
+        <div class="pf-fields" id="pfFields">
+          <label class="wide">Name<input data-f="name" placeholder="Research assistant"></label>
+          <label class="wide">What it does, in one sentence<input data-f="pitch" placeholder="Answers research questions from Wikipedia and your notes, citing every fact."></label>
+          <label class="wide">Live URL<input data-f="url" placeholder="https://research-assistant-xxxx.onrender.com"></label>
+          <label class="wide">Demo video URL<input data-f="video" placeholder="https://youtu.be/xxxx"></label>
+          <label>Model<input data-f="model" placeholder="Claude Haiku 5.5"></label>
+          <label>Eval score<input data-f="score" placeholder="95%"></label>
+          <label>Eval cases<input data-f="cases" placeholder="20"></label>
+          <label>Cost per 1,000 questions<input data-f="cost" placeholder="$0.354"></label>
+        </div>
+        <div class="cb" id="pfReadme"><div class="cb-h"><span>README.md (the start)</span><button type="button" class="cb-copy" aria-label="Copy README.md (the start)">Copy</button></div><pre class="code" id="pfReadmeCode"></pre></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. THE PROJECT ============ -->
+<section class="stage" id="pick" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · The project</p>
+    <h2 id="s1">Finish the research assistant, or build your own</h2>
+    <p>The research assistant already has every part, so finishing it well is a fine capstone. Your own idea shows more, if it passes these tests.</p>
+  </div>
+  <div class="grid g2">
+    <div class="box"><h4>A good capstone idea</h4><ul style="margin:0;padding-left:1.1em;display:grid;gap:4px;font-size:.92rem">
+      <li>You are a real user, with a real need</li>
+      <li>You have the data, and it's fine to use</li>
+      <li>It needs retrieval or tools, not only a prompt</li>
+      <li>One flow can work end to end in two weekends</li>
+      <li>It's safe to put online with limits</li>
+    </ul></div>
+    <div class="box tint"><h4>Ideas that fit</h4><ul style="margin:0;padding-left:1.1em;display:grid;gap:4px;font-size:.92rem">
+      <li>A study helper over your course PDFs</li>
+      <li>A meeting-notes assistant that finds decisions and owners</li>
+      <li>Q&amp;A over a product's public docs and changelog</li>
+      <li>A reading-list agent that summarises and files papers</li>
+    </ul></div>
+  </div>
+  <p class="prose">Avoid ideas built on other people's personal data, such as CVs or emails. You'd need consent and stronger safeguards than a portfolio project should take on.</p>
+</section>
+
+<!-- ============ 2. SPEC ============ -->
+<section class="stage" id="spec" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · A one-page spec</p>
+    <h2 id="s2">Decide what "done" means before you build</h2>
+    <p>As a PM you've written specs for others. This one is for you: one page that stops the project growing forever. The lab's template has six parts.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Part</th><th>Answers</th></tr></thead>
+      <tbody>
+        <tr><td>The problem</td><td>Who has it, how often, and what they do today</td></tr>
+        <tr><td>The user and the main flow</td><td>What they ask, and what they get back</td></tr>
+        <tr><td>Success measures</td><td>Eval score, cost per 1,000 questions, time to first words: numbers you'll actually measure</td></tr>
+        <tr><td><button type="button" class="term" data-term="scope" aria-expanded="false">Scope</button></td><td>Must, should, won't</td></tr>
+        <tr><td>How it works</td><td>Tools, data and model, with the E-module each comes from</td></tr>
+        <tr><td>Risks, limits and evals</td><td>What could go wrong, what's in place, and what the eval set checks</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="prose"><a href="how-ai-agents-work.html" data-site-link>Module 1</a>'s spec template for agents goes further, if your idea is bigger than the research assistant.</p>
+  <div class="quiz" data-quiz="qe12a">
+    <p class="quiz-label">Check your understanding · A one-page spec</p>
+    <p class="quiz-q">Which is a success measure you can actually check?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. That&#x27;s a goal, but how would you know it&#x27;s met?"><span class="l">A</span><span>Answers are helpful and accurate</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. A number, a way to measure it, and when it&#x27;s measured."><span class="l">B</span><span>At least 85% on the 20-case eval set, checked on every pull request</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Lovely to hear, impossible to check before launch."><span class="l">C</span><span>Users love it</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 3. SCOPE ============ -->
+<section class="stage" id="scope" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · Scope it to ship</p>
+    <h2 id="s3">One flow, working, deployed, before anything else</h2>
+    <p>Most side projects never ship because they keep growing. An <button type="button" class="term" data-term="mvp" aria-expanded="false">MVP</button> is the smallest thing that does the main job end to end, for real.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>Must</h4><p class="small">The one main flow, deployed, with evals and limits. If any of these is missing, it isn't done.</p></div>
+    <div class="box"><h4>Should</h4><p class="small">One or two improvements, only after "must" is live. For example, a friendlier page or keyword search.</p></div>
+    <div class="box"><h4>Won't, for now</h4><p class="small">Logins, multiple users, a mobile app, five more tools. Writing them down makes saying no easy.</p></div>
+  </div>
+  <p class="callout"><b>Timebox it.</b> Two weekends for the "must" list. If it isn't live by then, cut scope, not quality: drop a feature, never the evals or the limits.</p>
+  <div class="quiz" data-quiz="qe12c">
+    <p class="quiz-label">Check your understanding · Scope</p>
+    <p class="quiz-q">Your two weekends are up and the app isn't live. What do you cut?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Without evals you can&#x27;t show it works, and every later change is a gamble."><span class="l">A</span><span>The evals: you can add them later</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Cut scope, never quality. A smaller app that works and is tested is the better portfolio."><span class="l">B</span><span>A feature from the must list, so the rest can ship</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A public demo without limits is how surprise bills happen."><span class="l">C</span><span>The rate limits: it's only a demo</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 4. README ============ -->
+<section class="stage" id="readme" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · A README that sells it</p>
+    <h2 id="s4">One minute to make the case</h2>
+    <p>A reviewer opens your repo and gives it a minute. The <button type="button" class="term" data-term="readme" aria-expanded="false">README</button> has to show what it does, prove it works, and invite them to look closer.</p>
+  </div>
+  <ol class="steps-list">
+    <li><b>First screen:</b> what it does in one sentence, the live link, the video.</li>
+    <li><b>How it works:</b> four bullets, one per part, naming the real tools.</li>
+    <li><b>Evidence:</b> the eval score and how it's gated, the security defences and their tests, the cost per 1,000 questions.</li>
+    <li><b>Run it yourself:</b> commands that work on a clean machine.</li>
+    <li><b>What's next:</b> two honest improvements. It shows you know the limits.</li>
+  </ol>
+  <p class="prose">Numbers beat adjectives. "95% on 20 eval cases, checked on every pull request, about $0.35 per 1,000 questions" says more than "robust and cost-effective".</p>
+</section>
+
+<!-- ============ 5. VIDEO ============ -->
+<section class="stage" id="video" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · A two-minute demo video</p>
+    <h2 id="s5">Show it working, then say why it's built that way</h2>
+    <p>Many reviewers will watch the video and never run the code. Two minutes, one take, your real app.</p>
+  </div>
+  <div class="tablewrap">
+    <table class="video-table">
+      <thead><tr><th>Time</th><th>Show</th><th>Say</th></tr></thead>
+      <tbody>
+        <tr><td>0:00–0:15</td><td>Your face or the app's home page</td><td>The problem, and who has it</td></tr>
+        <tr><td>0:15–1:15</td><td>Three questions on the live site: one from your notes, one from Wikipedia, one it can't answer</td><td>Point at the plan, the tool calls and the citations; show it saying it doesn't know</td></tr>
+        <tr><td>1:15–1:45</td><td>The eval check on a pull request, and a Langfuse trace</td><td>How you know it works, and one defence against attacks</td></tr>
+        <tr><td>1:45–2:00</td><td>The README</td><td>What you'd build next, and where to find it</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="quiz" data-quiz="qe12b">
+    <p class="quiz-label">Check your understanding · A two-minute demo video</p>
+    <p class="quiz-q">Your agent sometimes can't answer. What should the demo video do?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Reviewers know agents fail; hiding it looks worse when they find out."><span class="l">A</span><span>Only show questions it answers well</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Handling failure gracefully is the evidence of good engineering. Show it on purpose."><span class="l">B</span><span>Show one question it can't answer, and how it says so</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A working app is the most convincing thing you have."><span class="l">C</span><span>Skip the live demo and show slides</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 6. SKILLS ============ -->
+<section class="stage" id="skills" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · Skills self-check</p>
+    <h2 id="s6">What you can do now</h2>
+    <p>Tick each statement you could do again tomorrow, without the module open. Anything you can't tick yet links to the module to revisit. Saved in this browser.</p>
+  </div>
+  <p class="sk-state" id="skState" aria-live="polite"></p>
+  <div class="sk-groups" id="skList"><div class="sk-group"><p class="dm-h">Foundations</p><label class="sk-item"><input type="checkbox" data-k="s0"><span>I can set up a Python project with uv, and commit and push it with git<small>If not yet: <a href="eng-setup.html" data-site-link>E1</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s1"><span>I can read a traceback and find the line that failed<small>If not yet: <a href="eng-setup.html" data-site-link>E1</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s2"><span>I can call a web API and work with its JSON in Python<small>If not yet: <a href="eng-python.html" data-site-link>E2</a></small></span></label></div><div class="sk-group"><p class="dm-h">Working with models</p><label class="sk-item"><input type="checkbox" data-k="s3"><span>I can call Claude from code, keep the key safe, and work out what a call costs<small>If not yet: <a href="eng-first-call.html" data-site-link>E3</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s4"><span>I can get structured output and check it in code before trusting it<small>If not yet: <a href="eng-structured.html" data-site-link>E4</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s5"><span>I can write a tool-use loop by hand<small>If not yet: <a href="eng-tools.html" data-site-link>E5</a></small></span></label></div><div class="sk-group"><p class="dm-h">Knowledge and agents</p><label class="sk-item"><input type="checkbox" data-k="s6"><span>I can build RAG over my own documents, with citations<small>If not yet: <a href="eng-rag.html" data-site-link>E6</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s7"><span>I can debug a bad answer by checking retrieval first<small>If not yet: <a href="eng-rag.html" data-site-link>E6</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s8"><span>I can build an agent with a plan, memory, stop conditions and approval<small>If not yet: <a href="eng-agents.html" data-site-link>E7</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s9"><span>I can explain when LangGraph or MCP is worth it<small>If not yet: <a href="eng-agents.html" data-site-link>E7</a></small></span></label></div><div class="sk-group"><p class="dm-h">Quality and production</p><label class="sk-item"><input type="checkbox" data-k="s10"><span>I can trace runs and find why one went wrong<small>If not yet: <a href="eng-evals.html" data-site-link>E8</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s11"><span>I can write an eval set with code checks and a judge, and gate merges on it<small>If not yet: <a href="eng-evals.html" data-site-link>E8</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s12"><span>I can deploy a streaming web app with limits and caching<small>If not yet: <a href="eng-ship.html" data-site-link>E9</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s13"><span>I can defend an agent against prompt injection, and test the defences<small>If not yet: <a href="eng-security.html" data-site-link>E10</a></small></span></label></div><div class="sk-group"><p class="dm-h">Judgement</p><label class="sk-item"><input type="checkbox" data-k="s14"><span>I can choose a model with evidence, and write the decision down<small>If not yet: <a href="eng-models.html" data-site-link>E11</a></small></span></label><label class="sk-item"><input type="checkbox" data-k="s15"><span>I can scope, spec and ship a project, and explain its trade-offs<small>If not yet: <a href="eng-capstone.html" data-site-link>E12</a></small></span></label></div></div>
+</section>
+
+<!-- ============ 7. SHOW IT ============ -->
+<section class="stage" id="show" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow"><b>7</b> · Show it</p>
+    <h2 id="s7">Make it easy to find, and ready to talk about</h2>
+    <p>A <button type="button" class="term" data-term="portfolio" aria-expanded="false">portfolio</button> project only helps if people see it, and you can explain it.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>Make it findable</h4><p class="small">Tag a <button type="button" class="term" data-term="release" aria-expanded="false">release</button>, v1.0. Pin the repo on your GitHub profile. Link it from your CV and LinkedIn.</p></div>
+    <div class="box"><h4>One line for your CV</h4><p class="small">"Built and deployed a research agent (Python, Claude API, Chroma, FastAPI) with 20 eval cases gating every merge; chose the model with evals at 1/20 the cost of the next option."</p></div>
+    <div class="box"><h4>Ready for questions</h4><p class="small">Be ready to explain your trade-offs: chunk size, what memory keeps, the model choice, which limits and why, and a failure you found in a trace and fixed.</p></div>
+  </div>
+  <p class="prose">That last box is where the PM modules pay off. Engineers who can explain why a system is built the way it is, in terms of users, cost and risk, are the ones teams trust with agents.</p>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · your project</p>
+    <h2 id="s8">Ship the finished assistant, or your own agent</h2>
+    <p>Spec, build, document, check, record, release. The checklist at the top of the page tracks the same steps.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>6 hours</b>, or two weekends for your own idea</span><span>API cost <b>under $1</b> for the final eval runs</span><span>You need <b>E1 to E11 done</b></span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Decide, and write the spec</h3><p>Finish the research assistant, or build your own idea with the same parts (section 1 has tests for a good one). Either way, start with <code>SPEC.md</code>: copy this template into your repo and replace every <code>&lt;…&gt;</code>.</p><div class="cb"><div class="cb-h"><span>SPEC.md</span><button type="button" class="cb-copy" aria-label="Copy SPEC.md">Copy</button></div><pre class="code"><span class="ln"><span class="c"># Spec: &lt;your project's name&gt;</span></span><span class="ln"> </span><span class="ln">**One line:** &lt;who it helps, with what, in one sentence&gt;</span><span class="ln">**Author:** &lt;you&gt; · **Date:** &lt;today&gt; · **Status:** draft</span><span class="ln"> </span><span class="ln"><span class="c">## The problem</span></span><span class="ln">&lt;Who has this problem, how often, and what they do today. Two or three sentences.&gt;</span><span class="ln"> </span><span class="ln"><span class="c">## The user and the main flow</span></span><span class="ln">- **User:** &lt;one specific person, ideally you&gt;</span><span class="ln">- **They ask or do:** &lt;the request, in their words&gt;</span><span class="ln">- **They get:** &lt;the result, and how they can check it&gt;</span><span class="ln"> </span><span class="ln"><span class="c">## Success measures</span></span><span class="ln">| Measure | Target | How it's measured |</span><span class="ln">|---|---|---|</span><span class="ln">| Eval score | at least 85% | `run_evals.py`, in CI on every pull request |</span><span class="ln">| Cost | under $1 per 1,000 questions | `compare_models.py` and the Anthropic Console |</span><span class="ln">| First words on screen | under 5 seconds | the web app's timing line |</span><span class="ln"> </span><span class="ln"><span class="c">## Scope</span></span><span class="ln">- **Must (version 1):** &lt;the one flow, end to end, deployed&gt;</span><span class="ln">- **Should (if time allows):** &lt;one or two things&gt;</span><span class="ln">- **Won't (not now):** &lt;the tempting things you're leaving out&gt;</span><span class="ln"> </span><span class="ln"><span class="c">## How it works</span></span><span class="ln">&lt;Tools, data sources and model, in a few bullets. Name the E-modules each part comes from.&gt;</span><span class="ln"> </span><span class="ln"><span class="c">## Risks and limits</span></span><span class="ln">- **Security:** &lt;what could be attacked, and which E10 defences cover it&gt;</span><span class="ln">- **Wrong answers:** &lt;what happens when it's wrong, and how the user can tell&gt;</span><span class="ln">- **Cost:** &lt;the limits in code, and the spend limit in the Console&gt;</span><span class="ln"> </span><span class="ln"><span class="c">## Evals</span></span><span class="ln">&lt;What the eval set covers, including questions it should refuse or can't answer.&gt;</span></pre></div><p class="small"><a href="how-ai-agents-work.html" data-site-link>Module 1</a> has a longer spec template for agents, if you want more prompts to think with.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Build what's missing, and keep it green</h3><p>Work through the "must" list only. After each change, run the checks you built:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run python -m unittest test_attacks</span><span class="ln">uv run run_evals.py 5</span></pre></div><p>Push through pull requests, so the eval check runs on every change. When "must" is done, deploy (E9) before touching "should".</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Write the README</h3><p>Replace <code>README.md</code> with this template, then make every line true for your project. The tool above builds the first part from your numbers.</p><div class="cb"><div class="cb-h"><span>README.md</span><button type="button" class="cb-copy" aria-label="Copy README.md">Copy</button></div><pre class="code"><span class="ln"><span class="c"># Research assistant</span></span><span class="ln"> </span><span class="ln">An AI agent that answers research questions from Wikipedia and your own notes, with a citation for every fact.</span><span class="ln"> </span><span class="ln">**Try it:** https://research-assistant-xxxx.onrender.com · **Demo video (2 min):** https://youtu.be/xxxx</span><span class="ln"> </span><span class="ln"><span class="c">## What it does</span></span><span class="ln"> </span><span class="ln">Ask a question in plain words. The agent makes a plan, searches Wikipedia and your notes, reads what it needs, and answers in under 200 words with a source for each fact. It says so when it can't find an answer.</span><span class="ln"> </span><span class="ln"><span class="c">## How it works</span></span><span class="ln"> </span><span class="ln">- **Agent loop** in plain Python, with a plan, memory, call and cost limits, and approval before it saves anything</span><span class="ln">- **Retrieval** over your PDFs and notes with Chroma, citing file and page</span><span class="ln">- **Web app** in FastAPI that streams answers, with rate limits and a daily cost cap</span><span class="ln">- **Model:** Claude Haiku 5.5, chosen with evals ([MODEL_CHOICE.md](MODEL_CHOICE.md))</span><span class="ln"> </span><span class="ln"><span class="c">## Evals</span></span><span class="ln"> </span><span class="ln">20 cases in `eval_cases.json`, graded by code checks and an LLM judge. They run on every pull request and block the merge below 85%. Current score: 95%.</span><span class="ln"> </span><span class="ln"><span class="c">## Security</span></span><span class="ln"> </span><span class="ln">Tool output is marked as untrusted, tools are limited per question, files stay in their folder, answers are checked for unknown links and unread citations, and logs are redacted. Each attack has a test in `test_attacks.py`.</span><span class="ln"> </span><span class="ln"><span class="c">## Run it yourself</span></span><span class="ln"> </span><span class="ln">```</span><span class="ln">git clone https://github.com/you/research-assistant</span><span class="ln">cd research-assistant</span><span class="ln">uv sync</span><span class="ln">echo "ANTHROPIC_API_KEY=sk-ant-..." &gt; .env</span><span class="ln">uv run uvicorn app:app --reload</span><span class="ln">```</span><span class="ln"> </span><span class="ln"><span class="c">## What I'd do next</span></span><span class="ln"> </span><span class="ln">- Keyword search alongside vector search, to fix the misses in the eval traces</span><span class="ln">- Save rate-limit and budget counts in a database, so they survive restarts</span></pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Check it's ready</h3><p>Save <code>check_portfolio.py</code> in your project and run it. It checks the README, the spec, that no API key is in a published file, the evals and their workflow, the attack tests and the model choice.</p><div class="cb"><div class="cb-h"><span>check_portfolio.py</span><button type="button" class="cb-copy" aria-label="Copy check_portfolio.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E12 lab: check that your project is ready to show. Run it in your project folder.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run check_portfolio.py            # checks the files</span></span><span class="ln"><span class="s">    uv run check_portfolio.py --online   # also checks that your live app answers</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> json</span><span class="ln"><span class="k">import</span> re</span><span class="ln"><span class="k">import</span> subprocess</span><span class="ln"><span class="k">import</span> sys</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"> </span><span class="ln"><span class="k">import</span> httpx</span><span class="ln"> </span><span class="ln">SECTIONS = [<span class="s">"## What it does"</span>, <span class="s">"## How it works"</span>, <span class="s">"## Evals"</span>, <span class="s">"## Security"</span>, <span class="s">"## Run it yourself"</span>, <span class="s">"## What I'd do next"</span>]</span><span class="ln">SECRET = re.compile(<span class="s">r"sk-ant-[\w-]{8,}|sk-lf-[\w-]{8,}|pk-lf-[\w-]{8,}"</span>)  <span class="c"># Anthropic and Langfuse keys</span></span><span class="ln">PLACEHOLDER = re.compile(<span class="s">r"&lt;[a-z][^&gt;\n]*&gt;"</span>)  <span class="c"># the &lt;fill this in&gt; parts of SPEC.md</span></span><span class="ln">SKIP = {<span class="s">".venv"</span>, <span class="s">".git"</span>, <span class="s">"chroma"</span>, <span class="s">"notes"</span>, <span class="s">"__pycache__"</span>}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> read(root, name):</span><span class="ln">    path = root / name</span><span class="ln">    <span class="k">return</span> path.read_text(encoding=<span class="s">"utf-8"</span>) <span class="k">if</span> path.is_file() <span class="k">else</span> <span class="k">None</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> published_files(root, env_ignored):</span><span class="ln">    <span class="s">"""The files git tracks, which are what GitHub shows. If this isn't a git repo yet, every file</span></span><span class="ln"><span class="s">    that would be committed: .env only counts when .gitignore doesn't keep it out."""</span></span><span class="ln">    <span class="k">try</span>:</span><span class="ln">        out = subprocess.run([<span class="s">"git"</span>, <span class="s">"ls-files"</span>], cwd=root, capture_output=<span class="k">True</span>, text=<span class="k">True</span>, check=<span class="k">True</span>).stdout</span><span class="ln">        <span class="k">return</span> [root / line <span class="k">for</span> line <span class="k">in</span> out.splitlines() <span class="k">if</span> line]</span><span class="ln">    <span class="k">except</span> (OSError, subprocess.CalledProcessError):</span><span class="ln">        <span class="k">return</span> [path <span class="k">for</span> path <span class="k">in</span> root.rglob(<span class="s">"*"</span>)</span><span class="ln">                <span class="k">if</span> path.is_file() <span class="k">and</span> <span class="k">not</span> (path.name == <span class="s">".env"</span> <span class="k">and</span> env_ignored)</span><span class="ln">                <span class="k">and</span> <span class="k">not</span> SKIP &amp; set(path.relative_to(root).parts)]</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> live_url(readme):</span><span class="ln">    match = re.search(<span class="s">r"\*\*Try it:\*\*\s*(https://[^\s)]+)"</span>, readme <span class="k">or</span> <span class="s">""</span>)</span><span class="ln">    <span class="k">return</span> match.group(1) <span class="k">if</span> match <span class="k">else</span> <span class="k">None</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> checks(root, online=<span class="k">False</span>):</span><span class="ln">    <span class="s">"""Every check, as (passed, what it found)."""</span></span><span class="ln">    results = []</span><span class="ln">    readme = read(root, <span class="s">"README.md"</span>)</span><span class="ln">    missing = [section <span class="k">for</span> section <span class="k">in</span> SECTIONS <span class="k">if</span> readme <span class="k">is</span> <span class="k">None</span> <span class="k">or</span> section <span class="k">not</span> <span class="k">in</span> readme]</span><span class="ln">    results.append((<span class="k">not</span> missing, <span class="s">"README.md has all six sections"</span> <span class="k">if</span> <span class="k">not</span> missing <span class="k">else</span> <span class="s">"README.md is missing: "</span> + <span class="s">", "</span>.join(missing)))</span><span class="ln">    url = live_url(readme)</span><span class="ln">    results.append((bool(url), <span class="s">f"README links the live app: {url}"</span> <span class="k">if</span> url <span class="k">else</span> <span class="s">'README has no "**Try it:** https://..." line'</span>))</span><span class="ln">    video = bool(readme <span class="k">and</span> re.search(<span class="s">r"video[^\n]*https?://"</span>, readme, re.IGNORECASE))</span><span class="ln">    results.append((video, <span class="s">"README links a demo video"</span> <span class="k">if</span> video <span class="k">else</span> <span class="s">"README has no demo video link"</span>))</span><span class="ln"> </span><span class="ln">    spec = read(root, <span class="s">"SPEC.md"</span>)</span><span class="ln">    holes = PLACEHOLDER.findall(spec <span class="k">or</span> <span class="s">""</span>)</span><span class="ln">    <span class="k">if</span> spec <span class="k">is</span> <span class="k">None</span>:</span><span class="ln">        results.append((<span class="k">False</span>, <span class="s">"SPEC.md is missing"</span>))</span><span class="ln">    <span class="k">else</span>:</span><span class="ln">        results.append((<span class="k">not</span> holes, <span class="s">"SPEC.md is filled in"</span> <span class="k">if</span> <span class="k">not</span> holes <span class="k">else</span> <span class="s">f"SPEC.md still has {len(holes)} &lt;placeholders&gt; to fill in"</span>))</span><span class="ln"> </span><span class="ln">    ignored = <span class="s">".env"</span> <span class="k">in</span> (read(root, <span class="s">".gitignore"</span>) <span class="k">or</span> <span class="s">""</span>).split()</span><span class="ln">    results.append((ignored, <span class="s">".env is in .gitignore"</span> <span class="k">if</span> ignored <span class="k">else</span> <span class="s">".env is not in .gitignore"</span>))</span><span class="ln">    leaks = [path.relative_to(root).as_posix() <span class="k">for</span> path <span class="k">in</span> published_files(root, ignored)</span><span class="ln">             <span class="k">if</span> path.is_file() <span class="k">and</span> SECRET.search(path.read_text(encoding=<span class="s">"utf-8"</span>, errors=<span class="s">"ignore"</span>))]</span><span class="ln">    results.append((<span class="k">not</span> leaks, <span class="s">"no API keys in published files"</span> <span class="k">if</span> <span class="k">not</span> leaks <span class="k">else</span> <span class="s">"API keys in: "</span> + <span class="s">", "</span>.join(leaks)))</span><span class="ln">    locked = (root / <span class="s">"pyproject.toml"</span>).is_file() <span class="k">and</span> (root / <span class="s">"uv.lock"</span>).is_file()</span><span class="ln">    results.append((locked, <span class="s">"pyproject.toml and uv.lock"</span> <span class="k">if</span> locked <span class="k">else</span> <span class="s">"pyproject.toml or uv.lock is missing"</span>))</span><span class="ln"> </span><span class="ln">    cases = read(root, <span class="s">"eval_cases.json"</span>)</span><span class="ln">    count = len(json.loads(cases)) <span class="k">if</span> cases <span class="k">else</span> 0</span><span class="ln">    workflows = [path.read_text(encoding=<span class="s">"utf-8"</span>) <span class="k">for</span> path <span class="k">in</span> (root / <span class="s">".github"</span> / <span class="s">"workflows"</span>).glob(<span class="s">"*.y*ml"</span>)]</span><span class="ln">    gated = any(<span class="s">"run_evals.py"</span> <span class="k">in</span> workflow <span class="k">for</span> workflow <span class="k">in</span> workflows)</span><span class="ln">    results.append((count &gt;= 20 <span class="k">and</span> gated, <span class="s">f"{count} eval cases, "</span> + (<span class="s">"run on every pull request"</span> <span class="k">if</span> gated <span class="k">else</span> <span class="s">"but no workflow runs run_evals.py"</span>)))</span><span class="ln">    attacks = (root / <span class="s">"test_attacks.py"</span>).is_file()</span><span class="ln">    results.append((attacks, <span class="s">"attack tests"</span> <span class="k">if</span> attacks <span class="k">else</span> <span class="s">"test_attacks.py is missing"</span>))</span><span class="ln">    choice = (root / <span class="s">"MODEL_CHOICE.md"</span>).is_file()</span><span class="ln">    results.append((choice, <span class="s">"a written model choice"</span> <span class="k">if</span> choice <span class="k">else</span> <span class="s">"MODEL_CHOICE.md is missing"</span>))</span><span class="ln"> </span><span class="ln">    <span class="k">if</span> online <span class="k">and</span> url:</span><span class="ln">        <span class="k">try</span>:  <span class="c"># a sleeping free server can take a minute to wake up</span></span><span class="ln">            status = httpx.get(url, timeout=90, follow_redirects=<span class="k">True</span>).status_code</span><span class="ln">        <span class="k">except</span> httpx.HTTPError <span class="k">as</span> error:</span><span class="ln">            status = type(error).__name__</span><span class="ln">        results.append((status == 200, <span class="s">f"the live app answered {status}"</span>))</span><span class="ln">    <span class="k">return</span> results</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main(args):</span><span class="ln">    root = Path.cwd()</span><span class="ln">    results = checks(root, online=<span class="s">"--online"</span> <span class="k">in</span> args)</span><span class="ln">    print(<span class="s">f"Portfolio check for {root.name}"</span>)</span><span class="ln">    <span class="k">for</span> passed, found <span class="k">in</span> results:</span><span class="ln">        print(<span class="s">f"  [{'x' if passed else ' '}] {found}"</span>)</span><span class="ln">    ready = sum(passed <span class="k">for</span> passed, _ <span class="k">in</span> results)</span><span class="ln">    print(<span class="s">f"{ready} of {len(results)} ready."</span>)</span><span class="ln">    <span class="k">return</span> ready == len(results)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    sys.exit(0 <span class="k">if</span> main(sys.argv[1:]) <span class="k">else</span> 1)</span></pre></div><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check_portfolio.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Portfolio check for research-assistant
+  [x] README.md has all six sections
+  [x] README links the live app: https://research-assistant-xxxx.onrender.com
+  [ ] README has no demo video link
+  [ ] SPEC.md still has 13 &lt;placeholders&gt; to fill in
+  [x] .env is in .gitignore
+  [x] no API keys in published files
+  [x] pyproject.toml and uv.lock
+  [x] 20 eval cases, run on every pull request
+  [x] attack tests
+  [x] a written model choice
+8 of 10 ready.</pre><p class="small">Fix each unticked line, then run it again with <code>--online</code> to check the live app too:</p></div><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check_portfolio.py --online</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Portfolio check for research-assistant
+  [x] README.md has all six sections
+  [x] README links the live app: https://research-assistant-xxxx.onrender.com
+  [x] README links a demo video
+  [x] SPEC.md is filled in
+  [x] .env is in .gitignore
+  [x] no API keys in published files
+  [x] pyproject.toml and uv.lock
+  [x] 20 eval cases, run on every pull request
+  [x] attack tests
+  [x] a written model choice
+  [x] the live app answered 200
+11 of 11 ready.</pre><p class="small">If the free server was asleep, the check waits up to 90 seconds for it to wake.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Record a two-minute demo</h3><p>Follow the script in section 5: one take is fine. Record your screen and voice:</p><div class="ost"><div class="ost-tabs" role="group" aria-label="Your computer"><button type="button" data-os="mac" aria-selected="true">Mac</button><button type="button" data-os="win" aria-selected="false">Windows</button></div><div class="ost-p" data-os="mac"><p>Open QuickTime Player and choose <b>File → New Screen Recording</b>, or press <b>Cmd+Shift+5</b>. Turn on your microphone under <b>Options</b>.</p></div><div class="ost-p" data-os="win" hidden><p>Open the Snipping Tool and press <b>Windows+Shift+R</b> to record the screen, with your microphone turned on.</p></div></div><p>Upload it to YouTube as <b>Unlisted</b>, or to Loom, and put the link in the README. <a href="https://obsproject.com" target="_blank" rel="noopener">OBS Studio</a> is a free recorder for both systems if you want more control.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Release it and share it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git tag v1.0</span><span class="ln">git push origin v1.0</span></pre></div><p>On GitHub, open <b>Releases → Draft a new release</b>, choose the <code>v1.0</code> tag, and write two lines on what it does. Then pin the repo on your profile (<b>Customize your pins</b>) and tell people. A post like this works on LinkedIn:</p><div class="cb"><div class="cb-h"><span>A post, to adapt</span><button type="button" class="cb-copy" aria-label="Copy A post, to adapt">Copy</button></div><pre class="code"><span class="ln">I spent the last few weeks going from product manager to building AI agents myself.</span><span class="ln"> </span><span class="ln">The result: a research assistant that answers from Wikipedia and my own notes, citing every fact. Live: https://research-assistant-xxxx.onrender.com</span><span class="ln"> </span><span class="ln">What's under the hood:</span><span class="ln">- An agent loop in Python on the Claude API, with a plan, memory, limits and approval</span><span class="ln">- RAG over my PDFs with Chroma</span><span class="ln">- 20 eval cases that run on every pull request and block a merge if quality drops</span><span class="ln">- Defences against prompt injection, each one tested</span><span class="ln">- The model chosen with evals: about $0.35 per 1,000 questions</span><span class="ln"> </span><span class="ln">Two-minute demo: https://youtu.be/xxxx</span><span class="ln">Code: https://github.com/you/research-assistant</span></pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Commit and push</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add SPEC.md README.md check_portfolio.py</span><span class="ln">git commit -m "Spec, README and portfolio check"</span><span class="ln">git push</span></pre></div></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>SPEC.md still has 13 &lt;placeholders&gt; to fill in</code></dt><dd>Search the file for <code>&lt;</code> and replace each placeholder with your own words, angle brackets included.</dd><dt><code>API keys in: .env</code></dt><dd><code>.env</code> isn't in <code>.gitignore</code>, so it would be published. Add it. If it was ever committed, run <code>git rm --cached .env</code> and revoke the key in the Console.</dd><dt><code>README has no "**Try it:** https://..." line</code></dt><dd>The check looks for that exact shape: <code>**Try it:** https://your-app.onrender.com</code> on one line.</dd><dt><code>the live app answered ReadTimeout</code></dt><dd>The server didn't answer within 90 seconds. Open the URL in a browser, and check Render's logs for a crash.</dd></dl></div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s9">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E12 is marked done, and so is the track.</p>
+  </div>
+  <ul class="done-list" data-mod="e12"><li><label><input type="checkbox"><span><code>SPEC.md</code> is filled in, with success measures and must, should and won't</span></label></li><li><label><input type="checkbox"><span><code>uv run check_portfolio.py --online</code> says every item is ready</span></label></li><li><label><input type="checkbox"><span>The README has the live link and a two-minute video, and the repo is public and pinned</span></label></li><li><label><input type="checkbox"><span>Every skill in the self-check is ticked, or you've planned when to revisit its module</span></label></li><li><label><input type="checkbox"><span>You tagged v1.0 and shared the project</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s10">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula"><em>Spec</em> → <em>must</em> list only → <em>deployed</em> with evals and limits → <em>README</em> with numbers → <em>two-minute video</em> → <em>check_portfolio.py</em> → <em>release</em> and <em>share</em>.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>Plan</h3><ul>
+        <li>You are the user</li>
+        <li>Success measures you'll actually measure</li>
+        <li>Must, should, won't</li>
+        <li>Two weekends; cut scope, not quality</li>
+      </ul></div>
+      <div class="blk"><h3>Prove</h3><ul>
+        <li>Evals gate every merge</li>
+        <li>Attack tests in CI</li>
+        <li>Model choice written down</li>
+        <li>No keys in published files</li>
+      </ul></div>
+      <div class="blk"><h3>Show</h3><ul>
+        <li>First screen: what, live link, video</li>
+        <li>Numbers, not adjectives</li>
+        <li>Release v1.0; pin the repo</li>
+        <li>Know your trade-offs</li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s11">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s11">3 common portfolio mistakes</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>A project that never ships</h3><dl>
+      <dt>What it looks like</dt><dd>Months of adding features to something only you have seen.</dd>
+      <dt>Fix</dt><dd>Write the "won't" list, deploy the "must" list, then improve what's live.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>A README with no evidence</h3><dl>
+      <dt>What it looks like</dt><dd>"An AI-powered assistant using cutting-edge LLMs", and no link, score or video.</dd>
+      <dt>Fix</dt><dd>Live link and video first, then the eval score, the cost and how it's tested.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>A demo that runs up a bill, or leaks a key</h3><dl>
+      <dt>What it looks like</dt><dd>A public app with no limits, or a key in the repo's history.</dd>
+      <dt>Fix</dt><dd>Limits in code, a spend limit in the Console, and <code>check_portfolio.py</code> before every share.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="eng-models.html" data-site-link>← Module E11 · Choosing models</a>
+  <a href="engineer.html" data-site-link>Back to the track: see your progress →</a>
+</div>
+
+<footer>
+  <p>Your checklist, README details and skills ticks are saved only in this browser. The example URLs, numbers and post are placeholders to replace with your own.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic, GitHub or Render.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "capstone": {
+  "t": "Capstone",
+  "d": "A final project that pulls together everything a course taught, built end to end and shown in public."
+ },
+ "spec": {
+  "t": "Spec",
+  "d": "A short document that says what you're building, for whom, how you'll know it works, and what's out of scope."
+ },
+ "mvp": {
+  "t": "MVP (minimum viable product)",
+  "d": "The smallest version that does the main job end to end, for real users. Everything else waits."
+ },
+ "scope": {
+  "t": "Scope",
+  "d": "What's in and out of a version. Writing down what you won't do is as useful as what you will."
+ },
+ "readme": {
+  "t": "README",
+  "d": "The page GitHub shows first for a repo. For a portfolio, it's the pitch: what it does, a live link, proof it works, how to run it."
+ },
+ "release": {
+  "t": "Release",
+  "d": "A named version of your code, such as v1.0, marked with a git tag and shown on GitHub's Releases page."
+ },
+ "portfolio": {
+  "t": "Portfolio",
+  "d": "Work you can show, with evidence: a live app, its code, how it's tested, and the decisions behind it."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Portfolio checklist, README builder and skills self-check (saved in this browser) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function load(k){ try{ return JSON.parse(localStorage.getItem(k) || "{}") || {}; }catch(e){ return {}; } }
+function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+let pf = load("guides.eng.portfolio"); pf.checks = pf.checks || {}; pf.fields = pf.fields || {};
+let sk = load("guides.eng.skills");
+const items = [...document.querySelectorAll("#pfList input")], inputs = [...document.querySelectorAll("#pfFields input")];
+const skills = [...document.querySelectorAll("#skList input")];
+function val(f){ const i = inputs.find(x => x.dataset.f === f); return (pf.fields[f] || "").trim() || i.placeholder; }
+function readme(){
+  return ["# " + val("name"), "", val("pitch"), "",
+    "**Try it:** " + val("url") + " · **Demo video (2 min):** " + val("video"), "",
+    "## What it does", "", "<what someone can ask, and what they get back>", "",
+    "## How it works", "", "- <one bullet per part: agent loop, retrieval, web app>", "- **Model:** " + val("model") + ", chosen with evals ([MODEL_CHOICE.md](MODEL_CHOICE.md))", "",
+    "## Evals", "", val("cases") + " cases, graded by code checks and an LLM judge, run on every pull request. Current score: " + val("score") + ". About " + val("cost") + " per 1,000 questions.", "",
+    "## Security", "", "<the defences, and the attack tests that check them>", "",
+    "## Run it yourself", "", "<commands that work on a clean machine>", "",
+    "## What I'd do next", "", "- <two honest improvements>"];
+}
+function render(){
+  items.forEach(b => { b.checked = !!pf.checks[b.dataset.k]; b.closest(".pf-item").classList.toggle("on", b.checked); });
+  inputs.forEach(i => { if(document.activeElement !== i) i.value = pf.fields[i.dataset.f] || ""; });
+  const n = items.filter(b => b.checked).length;
+  $("pfCount").textContent = n === items.length ? "All " + n + " ready: go and share it" : n + " of " + items.length + " ready";
+  $("pfBar").style.width = (n / items.length * 100) + "%";
+  $("pfReadmeCode").innerHTML = readme().map(l => '<span class="ln">' + (esc(l) || " ") + "</span>").join("");
+  skills.forEach(b => { b.checked = !!sk[b.dataset.k]; b.closest(".sk-item").classList.toggle("on", b.checked); });
+  const s = skills.filter(b => b.checked).length;
+  $("skState").textContent = s === skills.length ? "All " + s + " ticked. You can do the job." : s + " of " + skills.length + " ticked";
+}
+items.forEach(b => b.addEventListener("change", () => { pf.checks[b.dataset.k] = b.checked; save("guides.eng.portfolio", pf); render(); }));
+inputs.forEach(i => i.addEventListener("input", () => { pf.fields[i.dataset.f] = i.value; save("guides.eng.portfolio", pf); render(); }));
+skills.forEach(b => b.addEventListener("change", () => { sk[b.dataset.k] = b.checked; save("guides.eng.skills", sk); render(); }));
+$("pfReset").addEventListener("click", () => { pf = {checks: {}, fields: {}}; save("guides.eng.portfolio", pf); render(); });
+render();
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  if(!btn) return;  /* diffs have no copy button: copy the whole file instead */
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e12";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>

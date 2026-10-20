@@ -35,6 +35,8 @@ A hands-on track for beginners who want to build agents, not just understand the
 | **E8 · Tracing and evals in code**: Langfuse tracing, an eval set in code, code checks and an LLM judge, and evals in GitHub Actions, with a CI-gate demo and a lab that blocks pull requests when the score drops | https://lalwalataukir.github.io/how-ai-agents-work/eng-evals.html |
 | **E9 · Shipping it**: FastAPI, streaming, rate limits, cost caps, prompt caching, latency and free hosting, with a latency-and-cost demo and a lab that deploys the agent to Render | https://lalwalataukir.github.io/how-ai-agents-work/eng-ship.html |
 | **E10 · Security in code**: input handling, prompt-injection defences, tool permissions, sandboxing, and secrets and personal data, with a break-the-agent demo and a lab that writes every attack as a test | https://lalwalataukir.github.io/how-ai-agents-work/eng-security.html |
+| **E11 · Choosing models**: quality, cost and speed on your own evals, effort and routing, local models with Ollama, and fine-tuning against prompting and RAG, with a model-picker demo and a lab that compares three models and records the choice | https://lalwalataukir.github.io/how-ai-agents-work/eng-models.html |
+| **E12 · Capstone and portfolio**: choosing the project, a one-page spec, scope, a README with evidence, a demo video and a skills self-check, with a portfolio checklist and a lab that ships and checks the finished project | https://lalwalataukir.github.io/how-ai-agents-work/eng-capstone.html |
 
 The finished code for each lab is in [`labs/`](labs/), with offline tests: `uv run --with-requirements labs/test-requirements.txt python labs/run_tests.py`.
 
