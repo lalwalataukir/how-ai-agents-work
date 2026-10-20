@@ -40,6 +40,17 @@ A hands-on track for beginners who want to build agents, not just understand the
 
 The finished code for each lab is in [`labs/`](labs/), with offline tests: `uv run --with-requirements labs/test-requirements.txt python labs/run_tests.py`.
 
+### Guided projects
+
+Four optional projects, one after each phase of the track. Each is a new tool built in milestones from a downloadable starter, with a checker that says when each milestone works, hints that end in the solution, stretch goals and a write-up.
+
+| Project | Live link |
+|---|---|
+| **Guided projects**: the four projects, how they work, and your progress | https://lalwalataukir.github.io/how-ai-agents-work/eng-projects.html |
+| **P1 · AI code reviewer** (after E5): parse a git diff, get structured findings, check each one against the code and retry, a sandboxed read_file tool, and a pre-commit gate | https://lalwalataukir.github.io/how-ai-agents-work/proj-code-review.html |
+
+The finished projects and their starters are in [`projects/`](projects/). Their tests run with the lab tests above.
+
 **Demo lab:** https://lalwalataukir.github.io/how-ai-agents-work/demo-lab.html has the LangChain, LangGraph and Langfuse demos in one page, with tabs. Each tab loads the demo from its module page, so there's only one copy of each demo.
 
 Everything in the demos is a scripted simulation. No AI model, search engine, framework or tracing service is contacted, and the example addresses are made up. These pages are independent explainers and aren't affiliated with LangChain, LangGraph, LangSmith or Langfuse.

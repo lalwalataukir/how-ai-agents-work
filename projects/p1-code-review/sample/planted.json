@@ -1,0 +1,7 @@
+[
+  {"file": "shop/accounts.py", "lines": [8, 11], "bug": "Reset links last 30 days by default, not RESET_LINK_HOURS (2 hours)"},
+  {"file": "shop/cart.py", "lines": [16, 18], "bug": "Off by one: the loop skips the last item in the cart"},
+  {"file": "shop/config.py", "lines": [6, 6], "bug": "A live payment secret is written in the code"},
+  {"file": "shop/db.py", "lines": [21, 26], "bug": "SQL injection: the email is pasted into the query"},
+  {"file": "shop/orders.py", "lines": [13, 18], "bug": "No check that the refund is above 0 and no more than was paid"}
+]

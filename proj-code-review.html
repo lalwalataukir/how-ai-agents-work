@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>P1 AI Code Reviewer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: guided project P1 of the AI engineer track. The brief as a ticket, a flow of the parts, setup from a starter zip, five milestones each with a real checker run, hints that end in the solution and an If-it-breaks box, then stretch goals, the write-up and a done-when list. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage p code,.stage li code,.stage td code{overflow-wrap:anywhere}
+.cb-diff pre.code .ln.d-add{background:var(--final-soft)}
+.cb-diff pre.code .ln.d-del{background:var(--bad-soft)}
+.cb-diff pre.code .ln.d-gap{color:var(--muted)}
+.cb-key{display:flex;gap:10px}
+.cb-key .k-add{color:var(--final)}
+.cb-key .k-del{color:var(--bad)}
+.whole{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.whole>summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:.92rem}
+.whole[open]>summary{border-bottom:1px solid var(--line)}
+.whole>.cb{border:0;border-radius:0 0 var(--radius) var(--radius)}
+
+/* ---------- Guided projects ---------- */
+.ticket{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.ticket-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+.ticket-b{padding:14px 16px;display:grid;gap:10px}
+.ticket-b .story{font-size:1.02rem;max-width:72ch}
+.ac{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-width:76ch}
+.ac li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:.93rem}
+.ac li::before{content:"✓";color:var(--final);font-weight:700}
+.flow{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(3,minmax(0,1fr));counter-reset:flow}
+@media (max-width:860px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.flow{grid-template-columns:minmax(0,1fr)}}
+.flow li{counter-increment:flow;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:4px;align-content:start;position:relative}
+.flow li::before{content:counter(flow);font-family:var(--font-mono);font-size:.72rem;color:var(--accent);border:1px solid var(--accent);border-radius:999px;width:22px;height:22px;display:grid;place-items:center}
+.flow li b{font-family:var(--font-display);font-size:.98rem}
+.flow li span{font-size:.86rem;color:var(--muted)}
+.flow li code{font-size:.8rem;overflow-wrap:anywhere}
+.flow li.loop{border-style:dashed;border-color:var(--act)}
+.ms-meta{display:flex;flex-wrap:wrap;gap:6px}
+.ms-meta span{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted);background:var(--surface)}
+.ms-meta a{color:var(--accent)}
+.todo-list{margin:0;padding-left:1.2em;display:grid;gap:4px;max-width:76ch}
+.todo-list code{overflow-wrap:anywhere}
+.hints{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:14px 16px}
+.hints-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.hints-h h3{font-size:1rem}
+.hint{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;border-left:3px solid var(--accent);padding:2px 0 2px 12px}
+.hint[hidden]{display:none}
+.hint .dm-h{color:var(--accent)}
+.stretch{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.stretch .box{display:grid;gap:8px;align-content:start}
+.proj-dl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="eng-projects.html" data-site-link>← Guided projects</a>
+    <a class="brand" href="#top">P1 · AI code reviewer</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#brief" data-nav="brief">Brief</a>
+      <a href="#setup" data-nav="setup">Setup</a>
+      <a href="#m1" data-nav="m1"><span class="n">1</span>Diff</a>
+      <a href="#m2" data-nav="m2"><span class="n">2</span>Review</a>
+      <a href="#m3" data-nav="m3"><span class="n">3</span>Check</a>
+      <a href="#m4" data-nav="m4"><span class="n">4</span>Read files</a>
+      <a href="#m5" data-nav="m5"><span class="n">5</span>Every day</a>
+      <a href="#stretch" data-nav="stretch">Stretch</a>
+      <a href="#writeup" data-nav="writeup">Write-up</a>
+      <a href="#done" data-nav="done">Done</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+<div class="hero">
+  <p class="eyebrow">Guided project P1 · after E5 · 4 to 6 hours</p>
+  <h1>Build an AI code reviewer</h1>
+  <p class="lede">A command-line tool that reads your <span><button type="button" class="term" data-term="diff" aria-expanded="false">git diff</button></span>, asks Claude for a review, checks every finding against the code, and stops a commit when something serious turns up. You build it in five milestones from a starter that tells you what to write, with a checker that says when each part works.</p>
+  <div class="lab-meta"><span>Time <b>4 to 6 hours</b></span><span>API cost <b>under $0.05</b></span><span>You need <b>E1 to E5 done</b></span><span>Uses <b>E2, E3, E4, E5</b></span></div>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">Reviewing a change with five planted bugs. Claude reads two files for context, then reports. The run ends with exit code 1, so git or CI stops. Claude's wording varies from run to run.</p>
+    <pre class="out"># Code review
+
+Adds bulk pricing, an email search for support, partial refunds and password reset links. Four of the changes have serious bugs.
+
+| Severity | Where | Issue | Fix |
+|---|---|---|---|
+| high | `shop/cart.py:17` | range(len(items) - 1) skips the last item, so every cart is undercharged. | Loop over the items directly: for item in items: |
+| high | `shop/config.py:6` | A live PayGate secret is written into the code as a fallback, so it is published with the repo. | Remove the default so the secret only comes from the environment, and rotate the leaked key. |
+| high | `shop/db.py:25` | The email is pasted into the SQL, so a crafted email can read or change other orders (SQL injection). | Use a placeholder: WHERE email = ?, with (email,) as the parameters. |
+| high | `shop/orders.py:17` | The refund amount is never checked, and PayGate refunds whatever it is sent. | Check that 0 &lt; amount_cents &lt;= total_cents minus earlier refunds before calling payments.refund. |
+| medium | `shop/accounts.py:8` | Reset links last 30 days by default, while config.RESET_LINK_HOURS says 2 hours. | Default valid_hours to config.RESET_LINK_HOURS. |
+
+5 finding(s) · 2 model call(s) · $0.0012</pre>
+  </div>
+</div>
+<section class="stage" id="brief" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow">The brief</p>
+    <h2 id="s1">The ticket you're picking up</h2>
+    <p>Write it the way a team would: who it's for, what "done" means, and how you'll know. Every criterion below has a check in the starter's tests.</p>
+  </div>
+  <div class="ticket"><div class="ticket-h"><span>P1 · code-reviewer</span><span>Estimate: 4 to 6 hours · Labels: python, claude-api, cli</span></div><div class="ticket-b"><p class="story">As a developer, I want my changes reviewed before I commit them, so that bugs, security holes and leaked secrets are caught while they're cheap to fix.</p><p class="dm-h">Acceptance criteria</p><ul class="ac"><li><span><code>uv run reviewer.py</code> reviews my uncommitted changes; <code>--staged</code> reviews only what I'm about to commit</span></li><li><span>Each finding has a file, a line that the change added, a severity (high, medium or low), the problem and a fix</span></li><li><span>Claude can read other files in the repo for context, but nothing outside it, and no <code>.env</code> files</span></li><li><span>The report is saved as <code>review.md</code>, worst findings first, with the cost of the review</span></li><li><span>It exits with code 1 on a high-severity finding, so a pre-commit hook can block the commit</span></li><li><span>It finds at least 4 of the 5 bugs planted in the sample change, for under $0.01 a review</span></li></ul></div></div>
+  <div class="grid g2">
+    <div class="box"><h4>What you practise</h4><ul class="small" style="margin:0;padding-left:1.1em;display:grid;gap:4px">
+      <li>Parsing real developer data: a git diff (<a href="eng-python.html" data-site-link>E2</a>)</li>
+      <li>Structured output checked in code, with a retry (<a href="eng-structured.html" data-site-link>E4</a>)</li>
+      <li>A tool-use loop, and a tool that's safe to give a model (<a href="eng-tools.html" data-site-link>E5</a>)</li>
+      <li>Cost per run, and a command-line tool with exit codes (<a href="eng-first-call.html" data-site-link>E3</a>)</li>
+    </ul></div>
+    <div class="box tint"><h4>Why this project</h4><p class="small">Code review is one of the most common real uses of LLMs in engineering teams. Building one shows the whole pattern behind useful AI tools: give the model the right context, make it answer in a shape code can check, check it, and act on the result.</p></div>
+  </div>
+</section>
+<section class="stage" id="how" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow">Architecture</p>
+    <h2 id="s2">How the parts fit</h2>
+    <p>One file, <code>reviewer.py</code>, with a function for each box. The milestone that builds each part is in brackets, and dashed boxes can repeat.</p>
+  </div>
+  <ol class="flow"><li><b>Get the diff</b><span><code>git_diff</code> or a saved file (5)</span></li><li><b>Number every line</b><span><code>parse_diff</code>, <code>format_change</code> (1)</span></li><li><b>Ask for a Review</b><span><code>ask</code>, with <code>output_format=Review</code> (2)</span></li><li class="loop"><b>Read files if needed</b><span><code>read_file</code> inside the repo, at most 5 times (4)</span></li><li class="loop"><b>Check each finding</b><span><code>check</code>; ask again with the problems (3)</span></li><li><b>Report and decide</b><span><code>review.md</code>, exit code 0 or 1 (5)</span></li></ol>
+  <p class="prose">The model only sees what the code gives it, and the code only acts on answers it has checked. That split is the design: Claude does the judgement, code does the counting, checking and deciding.</p>
+</section>
+<section class="stage" id="setup" aria-labelledby="h-setup"><div class="stage-head"><p class="eyebrow">Before you start</p><h2 id="h-setup">Set up the starter</h2><p>Download the starter, install what it needs, and run the checker. It shows all five milestones as not started.</p><div class="ms-meta"><span>About 20 minutes</span><span>Uses <a href="eng-setup.html" data-site-link>E1</a>, <a href="eng-first-call.html" data-site-link>E3</a></span></div></div><div class="proj-dl"><a class="btn" href="projects/p1-code-review-starter.zip" download data-site-link>Download the starter (.zip)</a><a href="https://github.com/lalwalataukir/how-ai-agents-work/tree/main/projects/p1-code-review" target="_blank" rel="noopener">See the finished code on GitHub ↗</a></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Download and unzip it into your projects folder</h3><div class="ost"><div class="ost-tabs" role="group" aria-label="Your computer"><button type="button" data-os="mac" aria-selected="true">Mac</button><button type="button" data-os="win" aria-selected="false">Windows</button></div><div class="ost-p" data-os="mac"><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">cd ~/projects</span><span class="ln">curl -LO https://lalwalataukir.github.io/how-ai-agents-work/projects/p1-code-review-starter.zip</span><span class="ln">unzip p1-code-review-starter.zip</span><span class="ln">cd code-reviewer</span></pre></div></div><div class="ost-p" data-os="win" hidden><div class="cb"><div class="cb-h"><span>PowerShell</span><button type="button" class="cb-copy" aria-label="Copy PowerShell">Copy</button></div><pre class="code"><span class="ln">cd ~\projects</span><span class="ln">curl.exe -LO https://lalwalataukir.github.io/how-ai-agents-work/projects/p1-code-review-starter.zip</span><span class="ln">Expand-Archive p1-code-review-starter.zip .</span><span class="ln">cd code-reviewer</span></pre></div></div></div><p>Or use the button above and unzip it yourself. You get a folder called <code>code-reviewer</code>.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Install, and add your API key</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv sync</span><span class="ln">cp .env.example .env</span><span class="ln">code .</span></pre></div><p>In VS Code, open <code>.env</code> and replace <code>your-key-here</code> with your API key from E3. <code>.gitignore</code> already keeps <code>.env</code> out of git. On Windows, <code>cp</code> works in PowerShell too.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Look around</h3><ul><li><code>reviewer.py</code>: the tool. Each <code># TODO milestone N</code> comment marks code you write; everything else is done.</li><li><code>sample/</code>: a small shop app, and <code>changes.diff</code>, a change to it with five planted bugs. <code>planted.json</code> says where they are (no peeking until milestone 2).</li><li><code>score.py</code>: counts how many planted bugs a review finds. Your eval.</li><li><code>tests/</code> and <code>check.py</code>: the checks for each milestone. Claude is faked in them, so they are free and need no internet.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Run the checker</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [ ] 1  Read the diff: not started
+         test_a_gap_between_hunks_shows_as_dots: NotImplementedError: milestone 1: parse_diff
+         Hint: Go through the diff line by line. A line starting with '+++ ' starts a new file; a
+               line like '@@ -10,8 +12,15 @@' starts a hunk whose first line is line 12 of the new
+               file. Inside a hunk, '+' and ' ' lines move the line number on by one, and '-' lines
+               don't.
+  [ ] 2  A structured review: not started
+  [ ] 3  Check every finding: not started
+  [ ] 4  Let it read files: not started
+  [ ] 5  Use it every day: not started
+0 of 5 milestones done. Next: milestone 1.</pre><p class="small">Not started is right. Under the first open milestone, the checker shows the first check that fails, and a hint.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Make it a git repo</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git init</span><span class="ln">git add -A</span><span class="ln">git commit -m "Starter"</span></pre></div><p>Commit after each milestone. Milestone 5 reviews your own uncommitted changes, so it needs a repo.</p></div></li></ol></section>
+<section class="stage" id="m1" aria-labelledby="h-m1"><div class="stage-head"><p class="eyebrow"><b>1</b> · Milestone 1 of 5</p><h2 id="h-m1">Read the diff</h2><p>Turn the text of a diff into data: each changed file, and each line with its number in the new version. No API calls yet.</p><div class="ms-meta"><span>About 1 hour</span><span>Uses <a href="eng-python.html" data-site-link>E2</a></span></div></div><p class="prose">Claude is good at spotting bugs and bad at counting lines. Paste a raw diff and ask "which line?" and the numbers drift. So the code does the counting: it numbers every line, and Claude only has to copy a number. Doing in code what code does well is a habit worth building.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>parse_diff(text)</code>: returns a list of <code>FileChange</code>, one per file. Each has a <code>path</code> and <code>rows</code>: <code>(mark, line number, code)</code> tuples.</li><li><code>format_change(change)</code>: the change as text, the way Claude will see it.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Read a diff</h3><p>This is part of <code>sample/changes.diff</code>, the output of <code>git diff</code>:</p><div class="cb"><div class="cb-h"><span>sample/changes.diff (part)</span><button type="button" class="cb-copy" aria-label="Copy sample/changes.diff (part)">Copy</button></div><pre class="code"><span class="ln">diff --git a/shop/cart.py b/shop/cart.py</span><span class="ln">--- a/shop/cart.py</span><span class="ln">+++ b/shop/cart.py</span><span class="ln">@@ -10,8 +12,15 @@ class Item:</span><span class="ln"> </span><span class="ln"> </span><span class="ln"> def subtotal(items):</span><span class="ln">-    """The price of everything in the cart."""</span><span class="ln">-    return sum(item.price_cents * item.quantity for item in items)</span><span class="ln">+    """The price of everything in the cart, with the bulk discount on large quantities."""</span><span class="ln">+    cents = 0</span><span class="ln">+    for i in range(len(items) - 1):</span></pre></div><ul><li><code>+++ b/shop/cart.py</code> starts a file. The path after <code>b/</code> is the new name.</li><li><code>@@ -10,8 +12,15 @@</code> starts a <button type="button" class="term" data-term="hunk" aria-expanded="false">hunk</button>: 8 old lines from line 10 become 15 new lines from line 12.</li><li>Then each line starts with <code>+</code> (added), <code>-</code> (removed) or a space (unchanged, for context).</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write parse_diff</h3><p>In <code>reviewer.py</code>, the starter has:</p><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> parse_diff(text):</span><span class="ln">    <span class="s">"""Split a unified diff, the output of git diff, into one FileChange per changed file.</span></span><span class="ln"><span class="s">    Deleted files are left out: there is no new code in them to review."""</span></span><span class="ln">    <span class="c"># TODO milestone 1: return a list of FileChange, one per file in the diff.</span></span><span class="ln">    <span class="c"># Watch for "+++ b/&lt;path&gt;" (a new file starts) and "@@ -a,b +c,d @@" (a hunk starts at line c).</span></span><span class="ln">    <span class="k">raise</span> NotImplementedError(<span class="s">"milestone 1: parse_diff"</span>)</span></pre></div><p>Go through <code>text.splitlines()</code> once, keeping three counters: old lines left in the hunk, new lines left, and the next new line number.</p><ul><li>A <code>+</code> line gets the current number, then the number goes up.</li><li>A context line (space) gets a number too, and both counts go down.</li><li>A <code>-</code> line has no number in the new file: store <code>None</code>.</li><li>A deleted file shows as <code>+++ /dev/null</code>. Leave it out: there is no new code to review.</li><li>Between two hunks of one file, add a <code>("@", None, "")</code> row, so the gap shows.</li></ul><p>Counting lines left in the hunk, rather than looking for <code>---</code>, matters: a removed line that starts with <code>--</code> would look like a header.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Write format_change</h3><p>Each row becomes one line: the mark, the number right-aligned in 4 places, a bar, then the code. The whole file sits in a tag, as in E10, so Claude can tell where each file starts and ends:</p><div class="cb"><div class="cb-h"><span>What format_change returns</span><button type="button" class="cb-copy" aria-label="Copy What format_change returns">Copy</button></div><pre class="code"><span class="ln">&lt;file path="app.py"&gt;</span><span class="ln">-      | print("hi")</span><span class="ln">+    1 | name = input("Name: ")</span><span class="ln">+    2 | print("hi", name)</span><span class="ln">&lt;/file&gt;</span></pre></div><p>An f-string does the alignment: <code>f"{mark} {number or '':&gt;4} | {code}"</code>. A gap row is <code>"       ..."</code>.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 1</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Read the diff: 11 checks pass
+1 of 1 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>See what Claude will see</h3><p><code>--prompt</code> prints the prompt and stops, so it costs nothing:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run reviewer.py sample/changes.diff --repo sample --prompt</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Review this change.
+
+&lt;file path="shop/accounts.py"&gt;
++    1 | """Password reset links."""
++    2 | import secrets
++    3 | import time
++    4 | 
++    5 | RESET_TOKENS = {}  # token -&gt; (email, when it expires)
++    6 | 
++    7 | 
++    8 | def start_reset(email, valid_hours=24 * 30):
++    9 |     """Make a one-time token for a password reset link, and remember when it expires."""
++   10 |     token = secrets.token_urlsafe(32)
++   11 |     RESET_TOKENS[token] = (email, time.time() + valid_hours * 3600)
++   12 |     return token
++   13 | 
++   14 | 
++   15 | def finish_reset(token):
++   16 |     """The email a reset token belongs to, or None if it is unknown or has expired."""
++   17 |     email, expires = RESET_TOKENS.pop(token, (None, 0))
++   18 |     return email if time.time() &lt; expires else None
+&lt;/file&gt;
+
+&lt;file path="shop/cart.py"&gt;
+     1 | """Shopping cart totals. All prices are in cents, so sums stay exact."""
+     2 | from dataclasses import dataclass
+...</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 1: read the diff"</span></pre></div></div></li></ol><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p>Keep <code>current</code>, the FileChange being filled, and append rows to <code>current.rows</code>. Start a new one at each <code>+++ </code> line; read the counts from the hunk header with the <code>HUNK</code> regex already in the file: <code>HUNK.match(line)</code> gives the old count, the new start and the new count.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>When a header has no count, as in <code>@@ -1 +1 @@</code>, the count is 1: <code>int(hunk[1] or 1)</code>. Skip lines starting with a backslash: <code>\ No newline at end of file</code> isn't code.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> parse_diff(text):</span><span class="ln">    <span class="s">"""Split a unified diff, the output of git diff, into one FileChange per changed file.</span></span><span class="ln"><span class="s">    Deleted files are left out: there is no new code in them to review."""</span></span><span class="ln">    changes, current = [], <span class="k">None</span></span><span class="ln">    old_left = new_left = number = 0  <span class="c"># lines left in the current hunk, and the next new line number</span></span><span class="ln">    <span class="k">for</span> line <span class="k">in</span> text.splitlines():</span><span class="ln">        <span class="k">if</span> old_left &gt; 0 <span class="k">or</span> new_left &gt; 0:  <span class="c"># inside a hunk, every line is code</span></span><span class="ln">            mark, code = line[:1], line[1:]</span><span class="ln">            <span class="k">if</span> mark == <span class="s">"-"</span>:</span><span class="ln">                current.rows.append((<span class="s">"-"</span>, <span class="k">None</span>, code))</span><span class="ln">                old_left -= 1</span><span class="ln">            <span class="k">elif</span> mark == <span class="s">"+"</span>:</span><span class="ln">                current.rows.append((<span class="s">"+"</span>, number, code))</span><span class="ln">                number, new_left = number + 1, new_left - 1</span><span class="ln">            <span class="k">elif</span> mark != <span class="s">"\\"</span>:  <span class="c"># a context line; "\ No newline at end of file" is skipped</span></span><span class="ln">                current.rows.append((<span class="s">" "</span>, number, code))</span><span class="ln">                number, old_left, new_left = number + 1, old_left - 1, new_left - 1</span><span class="ln">        <span class="k">elif</span> line.startswith(<span class="s">"+++ "</span>):</span><span class="ln">            path = line[4:].split(<span class="s">"\t"</span>)[0]</span><span class="ln">            current = FileChange(path.removeprefix(<span class="s">"b/"</span>))</span><span class="ln">            <span class="k">if</span> path != <span class="s">"/dev/null"</span>:</span><span class="ln">                changes.append(current)</span><span class="ln">        <span class="k">elif</span> (hunk := HUNK.match(line)) <span class="k">and</span> current:</span><span class="ln">            <span class="k">if</span> current.rows:</span><span class="ln">                current.rows.append((<span class="s">"@"</span>, <span class="k">None</span>, <span class="s">""</span>))  <span class="c"># a gap between two hunks</span></span><span class="ln">            old_left = int(hunk[1] <span class="k">or</span> 1)</span><span class="ln">            number, new_left = int(hunk[2]), int(hunk[3] <span class="k">or</span> 1)</span><span class="ln">    <span class="k">return</span> changes</span></pre></div><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> format_change(change):</span><span class="ln">    <span class="s">"""One file's change as Claude sees it: + added, - removed, and line numbers from the new file."""</span></span><span class="ln">    lines = [<span class="s">f'&lt;file path="{change.path}"&gt;'</span>]</span><span class="ln">    <span class="k">for</span> mark, number, code <span class="k">in</span> change.rows:</span><span class="ln">        lines.append(<span class="s">"       ..."</span> <span class="k">if</span> mark == <span class="s">"@"</span> <span class="k">else</span> <span class="s">f"{mark} {number or '':&gt;4} | {code}"</span>)</span><span class="ln">    lines.append(<span class="s">"&lt;/file&gt;"</span>)</span><span class="ln">    <span class="k">return</span> <span class="s">"\n"</span>.join(lines)</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>AttributeError: 'NoneType' object has no attribute 'rows'</code></dt><dd>A row arrived before any <code>+++ </code> line set <code>current</code>. Check that you only read rows while inside a hunk.</dd><dt><code>AssertionError: 16 != 17</code></dt><dd>Line numbers are one off. The hunk header's new start is the number of its first line, and only <code>+</code> and context lines move it on.</dd><dt><code>test_one_change_per_file_and_deleted_files_left_out</code></dt><dd>The deleted file <code>shop/legacy_prices.py</code> is in your list, or its path still starts with <code>b/</code>. Use <code>path.removeprefix("b/")</code>.</dd></dl></div></section>
+<section class="stage" id="m2" aria-labelledby="h-m2"><div class="stage-head"><p class="eyebrow"><b>2</b> · Milestone 2 of 5</p><h2 id="h-m2">Ask for a structured review</h2><p>Define the shape of a finding, and ask Claude for a review in exactly that shape. Your first API call, for under a cent.</p><div class="ms-meta"><span>About 1 hour</span><span>Uses <a href="eng-first-call.html" data-site-link>E3</a>, <a href="eng-structured.html" data-site-link>E4</a>, <a href="eng-tools.html" data-site-link>E5</a></span></div></div><p class="prose">A review in free text can't be checked, sorted or turned into a report. With <code>output_format</code>, the API makes Claude's answer match a Pydantic model, and the SDK hands it back as an object, as in E4. Typing <code>severity</code> as <code>Literal["high", "medium", "low"]</code> means it can only ever be one of those three words.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>Finding</code>: <code>file</code>, <code>line</code>, <code>severity</code>, <code>issue</code> and <code>fix</code>.</li><li><code>Review</code>: <code>findings</code> (a list of Finding) and <code>summary</code>.</li><li><code>ask(messages, repo, cost)</code>: the call, and the tool-use loop from E5.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write the two models</h3><p>Plain Pydantic, as in E4. Add a comment to each field: it helps the next reader, and the field names are what Claude sees in the schema.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Read the system prompt</h3><p><code>SYSTEM</code> is already written. Read it: it says what counts as a problem, defines each severity so <em>high</em> means the same on every run, and ends with a defence from E10: the code under review is data, never instructions.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Write ask</h3><p>The call is <code>client.messages.parse(model=MODEL, max_tokens=8000, system=SYSTEM, tools=TOOLS, messages=messages, output_format=Review)</code>. Then:</p><ul><li><code>cost.add(response.usage)</code> after every call. <code>Cost</code> is written for you.</li><li>Append Claude's reply to <code>messages</code> as an <code>assistant</code> message.</li><li>If <code>stop_reason</code> isn't <code>"tool_use"</code>, return the response: <code>response.parsed_output</code> is the Review.</li><li>Otherwise run each <code>tool_use</code> block with <code>run_tool</code>, send every result back in one <code>user</code> message, and call again.</li></ul><p><code>TOOLS</code> already offers <code>read_file</code>, so Claude can ask for files from the first call. Until milestone 4, the starter's <code>run_tool</code> answers that the tool isn't built yet, and Claude reviews from the diff alone.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 2</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Read the diff: 11 checks pass
+  [x] 2  A structured review: 6 checks pass
+2 of 2 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Review the sample for real</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run reviewer.py sample/changes.diff --repo sample</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  -&gt; read_file({"path": "shop/payments.py", "start": 1, "end": 20})
+  -&gt; read_file({"path": "shop/config.py", "start": 1, "end": 10})
+Adds bulk pricing, an email search for support, partial refunds and password reset links. Four of the changes have serious bugs.
+  high   shop/cart.py:17  range(len(items) - 1) skips the last item, so every cart is undercharged.
+  high   shop/config.py:6  A live PayGate secret is written into the code as a fallback, so it is published with the repo.
+  high   shop/db.py:25  The email is pasted into the SQL, so a crafted email can read or change other orders (SQL injection).
+  high   shop/orders.py:17  The refund amount is never checked, and PayGate refunds whatever it is sent.
+  medium shop/accounts.py:8  Reset links last 30 days by default, while config.RESET_LINK_HOURS says 2 hours.
+5 finding(s) · 2 model call(s) · $0.0012</pre><p class="small">An example: Claude's findings and wording vary from run to run. The arrow lines are read_file requests; each got "not built yet" back.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Score it</h3><p>Now look at <code>sample/planted.json</code>, then run the eval:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run score.py</span></pre></div><p>Write your score down. You'll run it again after milestones 3 and 4 to see whether each change helps: the habit from E8, at a small scale. One run is noisy; run it three times if the numbers look close.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 2: a structured review"</span></pre></div></div></li></ol><div class="quiz" data-quiz="qp1a">
+    <p class="quiz-label">Check your understanding · Structured output</p>
+    <p class="quiz-q">Why does the code number the lines, rather than asking Claude which line a bug is on?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. It makes the prompt slightly longer."><span class="l">A</span><span>Numbering lines makes the prompt shorter</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Give the model the facts code can work out, and ask it only for judgement."><span class="l">B</span><span>Models are poor at counting lines, and code is exact, so Claude only has to copy a number</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The API accepts any text; this is a design choice."><span class="l">C</span><span>The API requires line numbers for code</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>class Finding(BaseModel):</code> then one line per field, such as <code>line: int</code>. For severity, <code>from typing import Literal</code> is already imported.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>The loop is E5's: <code>while True:</code>, call, add the cost, append the reply, return unless <code>stop_reason == "tool_use"</code>, then build one <code>tool_result</code> per <code>tool_use</code> block. Count the reads and pass the count to <code>run_tool</code>.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">class</span> Finding(BaseModel):</span><span class="ln">    <span class="s">"""One problem in the change."""</span></span><span class="ln">    file: str</span><span class="ln">    line: int  <span class="c"># a line number from the diff</span></span><span class="ln">    severity: Literal[<span class="s">"high"</span>, <span class="s">"medium"</span>, <span class="s">"low"</span>]</span><span class="ln">    issue: str  <span class="c"># what is wrong, in one sentence</span></span><span class="ln">    fix: str</span></pre></div><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">class</span> Review(BaseModel):</span><span class="ln">    findings: list[Finding]</span><span class="ln">    summary: str</span></pre></div><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> ask(messages, repo, cost):</span><span class="ln">    <span class="s">"""Call Claude until it answers with a Review, running the read_file calls it makes on the way."""</span></span><span class="ln">    reads = 0</span><span class="ln">    <span class="k">while</span> <span class="k">True</span>:</span><span class="ln">        response = client.messages.parse(</span><span class="ln">            model=MODEL, max_tokens=8000, system=SYSTEM, tools=TOOLS, messages=messages,</span><span class="ln">            output_format=Review,  <span class="c"># the answer is checked against Review, and given back as parsed_output</span></span><span class="ln">        )</span><span class="ln">        cost.add(response.usage)</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: response.content})</span><span class="ln">        <span class="k">if</span> response.stop_reason != <span class="s">"tool_use"</span>:</span><span class="ln">            <span class="k">return</span> response</span><span class="ln">        results = []  <span class="c"># one tool_result for every tool_use, all sent back in one message</span></span><span class="ln">        <span class="k">for</span> block <span class="k">in</span> response.content:</span><span class="ln">            <span class="k">if</span> block.type == <span class="s">"tool_use"</span>:</span><span class="ln">                reads += 1</span><span class="ln">                print(<span class="s">f"  -&gt; {block.name}({json.dumps(block.input)})"</span>, file=sys.stderr)</span><span class="ln">                text, failed = run_tool(block.name, block.input, repo, reads)</span><span class="ln">                results.append({<span class="s">"type"</span>: <span class="s">"tool_result"</span>, <span class="s">"tool_use_id"</span>: block.id, <span class="s">"content"</span>: text, <span class="s">"is_error"</span>: failed})</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: results})</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>anthropic.AuthenticationError</code></dt><dd>The key in <code>.env</code> is missing or wrong. <code>load_dotenv()</code> reads it from the folder you run the command in.</dd><dt><code>pydantic_core._pydantic_core.ValidationError</code></dt><dd>Claude's answer didn't match your model. This shouldn't happen with <code>output_format</code>; check that you passed <code>Review</code>, not <code>Finding</code>.</dd><dt><code>AttributeError: 'NoneType' object has no attribute 'findings'</code></dt><dd>You returned a response whose <code>stop_reason</code> was <code>tool_use</code>. Only return when it isn't.</dd></dl></div></section>
+<section class="stage" id="m3" aria-labelledby="h-m3"><div class="stage-head"><p class="eyebrow"><b>3</b> · Milestone 3 of 5</p><h2 id="h-m3">Check every finding</h2><p>The schema guarantees the shape of an answer, not that it's right. Check that every finding points at a line the change added, and ask again when one doesn't.</p><div class="ms-meta"><span>About 45 minutes</span><span>Uses <a href="eng-structured.html" data-site-link>E4</a></span></div></div><p class="prose"><code>line: 22</code> is a valid integer, and it may point at a blank line, a removed line, or a file that isn't in the diff. A reviewer that cites the wrong line wastes the reader's time and loses their trust. So check in code, send the problems back, and ask again: the E4 pattern. If findings are still wrong after the last attempt, drop them rather than crash: a pre-commit check that fails for its own reasons gets switched off.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>check(review, changes)</code>: a list of problems, one for each finding that doesn't point at an added line.</li><li><code>review(changes, repo, attempts=2)</code>: ask, check, retry with the problems listed, and drop findings still wrong at the end.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write check</h3><p>Build <code>{change.path: change.added for change in changes}</code> once. A finding is wrong if its file isn't a key, or its line isn't in that file's added lines. Write each problem as an instruction Claude can act on, such as <em>"shop/db.py line 18 is not an added line. Use the number of a line marked +."</em></p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write review</h3><p>Start the conversation with <code>build_prompt(changes)</code> and a fresh <code>Cost()</code>. Then up to <code>attempts</code> times:</p><ul><li>Call <code>ask</code>. If <code>stop_reason</code> isn't <code>"end_turn"</code>, raise <code>RuntimeError</code>: the answer is cut off or was declined.</li><li>Check it. No problems: return the review and the cost.</li><li>Otherwise add a user message listing the problems, and go round again.</li></ul><p>After the last attempt, keep only the findings on added lines and return those. Print what happened to <code>sys.stderr</code>, so it doesn't mix with the report.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 3</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Read the diff: 11 checks pass
+  [x] 2  A structured review: 6 checks pass
+  [x] 3  Check every finding: 8 checks pass
+3 of 3 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Run it, and score it again</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run reviewer.py sample/changes.diff --repo sample</span><span class="ln">uv run score.py</span></pre></div><p>Most runs need one attempt. When you see <code>Attempt 1: 1 finding(s) point at the wrong place.</code>, the check just caught something that would have reached the reader.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 3: check every finding"</span></pre></div></div></li></ol><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>check</code> is a loop over <code>review.findings</code> with two <code>if</code>s. Keep the messages specific: the file and line, and what to use instead.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>In <code>review</code>, <code>for attempt in range(1, attempts + 1):</code>. The problems go back as <code>{"role": "user", "content": "Fix these problems and answer again:\n" + "\n".join(problems)}</code>. <code>ask</code> already appended Claude's reply.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> check(review, changes):</span><span class="ln">    <span class="s">"""Problems the schema can't catch. An empty list means every finding points at an added line."""</span></span><span class="ln">    added = {change.path: change.added <span class="k">for</span> change <span class="k">in</span> changes}</span><span class="ln">    problems = []</span><span class="ln">    <span class="k">for</span> finding <span class="k">in</span> review.findings:</span><span class="ln">        <span class="k">if</span> finding.file <span class="k">not</span> <span class="k">in</span> added:</span><span class="ln">            problems.append(<span class="s">f"{finding.file} is not in the diff. Use a path from a &lt;file&gt; tag."</span>)</span><span class="ln">        <span class="k">elif</span> finding.line <span class="k">not</span> <span class="k">in</span> added[finding.file]:</span><span class="ln">            problems.append(<span class="s">f"{finding.file} line {finding.line} is not an added line. Use the number of a line marked +."</span>)</span><span class="ln">    <span class="k">return</span> problems</span></pre></div><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> review(changes, repo=<span class="s">"."</span>, attempts=2):</span><span class="ln">    <span class="s">"""Ask for a review, check it, and ask again with the problems listed if it fails.</span></span><span class="ln"><span class="s">    Returns the review and what it cost."""</span></span><span class="ln">    messages = [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: build_prompt(changes)}]</span><span class="ln">    cost = Cost()</span><span class="ln">    <span class="k">for</span> attempt <span class="k">in</span> range(1, attempts + 1):</span><span class="ln">        response = ask(messages, repo, cost)</span><span class="ln">        <span class="k">if</span> response.stop_reason != <span class="s">"end_turn"</span>:  <span class="c"># cut off or declined: no complete answer</span></span><span class="ln">            <span class="k">raise</span> RuntimeError(<span class="s">f"Claude stopped early ({response.stop_reason})."</span>)</span><span class="ln">        result = response.parsed_output</span><span class="ln">        problems = check(result, changes)</span><span class="ln">        <span class="k">if</span> <span class="k">not</span> problems:</span><span class="ln">            <span class="k">return</span> result, cost</span><span class="ln">        print(<span class="s">f"Attempt {attempt}: {len(problems)} finding(s) point at the wrong place."</span>, file=sys.stderr)</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Fix these problems and answer again:\n"</span> + <span class="s">"\n"</span>.join(problems)})</span><span class="ln">    added = {change.path: change.added <span class="k">for</span> change <span class="k">in</span> changes}  <span class="c"># still wrong: keep the findings that are right</span></span><span class="ln">    result.findings = [f <span class="k">for</span> f <span class="k">in</span> result.findings <span class="k">if</span> f.line <span class="k">in</span> added.get(f.file, {})]</span><span class="ln">    <span class="k">return</span> result, cost</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>RuntimeError: Claude stopped early (max_tokens)</code></dt><dd>The review was cut off. That's rare with 8,000 tokens; a very large diff can do it. Review fewer files at once.</dd><dt><code>test_still_wrong_after_two_attempts_keeps_only_the_right_findings</code></dt><dd>After the loop, filter <code>result.findings</code> rather than raising.</dd></dl></div></section>
+<section class="stage" id="m4" aria-labelledby="h-m4"><div class="stage-head"><p class="eyebrow"><b>4</b> · Milestone 4 of 5</p><h2 id="h-m4">Let it read files</h2><p>The diff hides context. Give Claude a tool to read files, and make it safe: inside the repo only, never secrets, and a limit on how much it reads.</p><div class="ms-meta"><span>About 1 hour</span><span>Uses <a href="eng-tools.html" data-site-link>E5</a>, <a href="eng-security.html" data-site-link>E10</a></span></div></div><p class="prose">Two planted bugs are hard to see from the diff alone. The refund bug depends on <code>payments.py</code>, which says PayGate refunds whatever it is sent; the reset-link default depends on <code>RESET_LINK_HOURS</code> in <code>config.py</code>. A tool lets Claude look. A tool that reads files is also the riskiest thing in this project: a path like <code>../../.ssh/id_rsa</code> is a <button type="button" class="term" data-term="traversal" aria-expanded="false">path traversal</button>, and a prompt injection hidden in the code under review could ask for one. So the code decides what is allowed, not the model.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>read_file(repo, path, start, end)</code>: numbered lines from a file inside the repo.</li><li><code>run_tool(name, args, repo, reads)</code>: runs <code>read_file</code>, enforces <code>MAX_READS</code>, and turns errors into error results.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write read_file</h3><p>Resolve both paths, then compare:</p><div class="cb"><div class="cb-h"><span>The containment check</span><button type="button" class="cb-copy" aria-label="Copy The containment check">Copy</button></div><pre class="code"><span class="ln">root = Path(repo).resolve()</span><span class="ln">target = (root / path).resolve()   <span class="c"># "../" and links are worked out here</span></span><span class="ln"><span class="k">if</span> <span class="k">not</span> target.is_relative_to(root):</span><span class="ln">    <span class="k">raise</span> ValueError(<span class="s">f"{path} is outside the repo."</span>)</span></pre></div><ul><li>Refuse any file whose name starts with <code>.env</code>, even inside the repo.</li><li>Raise <code>ValueError</code> for files that don't exist.</li><li>Clamp the range: from line 1 at least, to the end of the file at most, and never more than <code>MAX_LINES</code> lines.</li><li>Number the lines as <code>format_change</code> does: <code>f"{n:&gt;4} | {line}"</code>.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write run_tool</h3><p>Unknown tool name: an error. Over <code>MAX_READS</code>: an error that tells Claude to finish. A <code>ValueError</code> from <code>read_file</code>: its message, as an error. Errors go back to Claude with <code>is_error</code>, so it can adjust; they never crash the review.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py 4</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Read the diff: 11 checks pass
+  [x] 2  A structured review: 6 checks pass
+  [x] 3  Check every finding: 8 checks pass
+  [x] 4  Let it read files: 11 checks pass
+4 of 4 milestones done.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Score it again</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run score.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  -&gt; read_file({"path": "shop/payments.py", "start": 1, "end": 20})
+  -&gt; read_file({"path": "shop/config.py", "start": 1, "end": 10})
+  [x] shop/accounts.py: Reset links last 30 days by default, not RESET_LINK_HOURS (2 hours)
+  [x] shop/cart.py: Off by one: the loop skips the last item in the cart
+  [x] shop/config.py: A live payment secret is written in the code
+  [x] shop/db.py: SQL injection: the email is pasted into the query
+  [x] shop/orders.py: No check that the refund is above 0 and no more than was paid
+Found 5 of 5 planted bugs, plus 0 other finding(s). 2 model call(s), $0.0012</pre><p class="small">An example run. The arrow lines show what Claude chose to read. Compare with your score from milestone 2: reading context usually finds the refund and reset-link bugs more often.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 4: let it read files"</span></pre></div></div></li></ol><div class="quiz" data-quiz="qp1b">
+    <p class="quiz-label">Check your understanding · A safe tool</p>
+    <p class="quiz-q">Claude asks read_file for ../../.ssh/id_rsa. What should happen?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The code decides what&#x27;s allowed. The request may come from a prompt injection in the code under review."><span class="l">A</span><span>The code refuses it, because the resolved path is outside the repo</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The model can be tricked by text in the files it reviews; the limit has to be in code."><span class="l">B</span><span>It's fine: Claude wouldn't misuse a private key</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Say it in the prompt too, but only the code check can be relied on."><span class="l">C</span><span>The system prompt should tell Claude not to ask for it</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p><code>Path.resolve()</code> turns <code>sample/shop/../../reviewer.py</code> into a full path with no <code>..</code> in it. Then <code>is_relative_to</code> is a reliable test.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p><code>lines = target.read_text(encoding="utf-8").splitlines()</code>, then <code>end = min(end, start + MAX_LINES - 1, len(lines))</code>. Join the numbered lines with <code>"\n"</code>.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> read_file(repo, path, start, end):</span><span class="ln">    <span class="s">"""Lines start to end of a file in the repo, numbered. Refuses anything outside the repo,</span></span><span class="ln"><span class="s">    and .env files, which hold secrets."""</span></span><span class="ln">    root = Path(repo).resolve()</span><span class="ln">    target = (root / path).resolve()</span><span class="ln">    <span class="k">if</span> <span class="k">not</span> target.is_relative_to(root):</span><span class="ln">        <span class="k">raise</span> ValueError(<span class="s">f"{path} is outside the repo."</span>)</span><span class="ln">    <span class="k">if</span> target.name.startswith(<span class="s">".env"</span>):</span><span class="ln">        <span class="k">raise</span> ValueError(<span class="s">"read_file can't open .env files."</span>)</span><span class="ln">    <span class="k">if</span> <span class="k">not</span> target.is_file():</span><span class="ln">        <span class="k">raise</span> ValueError(<span class="s">f"There is no file {path} in the repo."</span>)</span><span class="ln">    lines = target.read_text(encoding=<span class="s">"utf-8"</span>, errors=<span class="s">"replace"</span>).splitlines()</span><span class="ln">    start = max(start, 1)</span><span class="ln">    end = min(end, start + MAX_LINES - 1, len(lines))</span><span class="ln">    <span class="k">if</span> start &gt; end:</span><span class="ln">        <span class="k">return</span> <span class="s">f"{path} has {len(lines)} lines."</span></span><span class="ln">    <span class="k">return</span> <span class="s">"\n"</span>.join(<span class="s">f"{n:&gt;4} | {lines[n - 1]}"</span> <span class="k">for</span> n <span class="k">in</span> range(start, end + 1))</span></pre></div><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> run_tool(name, args, repo, reads):</span><span class="ln">    <span class="s">"""Run one tool call. Returns the text to send back, and whether it failed."""</span></span><span class="ln">    <span class="k">if</span> name != <span class="s">"read_file"</span>:</span><span class="ln">        <span class="k">return</span> <span class="s">f"There is no tool called {name}."</span>, <span class="k">True</span></span><span class="ln">    <span class="k">if</span> reads &gt; MAX_READS:</span><span class="ln">        <span class="k">return</span> <span class="s">f"read_file has reached its limit of {MAX_READS} reads. Finish the review."</span>, <span class="k">True</span></span><span class="ln">    <span class="k">try</span>:</span><span class="ln">        <span class="k">return</span> read_file(repo, args[<span class="s">"path"</span>], args[<span class="s">"start"</span>], args[<span class="s">"end"</span>]), <span class="k">False</span></span><span class="ln">    <span class="k">except</span> ValueError <span class="k">as</span> error:</span><span class="ln">        <span class="k">return</span> str(error), <span class="k">True</span></span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>test_paths_outside_the_repo_are_refused</code></dt><dd>Compare resolved paths. Checking whether the text contains <code>..</code> misses absolute paths like <code>/etc/passwd</code>.</dd><dt><code>read_file has reached its limit</code></dt><dd>That's the limit working. If Claude hits it on most runs, give it a bigger <code>MAX_READS</code>, and watch the cost per review.</dd></dl></div></section>
+<section class="stage" id="m5" aria-labelledby="h-m5"><div class="stage-head"><p class="eyebrow"><b>5</b> · Milestone 5 of 5</p><h2 id="h-m5">Use it every day</h2><p>Review your real uncommitted changes, write a report, and return an exit code that git can act on. Then make it run before every commit.</p><div class="ms-meta"><span>About 1 hour</span><span>Uses <a href="eng-setup.html" data-site-link>E1</a>, <a href="eng-evals.html" data-site-link>E8</a></span></div></div><p class="prose">A tool you have to remember to run doesn't get run. An <button type="button" class="term" data-term="exitcode" aria-expanded="false">exit code</button> turns the review into a gate: 0 lets the next step go ahead, 1 stops it. That's how a <button type="button" class="term" data-term="precommit" aria-expanded="false">pre-commit hook</button> blocks a commit, and how CI blocks a merge, as with the evals in E8.</p><p class="dm-h">What you write</p><ul class="todo-list"><li><code>git_diff(repo, staged)</code>: runs <code>git diff HEAD</code>, or <code>git diff --staged</code>.</li><li><code>to_markdown(review, cost)</code>: the report, worst findings first.</li><li><code>should_block(review, fail_on)</code>: true if any finding is at least that severe.</li><li>The end of <code>main</code>: git when no diff file is given, <code>review.md</code>, and the exit code.</li></ul><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Write git_diff</h3><p><code>subprocess.run(command, cwd=repo, capture_output=True, text=True, encoding="utf-8")</code>. If the return code isn't 0, raise <code>RuntimeError</code> with git's own message: "not a git repository" is clearer than anything you could write.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write to_markdown and should_block</h3><p>The report is a summary, a table and a last line with the cost. Escape <code>|</code> in cells, or one finding about a pipe breaks the table. <code>SEVERITY</code> maps each level to a number, so "at least medium" is a comparison.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Finish main</h3><p>The starter's <code>main</code> only reads diff files. Replace its milestone 5 part: read the diff file if one is given, otherwise call <code>git_diff</code>; stop early if there are no changes; write <code>review.md</code>; print it; and return 1 when <code>should_block</code> says so.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Check it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run check.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  [x] 1  Read the diff: 11 checks pass
+  [x] 2  A structured review: 6 checks pass
+  [x] 3  Check every finding: 8 checks pass
+  [x] 4  Let it read files: 11 checks pass
+  [x] 5  Use it every day: 9 checks pass
+5 of 5 milestones done.</pre></div><p>With no number, the checker runs every milestone. All five done.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Run the whole thing</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run reviewer.py sample/changes.diff --repo sample</span><span class="ln">echo $?</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  -&gt; read_file({"path": "shop/payments.py", "start": 1, "end": 20})
+  -&gt; read_file({"path": "shop/config.py", "start": 1, "end": 10})
+# Code review
+
+Adds bulk pricing, an email search for support, partial refunds and password reset links. Four of the changes have serious bugs.
+
+| Severity | Where | Issue | Fix |
+|---|---|---|---|
+| high | `shop/cart.py:17` | range(len(items) - 1) skips the last item, so every cart is undercharged. | Loop over the items directly: for item in items: |
+| high | `shop/config.py:6` | A live PayGate secret is written into the code as a fallback, so it is published with the repo. | Remove the default so the secret only comes from the environment, and rotate the leaked key. |
+| high | `shop/db.py:25` | The email is pasted into the SQL, so a crafted email can read or change other orders (SQL injection). | Use a placeholder: WHERE email = ?, with (email,) as the parameters. |
+| high | `shop/orders.py:17` | The refund amount is never checked, and PayGate refunds whatever it is sent. | Check that 0 &lt; amount_cents &lt;= total_cents minus earlier refunds before calling payments.refund. |
+| medium | `shop/accounts.py:8` | Reset links last 30 days by default, while config.RESET_LINK_HOURS says 2 hours. | Default valid_hours to config.RESET_LINK_HOURS. |
+
+5 finding(s) · 2 model call(s) · $0.0012
+Blocked: a finding is high severity or worse. Details in review.md.
+1</pre><p class="small">An example. <code>echo $?</code> prints the exit code; in PowerShell use <code>echo $LASTEXITCODE</code>.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Make it run before every commit</h3><p>Git runs <code>.git/hooks/pre-commit</code> before each commit, and cancels the commit if it fails. In your <code>code-reviewer</code> folder:</p><div class="cb"><div class="cb-h"><span>.git/hooks/pre-commit</span><button type="button" class="cb-copy" aria-label="Copy .git/hooks/pre-commit">Copy</button></div><pre class="code"><span class="ln"><span class="c">#!/bin/sh</span></span><span class="ln"><span class="c"># Review staged changes; block the commit on a high-severity finding.</span></span><span class="ln">uv run reviewer.py --staged --fail-on high</span></pre></div><div class="ost"><div class="ost-tabs" role="group" aria-label="Your computer"><button type="button" data-os="mac" aria-selected="true">Mac</button><button type="button" data-os="win" aria-selected="false">Windows</button></div><div class="ost-p" data-os="mac"><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">chmod +x .git/hooks/pre-commit</span></pre></div></div><div class="ost-p" data-os="win" hidden><p>No extra step: Git for Windows runs hooks with its own shell.</p></div></div><p>Try it: add a bug on purpose (paste <code>password = "hunter2"</code> into <code>score.py</code>), then <code>git add -A</code> and <code>git commit -m "test"</code>. The commit should be blocked. Remove the line. When you need to commit anyway, <code>git commit --no-verify</code> skips the hook.</p><p>To use it in another repo, put the same hook there with the full paths: <code>uv run --project ~/projects/code-reviewer ~/projects/code-reviewer/reviewer.py --staged</code>.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Commit</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add -A</span><span class="ln">git commit -m "Milestone 5: use it every day"</span></pre></div></div></li></ol><div class="quiz" data-quiz="qp1c">
+    <p class="quiz-label">Check your understanding · Exit codes</p>
+    <p class="quiz-q">Your pre-commit hook blocks a commit on every medium finding, and people start using --no-verify all the time. What's the best fix?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. You lose the high-severity catches too."><span class="l">A</span><span>Delete the hook</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. A gate that blocks too often gets bypassed. Tune the threshold, and measure false positives."><span class="l">B</span><span>Block only on high, and use the eval to keep high findings rare and real</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. That hides findings instead of fixing the cause."><span class="l">C</span><span>Make the prompt say there are no medium problems</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div><div class="hints" aria-live="polite"><div class="hints-h"><h3>Stuck?</h3><button type="button" class="btn btn-sm hint-next">Show hint 1 of 2</button></div><div class="hint" hidden><p class="dm-h">Hint 1</p><p>Three small functions: <code>git_diff</code> is one <code>subprocess.run</code> and an <code>if</code>; <code>should_block</code> is one <code>any(...)</code>; <code>to_markdown</code> builds a list of lines and joins them.</p></div><div class="hint" hidden><p class="dm-h">Hint 2</p><p>Sort with <code>sorted(review.findings, key=lambda f: (-SEVERITY[f.severity], f.file, f.line))</code>. In <code>main</code>, <code>Path("review.md").write_text(report, encoding="utf-8")</code>.</p></div><div class="hint" hidden><p class="dm-h">The solution</p><p>Compare it with yours line by line, then type the difference rather than pasting: you learn more from the errors.</p><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> git_diff(repo=<span class="s">"."</span>, staged=<span class="k">False</span>):</span><span class="ln">    <span class="s">"""The uncommitted changes in a git repo, or only the staged ones."""</span></span><span class="ln">    command = [<span class="s">"git"</span>, <span class="s">"diff"</span>, <span class="s">"--staged"</span>] <span class="k">if</span> staged <span class="k">else</span> [<span class="s">"git"</span>, <span class="s">"diff"</span>, <span class="s">"HEAD"</span>]</span><span class="ln">    result = subprocess.run(command, cwd=repo, capture_output=<span class="k">True</span>, text=<span class="k">True</span>, encoding=<span class="s">"utf-8"</span>)</span><span class="ln">    <span class="k">if</span> result.returncode != 0:</span><span class="ln">        <span class="k">raise</span> RuntimeError(result.stderr.strip() <span class="k">or</span> <span class="s">"git diff failed."</span>)</span><span class="ln">    <span class="k">return</span> result.stdout</span></pre></div><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> to_markdown(review, cost):</span><span class="ln">    <span class="s">"""The review as a Markdown report: worst findings first."""</span></span><span class="ln">    lines = [<span class="s">"# Code review"</span>, <span class="s">""</span>, review.summary, <span class="s">""</span>]</span><span class="ln">    <span class="k">if</span> review.findings:</span><span class="ln">        lines += [<span class="s">"| Severity | Where | Issue | Fix |"</span>, <span class="s">"|---|---|---|---|"</span>]</span><span class="ln">        <span class="k">for</span> f <span class="k">in</span> sorted(review.findings, key=<span class="k">lambda</span> f: (-SEVERITY[f.severity], f.file, f.line)):</span><span class="ln">            cells = [f.severity, <span class="s">f"`{f.file}:{f.line}`"</span>, f.issue, f.fix]</span><span class="ln">            lines.append(<span class="s">"| "</span> + <span class="s">" | "</span>.join(cell.replace(<span class="s">"|"</span>, <span class="s">"\\|"</span>).replace(<span class="s">"\n"</span>, <span class="s">" "</span>) <span class="k">for</span> cell <span class="k">in</span> cells) + <span class="s">" |"</span>)</span><span class="ln">    <span class="k">else</span>:</span><span class="ln">        lines.append(<span class="s">"No findings."</span>)</span><span class="ln">    lines += [<span class="s">""</span>, <span class="s">f"{len(review.findings)} finding(s) · {cost.calls} model call(s) · ${cost.dollars():.4f}"</span>]</span><span class="ln">    <span class="k">return</span> <span class="s">"\n"</span>.join(lines) + <span class="s">"\n"</span></span></pre></div><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> should_block(review, fail_on=<span class="s">"high"</span>):</span><span class="ln">    <span class="s">"""True if any finding is at the fail_on severity or worse. fail_on="never" never blocks."""</span></span><span class="ln">    <span class="k">if</span> fail_on == <span class="s">"never"</span>:</span><span class="ln">        <span class="k">return</span> <span class="k">False</span></span><span class="ln">    <span class="k">return</span> any(SEVERITY[f.severity] &gt;= SEVERITY[fail_on] <span class="k">for</span> f <span class="k">in</span> review.findings)</span></pre></div><div class="cb"><div class="cb-h"><span>reviewer.py</span><button type="button" class="cb-copy" aria-label="Copy reviewer.py">Copy</button></div><pre class="code"><span class="ln"><span class="k">def</span> main(argv=<span class="k">None</span>):</span><span class="ln">    parser = argparse.ArgumentParser(description=<span class="s">"Review a code change with Claude."</span>)</span><span class="ln">    parser.add_argument(<span class="s">"diff"</span>, nargs=<span class="s">"?"</span>, help=<span class="s">"a saved diff; leave it out to review your uncommitted changes"</span>)</span><span class="ln">    parser.add_argument(<span class="s">"--repo"</span>, default=<span class="s">"."</span>, help=<span class="s">"the repo the diff comes from, for read_file (default: here)"</span>)</span><span class="ln">    parser.add_argument(<span class="s">"--staged"</span>, action=<span class="s">"store_true"</span>, help=<span class="s">"review only staged changes, before a commit"</span>)</span><span class="ln">    parser.add_argument(<span class="s">"--fail-on"</span>, choices=[<span class="s">"high"</span>, <span class="s">"medium"</span>, <span class="s">"low"</span>, <span class="s">"never"</span>], default=<span class="s">"high"</span>,</span><span class="ln">                        help=<span class="s">"exit with code 1 if a finding is this bad or worse (default: high)"</span>)</span><span class="ln">    parser.add_argument(<span class="s">"--prompt"</span>, action=<span class="s">"store_true"</span>, help=<span class="s">"print what Claude would see, and stop"</span>)</span><span class="ln">    args = parser.parse_args(argv)</span><span class="ln">    text = Path(args.diff).read_text(encoding=<span class="s">"utf-8"</span>) <span class="k">if</span> args.diff <span class="k">else</span> git_diff(args.repo, args.staged)</span><span class="ln">    changes = parse_diff(text)</span><span class="ln">    <span class="k">if</span> <span class="k">not</span> changes:</span><span class="ln">        print(<span class="s">"No changes to review."</span>)</span><span class="ln">        <span class="k">return</span> 0</span><span class="ln">    <span class="k">if</span> args.prompt:</span><span class="ln">        print(build_prompt(changes))</span><span class="ln">        <span class="k">return</span> 0</span><span class="ln">    result, cost = review(changes, args.repo)</span><span class="ln">    report = to_markdown(result, cost)</span><span class="ln">    Path(<span class="s">"review.md"</span>).write_text(report, encoding=<span class="s">"utf-8"</span>)</span><span class="ln">    print(report)</span><span class="ln">    <span class="k">if</span> should_block(result, args.fail_on):</span><span class="ln">        print(<span class="s">f"Blocked: a finding is {args.fail_on} severity or worse. Details in review.md."</span>, file=sys.stderr)</span><span class="ln">        <span class="k">return</span> 1</span><span class="ln">    <span class="k">return</span> 0</span></pre></div></div></div><div class="fix"><h3>If it breaks</h3><dl><dt><code>fatal: not a git repository</code></dt><dd>Run it inside a git repo, or pass <code>--repo</code>. You made <code>code-reviewer</code> a repo in setup.</dd><dt><code>fatal: ambiguous argument 'HEAD'</code></dt><dd>The repo has no commits yet, so there's nothing to compare with. Commit once, or use <code>--staged</code>.</dd><dt><code>The hook doesn't run</code></dt><dd>Check the file is called exactly <code>pre-commit</code>, with no extension, in <code>.git/hooks</code>, and on a Mac that it's executable.</dd></dl></div></section>
+<section class="stage" id="stretch" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Go further</p>
+    <h2 id="s9">Stretch goals</h2>
+    <p>Pick one or two. Each is a real improvement you can talk about, and none needs new concepts.</p>
+  </div>
+  <div class="stretch">
+    <div class="box"><h4>Comment on pull requests</h4><p class="small">A GitHub Action that reviews every pull request and posts <code>review.md</code> as a comment. Add your key as a repository secret named <code>ANTHROPIC_API_KEY</code> first (E8 shows how). Pull requests from forks don't get secrets, so this suits your own repos.</p><div class="cb"><div class="cb-h"><span>.github/workflows/review.yml</span><button type="button" class="cb-copy" aria-label="Copy .github/workflows/review.yml">Copy</button></div><pre class="code"><span class="ln">name: AI review</span><span class="ln">on: pull_request</span><span class="ln">permissions:</span><span class="ln">  contents: read</span><span class="ln">  pull-requests: write</span><span class="ln">jobs:</span><span class="ln">  review:</span><span class="ln">    runs-on: ubuntu-latest</span><span class="ln">    steps:</span><span class="ln">      - uses: actions/checkout@v5</span><span class="ln">        with:</span><span class="ln">          fetch-depth: 0</span><span class="ln">      - uses: astral-sh/setup-uv@v7</span><span class="ln">      - run: git diff origin/${{ github.base_ref }}...HEAD &gt; pr.diff</span><span class="ln">      - run: uv run reviewer.py pr.diff --fail-on never</span><span class="ln">        env:</span><span class="ln">          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}</span><span class="ln">      - run: gh pr comment ${{ github.event.pull_request.number }} --body-file review.md</span><span class="ln">        env:</span><span class="ln">          GH_TOKEN: ${{ github.token }}</span></pre></div></div>
+    <div class="box"><h4>Compare models with your eval</h4><p class="small">Change <code>MODEL</code> and the prices, run <code>score.py</code> three times each, and make a table: bugs found, extra findings, cost per review. That's E11's method on your own project, and a great README section.</p></div>
+    <div class="box"><h4>Write the commit message too</h4><p class="small">Add <code>--message</code>: a second structured call that returns a subject line under 60 characters and a short body, from the same staged diff. Print it, ready for <code>git commit -F</code>.</p></div>
+    <div class="box"><h4>Handle big changes</h4><p class="small">Skip files that aren't worth reviewing (lock files, generated code), and review large diffs one file at a time, merging the findings. Print the cost before a run that would be expensive, and ask first.</p></div>
+  </div>
+</section>
+<section class="stage" id="writeup" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Show it</p>
+    <h2 id="s10">Write it up</h2>
+    <p>A finished project only helps you if people can see it and you can explain it. Push it to a public GitHub repo (E1), then replace <code>README.md</code> with this, keeping every line true.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>README.md</span><button type="button" class="cb-copy" aria-label="Copy README.md">Copy</button></div><pre class="code"><span class="ln"><span class="c"># Code reviewer</span></span><span class="ln"> </span><span class="ln">Reviews a git diff with Claude and reports each problem with its file, line, severity and a fix.</span><span class="ln">Runs before every commit and blocks the commit on high-severity findings.</span><span class="ln"> </span><span class="ln"><span class="c">## What it does</span></span><span class="ln"> </span><span class="ln">&lt;a sample report, from review.md&gt;</span><span class="ln"> </span><span class="ln"><span class="c">## How it works</span></span><span class="ln"> </span><span class="ln">- Parses the diff and numbers every line, so the model only copies line numbers</span><span class="ln">- Asks Claude (Haiku 5.5) for a review as structured output, checked with Pydantic</span><span class="ln">- Checks every finding points at an added line, and asks again when one doesn't</span><span class="ln">- Gives Claude a read_file tool, confined to the repo, with no access to .env files and a limit of 5 reads</span><span class="ln">- Exits with code 1 on high-severity findings, so a pre-commit hook or CI can stop</span><span class="ln"> </span><span class="ln"><span class="c">## Evals</span></span><span class="ln"> </span><span class="ln">A sample change with 5 planted bugs: it finds &lt;your score&gt; of 5, with &lt;n&gt; other findings, for about $&lt;cost&gt; a review.</span><span class="ln">&lt;what changed your score: the checks in milestone 3, the tool in milestone 4&gt;</span><span class="ln"> </span><span class="ln"><span class="c">## Run it yourself</span></span><span class="ln"> </span><span class="ln">uv sync</span><span class="ln">cp .env.example .env    # add your API key</span><span class="ln">uv run reviewer.py sample/changes.diff --repo sample</span><span class="ln">uv run check.py         # the offline tests</span><span class="ln"> </span><span class="ln"><span class="c">## What I'd do next</span></span><span class="ln"> </span><span class="ln">- &lt;two honest improvements&gt;</span></pre></div>
+  <div class="grid g2">
+    <div class="box"><h4>One line for your CV</h4><p class="small">"Built an AI code reviewer in Python on the Claude API: structured findings validated against the diff with automatic retries, a sandboxed file-reading tool, and a pre-commit gate; finds <your score> of 5 planted bugs for under $0.01 a review."</p></div>
+    <div class="box"><h4>Be ready to explain</h4><ul class="small" style="margin:0;padding-left:1.1em;display:grid;gap:4px">
+      <li>Why the code numbers the lines instead of asking Claude to</li>
+      <li>What the schema guarantees, and what <code>check</code> adds</li>
+      <li>How <code>read_file</code> stays inside the repo, and why that matters</li>
+      <li>Why it drops bad findings instead of crashing</li>
+      <li>How you'd cut <button type="button" class="term" data-term="falsepos" aria-expanded="false">false positives</button>: severity thresholds, and the eval</li>
+    </ul></div>
+  </div>
+</section>
+<section class="stage" id="done" aria-labelledby="s11">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s11">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, P1 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="p1" data-what="Project"><li><label><input type="checkbox"><span><code>uv run check.py</code> says 5 of 5 milestones done</span></label></li><li><label><input type="checkbox"><span><code>uv run score.py</code> finds at least 4 of the 5 planted bugs</span></label></li><li><label><input type="checkbox"><span>The pre-commit hook blocked a commit with a planted bug, and <code>--no-verify</code> got past it</span></label></li><li><label><input type="checkbox"><span>The repo is on GitHub with your README, and <code>.env</code> isn't in it</span></label></li><li><label><input type="checkbox"><span>You can explain why the reviewer numbers lines and checks findings instead of trusting Claude</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+  <p class="score" id="quizScore"></p>
+  <div class="box" style="display:grid;gap:10px"><h3>Words used in this project</h3><div class="gloss" id="glossary"></div></div>
+</section>
+
+<div class="next-module">
+  <a href="eng-tools.html" data-site-link>← E5 · Tool calling</a>
+  <a href="eng-rag.html" data-site-link>Next: E6 · Embeddings and RAG →</a>
+</div>
+
+<footer>
+  <p>The example outputs come from running the finished code against a scripted stand-in for the Claude API, so the format is exact; real reviews word things differently on every run. The shop in <code>sample/</code> is made up, and so is its payment secret.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic or GitHub.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "diff": {
+  "t": "Diff",
+  "d": "The lines that changed between two versions of some files: + for added, - for removed. git diff prints one."
+ },
+ "hunk": {
+  "t": "Hunk",
+  "d": "One block of changes in a diff. Its header, such as @@ -10,8 +12,15 @@, says it covers 8 old lines from line 10 and 15 new lines from line 12."
+ },
+ "precommit": {
+  "t": "Pre-commit hook",
+  "d": "A script git runs before every commit. If it exits with an error code, the commit doesn't happen."
+ },
+ "exitcode": {
+  "t": "Exit code",
+  "d": "The number a program hands back when it ends. 0 means it worked; anything else means it failed, and scripts, git and CI can act on that."
+ },
+ "traversal": {
+  "t": "Path traversal",
+  "d": "Using ../ or a full path to reach files outside the folder a program meant to allow, such as keys or passwords."
+ },
+ "falsepos": {
+  "t": "False positive",
+  "d": "A finding that isn't a real problem. A reviewer with many of them gets ignored, so it's worth measuring."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Hints: one at a time, the last one is the solution ---------- */
+(function(){
+"use strict";
+document.querySelectorAll(".hints").forEach(box => {
+  const hints = [...box.querySelectorAll(".hint")], btn = box.querySelector(".hint-next");
+  let shown = 0;
+  function label(){
+    if(shown >= hints.length){ btn.hidden = true; return; }
+    btn.textContent = shown === hints.length - 1 ? "Show the solution" : "Show hint " + (shown + 1) + " of " + (hints.length - 1);
+  }
+  btn.addEventListener("click", () => {
+    hints[shown].hidden = false; shown++;
+    label();
+    const focus = hints[shown - 1].querySelector(".dm-h"); if(focus){ focus.setAttribute("tabindex", "-1"); focus.focus(); }
+  });
+  label();
+})
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  if(!btn) return;  /* diffs have no copy button: copy the whole file instead */
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? (list.dataset.what || "Module") + " marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.p1";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>

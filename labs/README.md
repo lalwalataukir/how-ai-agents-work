@@ -19,11 +19,13 @@ Each folder holds the finished code for one module's lab, so you can compare it 
 
 Type the code yourself in your own `research-assistant` repo rather than copying this folder: you learn more from the errors.
 
+The guided projects, separate tools you build after each phase, are in [`projects/`](../projects/).
+
 In your repo all these files sit side by side in one folder. Here each module has its own, so `agent.py` appears four times: E8, E9 and E10 each hold the finished version after that module's changes.
 
 ## Tests
 
-The `test_*.py` files run every lab offline. Websites, Claude and Langfuse are faked, so you need no API key or internet connection:
+The `test_*.py` files run every lab, and every guided project, offline. Websites, Claude and Langfuse are faked, so you need no API key or internet connection:
 
 ```
 uv run --with-requirements labs/test-requirements.txt python labs/run_tests.py
