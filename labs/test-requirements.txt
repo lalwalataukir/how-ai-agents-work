@@ -1,0 +1,12 @@
+# The packages the lab tests need, so one command can run every lab's tests.
+anthropic
+chromadb
+fastapi
+httpx
+langfuse
+langgraph
+mcp
+pydantic
+pypdf
+python-dotenv
+pyyaml

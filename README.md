@@ -30,8 +30,13 @@ A hands-on track for beginners who want to build agents, not just understand the
 | **E3 · Your first LLM call**: API keys, the Messages API, system prompts and effort, tokens and cost, streaming, and errors and retries, with a request-builder demo and a chatbot lab that prints its cost | https://lalwalataukir.github.io/how-ai-agents-work/eng-first-call.html |
 | **E4 · Prompts and structured output**: templates, clear instructions, few-shot examples, structured outputs with Pydantic, and check-and-retry, with a schema-check demo and an article-extractor lab | https://lalwalataukir.github.io/how-ai-agents-work/eng-structured.html |
 | **E5 · Tool calling**: defining tools, the tool-use loop by hand, running tools safely, and what loops cost, with a loop-stepper demo and a Wikipedia research-bot lab | https://lalwalataukir.github.io/how-ai-agents-work/eng-tools.html |
+| **E6 · Embeddings and RAG**: embeddings, chunking, vector search with Chroma, citations and failure modes, with a chunk-and-retrieve demo on real embedding distances and a lab that answers questions over your own documents | https://lalwalataukir.github.io/how-ai-agents-work/eng-rag.html |
+| **E7 · Building agents**: planning, memory and state, stop conditions, human approval, LangGraph and MCP, with an agent-trace demo and a lab that builds the research agent in plain Python and LangGraph, plus an MCP server | https://lalwalataukir.github.io/how-ai-agents-work/eng-agents.html |
+| **E8 · Tracing and evals in code**: Langfuse tracing, an eval set in code, code checks and an LLM judge, and evals in GitHub Actions, with a CI-gate demo and a lab that blocks pull requests when the score drops | https://lalwalataukir.github.io/how-ai-agents-work/eng-evals.html |
+| **E9 · Shipping it**: FastAPI, streaming, rate limits, cost caps, prompt caching, latency and free hosting, with a latency-and-cost demo and a lab that deploys the agent to Render | https://lalwalataukir.github.io/how-ai-agents-work/eng-ship.html |
+| **E10 · Security in code**: input handling, prompt-injection defences, tool permissions, sandboxing, and secrets and personal data, with a break-the-agent demo and a lab that writes every attack as a test | https://lalwalataukir.github.io/how-ai-agents-work/eng-security.html |
 
-The finished code for each lab is in [`labs/`](labs/), with offline tests: `uv run --with httpx --with anthropic --with python-dotenv --with pydantic python labs/run_tests.py`.
+The finished code for each lab is in [`labs/`](labs/), with offline tests: `uv run --with-requirements labs/test-requirements.txt python labs/run_tests.py`.
 
 **Demo lab:** https://lalwalataukir.github.io/how-ai-agents-work/demo-lab.html has the LangChain, LangGraph and Langfuse demos in one page, with tabs. Each tab loads the demo from its module page, so there's only one copy of each demo.
 

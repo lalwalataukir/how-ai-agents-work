@@ -26,6 +26,11 @@ PAGES = [
     ("eng-first-call.html", "E3 · Your first LLM call"),
     ("eng-structured.html", "E4 · Prompts and structured output"),
     ("eng-tools.html", "E5 · Tool calling"),
+    ("eng-rag.html", "E6 · Embeddings and RAG"),
+    ("eng-agents.html", "E7 · Building agents"),
+    ("eng-evals.html", "E8 · Tracing and evals in code"),
+    ("eng-ship.html", "E9 · Shipping it"),
+    ("eng-security.html", "E10 · Security in code"),
     ("reference.html", "Glossary"),
 ]
 

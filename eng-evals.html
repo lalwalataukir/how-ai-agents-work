@@ -1,0 +1,1059 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E8 Tracing and Evals</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E8 of the AI engineer track. A CI-gate demo on the lab's 20 eval cases up top, then tracing, the eval set, graders, scores, CI and the improvement loop, a lab that traces the agent and gates pull requests, a done-when checklist and the cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage p code,.stage li code,.stage td code{overflow-wrap:anywhere}
+.cb-diff pre.code .ln.d-add{background:var(--final-soft)}
+.cb-diff pre.code .ln.d-del{background:var(--bad-soft)}
+.cb-diff pre.code .ln.d-gap{color:var(--muted)}
+.cb-key{display:flex;gap:10px}
+.cb-key .k-add{color:var(--final)}
+.cb-key .k-del{color:var(--bad)}
+.whole{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.whole>summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:.92rem}
+.whole[open]>summary{border-bottom:1px solid var(--line)}
+.whole>.cb{border:0;border-radius:0 0 var(--radius) var(--radius)}
+
+/* ---------- E8: CI gate ---------- */
+.cg-body{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+@media (max-width:860px){.cg-body{grid-template-columns:minmax(0,1fr)}}
+.cg-col{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start;min-width:0}
+.cg-col+.cg-col{border-left:1px solid var(--line)}
+@media (max-width:860px){.cg-col+.cg-col{border-left:0;border-top:1px solid var(--line)}}
+.cg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
+.cg-case{font:inherit;font-size:.76rem;text-align:left;display:grid;gap:2px;border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);cursor:pointer;min-width:0}
+.cg-case .id{font-family:var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cg-case .st{font-size:.7rem;color:var(--muted)}
+.cg-case.s-pass{border-color:var(--final)}
+.cg-case.s-pass .st{color:var(--final)}
+.cg-case.s-code{border-color:var(--bad);background:var(--bad-soft)}
+.cg-case.s-code .st{color:var(--bad)}
+.cg-case.s-judge{border-color:var(--act);background:var(--act-soft)}
+.cg-case.s-judge .st{color:var(--act)}
+.cg-case[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+.cg-score{display:grid;gap:6px}
+.cg-track{position:relative;height:12px;border-radius:999px;background:var(--surface-2)}
+.cg-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--final);transition:width .25s}
+.cg-fill.low{background:var(--bad)}
+.cg-mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.cg-score-top{display:flex;justify-content:space-between;gap:8px;font-size:.85rem}
+.cg-score-top b{font-family:var(--font-mono);font-weight:500}
+.cg-pr{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.cg-pr-h{padding:10px 14px;border-bottom:1px solid var(--line);font-size:.9rem}
+.cg-pr-h b{font-family:var(--font-display)}
+.cg-check{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:.86rem;align-items:start}
+.cg-icon{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:700;color:var(--accent-ink)}
+.cg-icon.i-ok{background:var(--final)}
+.cg-icon.i-no{background:var(--bad)}
+.cg-merge{padding:10px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.cg-merge-btn{font:inherit;font-weight:700;font-size:.88rem;border:0;border-radius:6px;padding:7px 14px;background:var(--final);color:var(--accent-ink)}
+.cg-merge-btn:disabled{background:var(--surface-2);color:var(--muted)}
+.cg-detail{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:6px;font-size:.86rem;background:var(--surface)}
+.cg-detail ul{margin:0;padding-left:1.1em;display:grid;gap:2px}
+.cg-detail .y{color:var(--final)}
+.cg-detail .n{color:var(--bad)}
+.cg-detail .m{color:var(--muted)}
+.trace-tree{list-style:none;margin:0;padding:12px 14px;display:grid;gap:4px;font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);overflow-x:auto}
+.trace-tree li{white-space:nowrap}
+.trace-tree .tk{display:inline-block;min-width:76px;color:var(--accent)}
+.trace-tree .tm{color:var(--muted)}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E8 · Tracing and evals in code</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#tracing" data-nav="tracing"><span class="n">1</span>Tracing</a>
+      <a href="#dataset" data-nav="dataset"><span class="n">2</span>An eval set</a>
+      <a href="#graders" data-nav="graders"><span class="n">3</span>Graders</a>
+      <a href="#score" data-nav="score"><span class="n">4</span>Scores</a>
+      <a href="#ci" data-nav="ci"><span class="n">5</span>Evals in CI</a>
+      <a href="#loop" data-nav="loop"><span class="n">6</span>The loop</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E8 · AI engineer track · about 4 hours</p>
+  <h1>Tracing and evals in code: see every run, score every change</h1>
+  <p class="lede">Your agent works on the questions you tried. Two things tell you whether it keeps working: <button type="button" class="term" data-term="trace" aria-expanded="false">traces</button> show exactly what each run did, and an <button type="button" class="term" data-term="eval_set" aria-expanded="false">eval set</button> scores every change before it ships. <a href="langfuse.html" data-site-link>Module 5</a> and <a href="evals.html" data-site-link>module 10</a> covered both as a PM. Here you'll build them: Langfuse tracing in three lines, 20 eval cases graded by code and an LLM judge, and a GitHub check that blocks a pull request when the score drops.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="llm_judge" aria-expanded="false">LLM judge</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">An eval run that grades the agent and fails when the score drops, on your laptop and on every pull request:</p>
+    <pre class="out">% uv run run_evals.py
+ 1 pass  ai-term           4 calls  $0.00071
+ ...
+17 FAIL  mccarthy-job      4 calls  $0.00062  judge: The answer says McCarthy was at MIT...
+
+Score 19/20 = 95% (minimum 85%). This run cost $0.0124.</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">CI gate</h2>
+    <p>You open a pull request that changes the agent's system prompt. GitHub Actions runs the 20 eval cases from the lab and blocks the merge if the score falls below the threshold. Pick a change, set the threshold, and click any case to see how it was graded.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>The 20 cases are the lab's real eval set. The results are scripted to show typical outcomes; real runs vary a little from one run to the next.</span></div>
+    <div class="demo-top">
+      <div class="ctl"><span>The change</span><div class="seg" id="cgChange" role="group" aria-label="The change in the pull request"></div></div>
+      <div class="ctl"><span>MIN_SCORE</span><div class="seg" id="cgMin" role="group" aria-label="Threshold"></div></div>
+      <div class="dm-metrics" aria-live="polite">
+        <div class="metric" id="mScore"><span class="v">0%</span><span class="k">score</span></div>
+        <div class="metric" id="mJudged"><span class="v">0</span><span class="k">cases the judge read</span></div>
+        <div class="metric" id="mRunCost"><span class="v">$0.000</span><span class="k">cost of this run</span></div>
+      </div>
+    </div>
+    <div class="cg-body">
+      <div class="cg-col">
+        <p class="dm-h">The 20 cases</p>
+        <div class="cg-grid" id="cgGrid"></div>
+        <div class="cg-detail" id="cgDetail" aria-live="polite"></div>
+      </div>
+      <div class="cg-col">
+        <div class="cg-score">
+          <div class="cg-score-top"><span>Score against MIN_SCORE</span><b id="cgScoreTxt">0 of 20</b></div>
+          <div class="cg-track" aria-hidden="true"><span class="cg-fill" id="cgFill"></span><span class="cg-mark" id="cgMark"></span></div>
+        </div>
+        <div class="cg-pr">
+          <p class="cg-pr-h"><b id="cgTitle">Pull request</b><br><span class="small">wants to merge 1 commit into main</span></p>
+          <div class="cg-check"><span class="cg-icon" id="cgIcon"></span><span id="cgCheck"></span></div>
+          <div class="cg-merge"><button type="button" class="cg-merge-btn" id="cgMerge" disabled>Merge pull request</button><span class="small" id="cgMergeNote"></span></div>
+        </div>
+        <p class="dm-note" id="cgNote"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. TRACING ============ -->
+<section class="stage" id="tracing" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · Tracing</p>
+    <h2 id="s1">A trace is the agent's flight recorder</h2>
+    <p>An agent run is a dozen steps you can't see from the final answer. A trace records each one as a <button type="button" class="term" data-term="span" aria-expanded="false">span</button>: the plan call, every model call with its tokens and time, every tool call with its arguments and result, all nested under the run.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>Claude calls, for free</h4><p class="small">The Anthropic SDK writes a span for every request in the <button type="button" class="term" data-term="otel" aria-expanded="false">OpenTelemetry</button> standard. <code>get_client()</code> makes Langfuse their destination, so every Claude call is traced with no more code.</p></div>
+    <div class="box"><h4>Your steps, with a decorator</h4><p class="small"><code>@observe</code> on <code>steps</code> makes each run one trace; on <code>run_tool</code> it records every tool call inside it.</p></div>
+    <div class="box"><h4>Content is a choice</h4><p class="small">By default the SDK sends token counts, not prompts. <code>ANTHROPIC_OPEN_TELEMETRY_TRACES_CONTENT_MODE=content</code> adds prompts and replies: right on your laptop, a privacy decision in production (E10).</p></div>
+  </div>
+  <p class="prose">When an answer is wrong, the trace tells you why in a minute: the plan skipped your notes, a page failed to load, or the model ignored a result it had. Without it you'd be guessing.</p>
+  <div class="quiz" data-quiz="qe8a">
+    <p class="quiz-label">Check your understanding · Tracing</p>
+    <p class="quiz-q">You added get_client() and @observe to the agent. Where do the Claude calls in the trace come from?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. You can, but there&#x27;s no need: the SDK already records them."><span class="l">A</span><span>You must wrap every client.messages call in @observe too</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Langfuse sets itself up as the destination for those spans, so every Claude call appears inside your agent&#x27;s trace."><span class="l">B</span><span>The Anthropic SDK writes an OpenTelemetry span for each request, and Langfuse receives it</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The spans are sent from your program as it runs."><span class="l">C</span><span>Langfuse reads them from your Anthropic Console</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 2. AN EVAL SET ============ -->
+<section class="stage" id="dataset" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · An eval set in code</p>
+    <h2 id="s2">Twenty questions with known good answers</h2>
+    <p>An eval set is a file of test cases kept in git next to the code. Each case says what to ask and how to tell a good answer: words it must contain, and a reference for the judge.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>One case from eval_cases.json</span><button type="button" class="cb-copy" aria-label="Copy One case from eval_cases.json">Copy</button></div><pre class="code"><span class="ln">{</span><span class="ln">  "id": "ai-term",</span><span class="ln">  "question": "Who coined the term \"artificial intelligence\", and when?",</span><span class="ln">  "expect": "answer",</span><span class="ln">  "must_include": [</span><span class="ln">    "McCarthy",</span><span class="ln">    "1955|1956"</span><span class="ln">  ],</span><span class="ln">  "reference": "John McCarthy and colleagues, in their 1955 proposal for the 1956 Dartmouth workshop."</span><span class="ln">}</span></pre></div>
+  <div class="grid g3">
+    <div class="box tint"><h4>Where cases come from</h4><p class="small">Questions real users asked, every failure you found in a trace, and edge cases you can think of. Start with 20; grow it every time something breaks.</p></div>
+    <div class="box tint"><h4>Include "can't know"</h4><p class="small">Three of the lab's cases ask things nobody could know. A good agent says so; one that guesses fails.</p></div>
+    <div class="box tint"><h4>Stable facts only</h4><p class="small">Pick questions whose right answer won't change next month, or the eval will fail while the agent is fine.</p></div>
+  </div>
+</section>
+
+<!-- ============ 3. GRADERS ============ -->
+<section class="stage" id="graders" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · Graders</p>
+    <h2 id="s3">Code checks first, then a judge</h2>
+    <p>Grade everything you can with <button type="button" class="term" data-term="code_check" aria-expanded="false">code checks</button>: they cost nothing and never disagree with themselves. Use an <button type="button" class="term" data-term="llm_judge" aria-expanded="false">LLM judge</button> only for what code can't decide, such as "is this right?" or "did it admit it doesn't know?".</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Check</th><th>Grader</th><th>Catches</th></tr></thead>
+      <tbody>
+        <tr><td>Mentions McCarthy, and 1955 or 1956</td><td>Code</td><td>Wrong or missing facts</td></tr>
+        <tr><td>Has a <code>[citation]</code></td><td>Code</td><td>Answers nobody can check</td></tr>
+        <tr><td>At most 200 words; didn't hit a limit</td><td>Code</td><td>Rambling and runaway runs</td></tr>
+        <tr><td>Answers the question, contradicts nothing, cites every fact</td><td>Judge</td><td>Wrong details, missing parts, guessing</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="cb"><div class="cb-h"><span>The judge, from the lab</span><button type="button" class="cb-copy" aria-label="Copy The judge, from the lab">Copy</button></div><pre class="code"><span class="ln"><span class="k">class</span> Verdict(BaseModel):</span><span class="ln">    reason: str   <span class="c"># first, so the judge explains before it decides</span></span><span class="ln">    passed: bool</span><span class="ln"> </span><span class="ln">response = agent.client.messages.parse(</span><span class="ln">    model=JUDGE_MODEL, max_tokens=1000, output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>},</span><span class="ln">    messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: prompt}], output_format=Verdict,</span><span class="ln">)</span></pre></div>
+  <p class="callout"><b>Check the checker.</b> A judge is a model, so it can be wrong. Read its reasons on a few runs and mark where you disagree. A clear rubric, a reference answer, and a reason before the verdict all make it agree with people more often.</p>
+  <div class="quiz" data-quiz="qe8b">
+    <p class="quiz-label">Check your understanding · Graders</p>
+    <p class="quiz-q">Which check should be code, not an LLM judge?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Correctness in free text needs judgement: that&#x27;s the judge&#x27;s job."><span class="l">A</span><span>Is the answer correct, compared with the reference?</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. A regular expression decides it instantly, for free, the same way every time."><span class="l">B</span><span>Does the answer contain at least one [citation]?</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. People say &quot;I don&#x27;t know&quot; in endless ways. Leave this one to the judge."><span class="l">C</span><span>Does the answer admit when it can't know?</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 4. SCORES ============ -->
+<section class="stage" id="score" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Scores and thresholds</p>
+    <h2 id="s4">One number, and a line it mustn't cross</h2>
+    <p>The score is the share of cases that pass every check. A <button type="button" class="term" data-term="threshold" aria-expanded="false">threshold</button>, <code>MIN_SCORE</code>, turns it into pass or fail, through the program's <button type="button" class="term" data-term="exit_code" aria-expanded="false">exit code</button>.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>Set it just below today</h4><p class="small">If the agent scores 95%, a threshold of 85% allows for run-to-run noise and still catches real drops.</p></div>
+    <div class="box"><h4>Ratchet it up</h4><p class="small">When improvements hold for a week, raise the threshold so they can't quietly slip back.</p></div>
+    <div class="box"><h4>Expect some noise</h4><p class="small">The same case can pass one run and fail the next. Look at which cases fail, not only the score, and rerun once before you panic.</p></div>
+  </div>
+</section>
+
+<!-- ============ 5. EVALS IN CI ============ -->
+<section class="stage" id="ci" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Evals in CI</p>
+    <h2 id="s5">A check on every pull request</h2>
+    <p><button type="button" class="term" data-term="ci" aria-expanded="false">CI</button> runs checks on every proposed change. GitHub Actions reads a workflow file from your repo, starts a fresh machine, installs your project with uv, and runs the evals. If <code>run_evals.py</code> exits with 1, the check turns red.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box tint"><h4>Keys as secrets</h4><p class="small">The workflow needs your API key. It comes from an encrypted <button type="button" class="term" data-term="secret" aria-expanded="false">repository secret</button>, never the code. GitHub hides it in logs.</p></div>
+    <div class="box tint"><h4>Pull requests, not every push</h4><p class="small">Each run costs about $0.013 and four minutes. Running on pull requests checks what's about to be merged without paying for every small push.</p></div>
+    <div class="box tint"><h4>Make it required</h4><p class="small">A branch rule can require the check to pass before merging, so nobody, including you, ships a drop by accident.</p></div>
+  </div>
+  <div class="quiz" data-quiz="qe8c">
+    <p class="quiz-label">Check your understanding · Evals in CI</p>
+    <p class="quiz-q">Where does the workflow get ANTHROPIC_API_KEY on GitHub's servers?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. .env is in .gitignore and must stay there: it never reaches GitHub."><span class="l">A</span><span>From the .env file in the repo</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The key lives in Settings → Secrets and variables → Actions, and GitHub hides it in logs."><span class="l">B</span><span>From an encrypted repository secret, passed to the step as an environment variable</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Anything in the repo is readable by anyone who can see the repo."><span class="l">C</span><span>It's written in evals.yml</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 6. THE LOOP ============ -->
+<section class="stage" id="loop" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · The improvement loop</p>
+    <h2 id="s6">Traces find problems; evals keep them fixed</h2>
+    <p>The two tools work as a loop, the same one <a href="evals.html" data-site-link>module 10</a> describes for a team.</p>
+  </div>
+  <ol class="steps-list">
+    <li><b>Spot it:</b> a bad answer, in testing or from a user.</li>
+    <li><b>Trace it:</b> open the run in Langfuse and find the step that went wrong.</li>
+    <li><b>Capture it:</b> add the question as an eval case. It should fail now.</li>
+    <li><b>Fix it:</b> change the prompt, a tool or a limit, until the new case passes.</li>
+    <li><b>Gate it:</b> open a pull request. The eval check confirms the fix and that nothing else broke.</li>
+  </ol>
+  <p class="prose">Each eval run also lands in Langfuse, tagged <code>eval</code>, with its pass or fail attached to the trace as a score. When a case fails in CI, its trace is one filter away.</p>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · on your laptop and GitHub</p>
+    <h2 id="s7">Trace your agent and gate it with evals</h2>
+    <p>You'll add tracing to E7's agent, write the eval runner, and make GitHub run it on every pull request.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>3–4 hours</b></span><span>API cost <b>about $0.10</b> (each full eval run is about $0.013)</span><span>You need <b>E7 done</b></span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Set up Langfuse</h3><p>Sign up at <a href="https://cloud.langfuse.com" target="_blank" rel="noopener">cloud.langfuse.com</a>. The free Hobby plan includes 50,000 units a month, plenty for this track. Create a project, then <b>Settings → API Keys → Create new API keys</b>. Add the three values it shows to <code>.env</code>, plus one line that tells the Anthropic SDK to include prompts and replies in its traces:</p><div class="cb"><div class="cb-h"><span>.env (add these lines)</span><button type="button" class="cb-copy" aria-label="Copy .env (add these lines)">Copy</button></div><pre class="code"><span class="ln">LANGFUSE_PUBLIC_KEY=pk-lf-...</span><span class="ln">LANGFUSE_SECRET_KEY=sk-lf-...</span><span class="ln">LANGFUSE_BASE_URL=https://cloud.langfuse.com</span><span class="ln">ANTHROPIC_OPEN_TELEMETRY_TRACES_CONTENT_MODE=content</span></pre></div><p class="small">Use the base URL Langfuse shows you: <code>https://us.cloud.langfuse.com</code> if you picked the US region. E10 turns content capture off for production.</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv add langfuse</span></pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Trace the agent</h3><p>Three changes to <code>agent.py</code>, highlighted below. Everything else stays as it was.</p><div class="cb cb-diff"><div class="cb-h"><span>agent.py: what changes from E7</span><span class="cb-key" aria-hidden="true"><span class="k-add">+ added</span><span class="k-del">- removed</span></span></div><pre class="code"><span class="ln d-gap">⋯</span><span class="ln d-del">-"""E7 lab: the research assistant as an agent. It makes a plan, searches your notes and</span><span class="ln d-del">-Wikipedia, remembers the conversation, stops at its limits, and asks before it saves anything.</span><span class="ln d-add">+"""E8 lab: the E7 agent, now traced. Every run shows up in Langfuse as a tree: the agent,</span><span class="ln d-add">+each model call with its tokens, and each tool call.</span><span class="ln"> </span><span class="ln"> Run it with:</span><span class="ln d-gap">⋯</span><span class="ln"> import anthropic</span><span class="ln"> from dotenv import load_dotenv</span><span class="ln d-add">+from langfuse import get_client, observe</span><span class="ln"> from pydantic import BaseModel</span><span class="ln"> </span><span class="ln d-gap">⋯</span><span class="ln"> </span><span class="ln"> load_dotenv()</span><span class="ln d-add">+langfuse = get_client()  # reads the LANGFUSE_ keys from .env; Claude calls are then traced too</span><span class="ln"> </span><span class="ln"> MODEL = "claude-haiku-5-5"</span><span class="ln d-gap">⋯</span><span class="ln"> </span><span class="ln"> </span><span class="ln d-add">+@observe(as_type="tool")</span><span class="ln"> def run_tool(name, args, approve):</span><span class="ln">     """Run one tool call. Returns the text to send back, and whether it failed."""</span><span class="ln d-gap">⋯</span><span class="ln"> </span><span class="ln"> </span><span class="ln d-add">+@observe(name="agent", as_type="agent")</span><span class="ln"> def steps(question, memory, tools=ALL_TOOLS, approve=ask_to_approve):</span><span class="ln">     """Run the agent on one question, yielding an event for each thing it does:</span></pre></div><details class="whole"><summary>Show the whole of agent.py after this step</summary><div class="cb"><div class="cb-h"><span>agent.py</span><button type="button" class="cb-copy" aria-label="Copy agent.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E8 lab: the E7 agent, now traced. Every run shows up in Langfuse as a tree: the agent,</span></span><span class="ln"><span class="s">each model call with its tokens, and each tool call.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run agent.py</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> json</span><span class="ln"><span class="k">import</span> re</span><span class="ln"><span class="k">from</span> datetime <span class="k">import</span> date</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"> </span><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"><span class="k">from</span> dotenv <span class="k">import</span> load_dotenv</span><span class="ln"><span class="k">from</span> langfuse <span class="k">import</span> get_client, observe</span><span class="ln"><span class="k">from</span> pydantic <span class="k">import</span> BaseModel</span><span class="ln"> </span><span class="ln"><span class="k">from</span> rag <span class="k">import</span> index_file, search  <span class="c"># E6: your notes</span></span><span class="ln"><span class="k">from</span> research_bot <span class="k">import</span> TOOLS <span class="k">as</span> WIKI_TOOLS, run_tool <span class="k">as</span> run_wiki_tool  <span class="c"># E5: Wikipedia</span></span><span class="ln"> </span><span class="ln">load_dotenv()</span><span class="ln">langfuse = get_client()  <span class="c"># reads the LANGFUSE_ keys from .env; Claude calls are then traced too</span></span><span class="ln"> </span><span class="ln">MODEL = <span class="s">"claude-haiku-5-5"</span></span><span class="ln">PRICE_IN, PRICE_OUT = 0.10, 0.50  <span class="c"># dollars per million tokens, for this model</span></span><span class="ln">MAX_CALLS = 10   <span class="c"># stop condition: most model calls for one question</span></span><span class="ln">MAX_COST = 0.02  <span class="c"># stop condition: most dollars for one question</span></span><span class="ln">NOTES = Path(__file__).parent / <span class="s">"notes"</span>  <span class="c"># save_note writes Markdown files here</span></span><span class="ln">SYSTEM = (</span><span class="ln">    <span class="s">"You are a research assistant. Use the tools to search the user's notes and Wikipedia, and follow "</span></span><span class="ln">    <span class="s">"the plan you're given, changing it if a tool shows it won't work. Cite every fact: [Page title] "</span></span><span class="ln">    <span class="s">"for Wikipedia, [file, page N] for the user's notes. Save a note only when the user asks you to. "</span></span><span class="ln">    <span class="s">"If you can't find the answer, say so. Answer in at most 200 words."</span></span><span class="ln">)</span><span class="ln">PLANNER = (</span><span class="ln">    <span class="s">"You plan the work of a research assistant. Its tools: search_notes (the user's own notes and PDFs), "</span></span><span class="ln">    <span class="s">"search_wikipedia and read_page (Wikipedia), and save_note (only when the user asks to save something). "</span></span><span class="ln">    <span class="s">"Write a plan of 1 to 4 short steps for the latest request. Don't answer it."</span></span><span class="ln">)</span><span class="ln"> </span><span class="ln">TOOLS = WIKI_TOOLS + [</span><span class="ln">    {</span><span class="ln">        <span class="s">"name"</span>: <span class="s">"search_notes"</span>,</span><span class="ln">        <span class="s">"description"</span>: <span class="s">"Search the user's own notes and PDFs. Returns up to 4 passages, each with its file "</span></span><span class="ln">                       <span class="s">"and page. Use it first for anything the user may have notes on."</span>,</span><span class="ln">        <span class="s">"input_schema"</span>: {</span><span class="ln">            <span class="s">"type"</span>: <span class="s">"object"</span>,</span><span class="ln">            <span class="s">"properties"</span>: {<span class="s">"query"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"What to look for, in plain words"</span>}},</span><span class="ln">            <span class="s">"required"</span>: [<span class="s">"query"</span>],</span><span class="ln">            <span class="s">"additionalProperties"</span>: <span class="k">False</span>,</span><span class="ln">        },</span><span class="ln">        <span class="s">"strict"</span>: <span class="k">True</span>,</span><span class="ln">    },</span><span class="ln">    {</span><span class="ln">        <span class="s">"name"</span>: <span class="s">"save_note"</span>,</span><span class="ln">        <span class="s">"description"</span>: <span class="s">"Save a note for the user as a Markdown file. Only use it when the user asks to save "</span></span><span class="ln">                       <span class="s">"something. The user approves every save."</span>,</span><span class="ln">        <span class="s">"input_schema"</span>: {</span><span class="ln">            <span class="s">"type"</span>: <span class="s">"object"</span>,</span><span class="ln">            <span class="s">"properties"</span>: {</span><span class="ln">                <span class="s">"title"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"A short title"</span>},</span><span class="ln">                <span class="s">"text"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"The note, with its citations"</span>},</span><span class="ln">            },</span><span class="ln">            <span class="s">"required"</span>: [<span class="s">"title"</span>, <span class="s">"text"</span>],</span><span class="ln">            <span class="s">"additionalProperties"</span>: <span class="k">False</span>,</span><span class="ln">        },</span><span class="ln">        <span class="s">"strict"</span>: <span class="k">True</span>,</span><span class="ln">    },</span><span class="ln">]</span><span class="ln">ALL_TOOLS = [tool[<span class="s">"name"</span>] <span class="k">for</span> tool <span class="k">in</span> TOOLS]</span><span class="ln">NEEDS_APPROVAL = {<span class="s">"save_note"</span>}  <span class="c"># tools that change something: a person says yes first</span></span><span class="ln"> </span><span class="ln">client = anthropic.Anthropic()</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">class</span> Plan(BaseModel):</span><span class="ln">    steps: list[str]</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> make_plan(question, memory):</span><span class="ln">    <span class="s">"""Ask for a short plan before any tool runs. Returns the steps and the call's token usage."""</span></span><span class="ln">    response = client.messages.parse(</span><span class="ln">        model=MODEL, max_tokens=1000, system=PLANNER, output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>},</span><span class="ln">        messages=memory + [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}], output_format=Plan,</span><span class="ln">    )</span><span class="ln">    <span class="k">return</span> response.parsed_output.steps, response.usage</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> save_note(title, text):</span><span class="ln">    <span class="s">"""Write a Markdown note, and add it to your notes so search_notes can find it later."""</span></span><span class="ln">    NOTES.mkdir(exist_ok=<span class="k">True</span>)</span><span class="ln">    slug = re.sub(<span class="s">r"[^a-z0-9]+"</span>, <span class="s">"-"</span>, title.lower()).strip(<span class="s">"-"</span>)[:50] <span class="k">or</span> <span class="s">"note"</span></span><span class="ln">    path = NOTES / <span class="s">f"{date.today()}-{slug}.md"</span></span><span class="ln">    path.write_text(<span class="s">f"# {title}\n\n{text}\n"</span>, encoding=<span class="s">"utf-8"</span>)</span><span class="ln">    index_file(path, NOTES)</span><span class="ln">    <span class="k">return</span> {<span class="s">"saved"</span>: path.name}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> ask_to_approve(name, args):</span><span class="ln">    <span class="s">"""Human approval: show what the agent wants to do and wait for a yes."""</span></span><span class="ln">    print(<span class="s">f"\n  The agent wants to run {name}:"</span>)</span><span class="ln">    <span class="k">for</span> key, value <span class="k">in</span> args.items():</span><span class="ln">        print(<span class="s">f"    {key}: {value}"</span>)</span><span class="ln">    <span class="k">return</span> input(<span class="s">"  Allow it? [y/N] "</span>).strip().lower() == <span class="s">"y"</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln">@observe(as_type=<span class="s">"tool"</span>)</span><span class="ln"><span class="k">def</span> run_tool(name, args, approve):</span><span class="ln">    <span class="s">"""Run one tool call. Returns the text to send back, and whether it failed."""</span></span><span class="ln">    <span class="k">if</span> name <span class="k">in</span> (<span class="s">"search_wikipedia"</span>, <span class="s">"read_page"</span>):</span><span class="ln">        <span class="k">return</span> run_wiki_tool(name, args)  <span class="c"># E5's code, with its error handling</span></span><span class="ln">    <span class="k">if</span> name <span class="k">in</span> NEEDS_APPROVAL <span class="k">and</span> <span class="k">not</span> approve(name, args):</span><span class="ln">        <span class="k">return</span> <span class="s">"The user said no. Don't try again; tell them it wasn't saved."</span>, <span class="k">True</span></span><span class="ln">    <span class="k">if</span> name == <span class="s">"search_notes"</span>:</span><span class="ln">        <span class="k">return</span> json.dumps(search(args[<span class="s">"query"</span>]) <span class="k">or</span> <span class="s">"No notes matched."</span>), <span class="k">False</span></span><span class="ln">    <span class="k">if</span> name == <span class="s">"save_note"</span>:</span><span class="ln">        <span class="k">return</span> json.dumps(save_note(args[<span class="s">"title"</span>], args[<span class="s">"text"</span>])), <span class="k">False</span></span><span class="ln">    <span class="k">return</span> <span class="s">f"There is no tool called {name}."</span>, <span class="k">True</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> add_usage(state, usage):</span><span class="ln">    state[<span class="s">"calls"</span>] += 1</span><span class="ln">    state[<span class="s">"tokens_in"</span>] += usage.input_tokens</span><span class="ln">    state[<span class="s">"tokens_out"</span>] += usage.output_tokens</span><span class="ln">    state[<span class="s">"cost"</span>] = (state[<span class="s">"tokens_in"</span>] * PRICE_IN + state[<span class="s">"tokens_out"</span>] * PRICE_OUT) / 1_000_000</span><span class="ln"> </span><span class="ln"> </span><span class="ln">@observe(name=<span class="s">"agent"</span>, as_type=<span class="s">"agent"</span>)</span><span class="ln"><span class="k">def</span> steps(question, memory, tools=ALL_TOOLS, approve=ask_to_approve):</span><span class="ln">    <span class="s">"""Run the agent on one question, yielding an event for each thing it does:</span></span><span class="ln"><span class="s">    a plan, each tool call, and finally "done" with the answer and what it cost."""</span></span><span class="ln">    state = {<span class="s">"calls"</span>: 0, <span class="s">"tokens_in"</span>: 0, <span class="s">"tokens_out"</span>: 0, <span class="s">"cost"</span>: 0.0, <span class="s">"tools"</span>: []}  <span class="c"># this run's state</span></span><span class="ln">    plan, usage = make_plan(question, memory)</span><span class="ln">    add_usage(state, usage)</span><span class="ln">    <span class="k">yield</span> {<span class="s">"type"</span>: <span class="s">"plan"</span>, <span class="s">"steps"</span>: plan}</span><span class="ln"> </span><span class="ln">    numbered = <span class="s">"\n"</span>.join(<span class="s">f"{n}. {step}"</span> <span class="k">for</span> n, step <span class="k">in</span> enumerate(plan, 1))</span><span class="ln">    messages = memory + [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">f"{question}\n\n&lt;plan&gt;\n{numbered}\n&lt;/plan&gt;"</span>}]</span><span class="ln">    offered = [tool <span class="k">for</span> tool <span class="k">in</span> TOOLS <span class="k">if</span> tool[<span class="s">"name"</span>] <span class="k">in</span> tools]</span><span class="ln">    seen = set()  <span class="c"># tool calls already made, to catch a loop asking for the same thing</span></span><span class="ln">    <span class="k">while</span> <span class="k">True</span>:</span><span class="ln">        <span class="k">if</span> state[<span class="s">"calls"</span>] &gt;= MAX_CALLS <span class="k">or</span> state[<span class="s">"cost"</span>] &gt;= MAX_COST:  <span class="c"># stop conditions, before every call</span></span><span class="ln">            answer = <span class="s">f"Stopped: this question reached its limit of {MAX_CALLS} model calls or ${MAX_COST}."</span></span><span class="ln">            <span class="k">break</span></span><span class="ln">        response = client.messages.create(</span><span class="ln">            model=MODEL, max_tokens=4000, system=SYSTEM, tools=offered, messages=messages,</span><span class="ln">        )</span><span class="ln">        add_usage(state, response.usage)</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: response.content})</span><span class="ln">        <span class="k">if</span> response.stop_reason != <span class="s">"tool_use"</span>:  <span class="c"># the model answered</span></span><span class="ln">            answer = <span class="s">""</span>.join(block.text <span class="k">for</span> block <span class="k">in</span> response.content <span class="k">if</span> block.type == <span class="s">"text"</span>)</span><span class="ln">            <span class="k">if</span> response.stop_reason != <span class="s">"end_turn"</span>:</span><span class="ln">                answer += <span class="s">f"\n(Stopped early: {response.stop_reason})"</span></span><span class="ln">            <span class="k">break</span></span><span class="ln"> </span><span class="ln">        results = []</span><span class="ln">        <span class="k">for</span> block <span class="k">in</span> response.content:</span><span class="ln">            <span class="k">if</span> block.type != <span class="s">"tool_use"</span>:</span><span class="ln">                <span class="k">continue</span></span><span class="ln">            <span class="k">yield</span> {<span class="s">"type"</span>: <span class="s">"tool"</span>, <span class="s">"name"</span>: block.name, <span class="s">"input"</span>: block.input}</span><span class="ln">            state[<span class="s">"tools"</span>].append(block.name)</span><span class="ln">            key = block.name + json.dumps(block.input, sort_keys=<span class="k">True</span>)</span><span class="ln">            <span class="k">if</span> block.name <span class="k">not</span> <span class="k">in</span> tools:  <span class="c"># only the tools offered for this run, whatever the model asks</span></span><span class="ln">                text, failed = <span class="s">f"There is no tool called {block.name}."</span>, <span class="k">True</span></span><span class="ln">            <span class="k">elif</span> key <span class="k">in</span> seen:</span><span class="ln">                text, failed = <span class="s">"You already made this exact call. Use its result above."</span>, <span class="k">True</span></span><span class="ln">            <span class="k">else</span>:</span><span class="ln">                seen.add(key)</span><span class="ln">                text, failed = run_tool(block.name, block.input, approve)</span><span class="ln">            results.append({<span class="s">"type"</span>: <span class="s">"tool_result"</span>, <span class="s">"tool_use_id"</span>: block.id, <span class="s">"content"</span>: text, <span class="s">"is_error"</span>: failed})</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: results})</span><span class="ln">    <span class="k">yield</span> {<span class="s">"type"</span>: <span class="s">"done"</span>, <span class="s">"answer"</span>: answer, **state}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> ask(question, memory):</span><span class="ln">    <span class="s">"""Run the agent in the terminal, then remember the question and answer for follow-ups."""</span></span><span class="ln">    <span class="k">for</span> event <span class="k">in</span> steps(question, memory):</span><span class="ln">        <span class="k">if</span> event[<span class="s">"type"</span>] == <span class="s">"plan"</span>:</span><span class="ln">            print(<span class="s">"  plan: "</span> + <span class="s">" | "</span>.join(event[<span class="s">"steps"</span>]))</span><span class="ln">        <span class="k">elif</span> event[<span class="s">"type"</span>] == <span class="s">"tool"</span>:</span><span class="ln">            print(<span class="s">f"  -&gt; {event['name']}({json.dumps(event['input'])})"</span>)</span><span class="ln">        <span class="k">elif</span> event[<span class="s">"type"</span>] == <span class="s">"done"</span>:</span><span class="ln">            print(<span class="s">f"  [{event['calls']} model calls, {event['tokens_in']} tokens in, "</span></span><span class="ln">                  <span class="s">f"{event['tokens_out']} out, ${event['cost']:.5f}]\n"</span>)</span><span class="ln">            print(event[<span class="s">"answer"</span>])</span><span class="ln">            memory.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question})  <span class="c"># memory keeps the answers, not the tool calls</span></span><span class="ln">            memory.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: event[<span class="s">"answer"</span>]})</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main():</span><span class="ln">    memory = []  <span class="c"># earlier questions and answers in this session</span></span><span class="ln">    print(<span class="s">"Ask a research question. Type quit to stop."</span>)</span><span class="ln">    <span class="k">while</span> <span class="k">True</span>:</span><span class="ln">        question = input(<span class="s">"\nYou: "</span>).strip()</span><span class="ln">        <span class="k">if</span> question.lower() <span class="k">in</span> (<span class="s">"quit"</span>, <span class="s">"exit"</span>):</span><span class="ln">            <span class="k">break</span></span><span class="ln">        <span class="k">if</span> <span class="k">not</span> question:</span><span class="ln">            <span class="k">continue</span></span><span class="ln">        <span class="k">try</span>:</span><span class="ln">            ask(question, memory)</span><span class="ln">        <span class="k">except</span> anthropic.APIConnectionError:</span><span class="ln">            print(<span class="s">"Could not reach the API. Check your internet connection and try again."</span>)</span><span class="ln">        <span class="k">except</span> anthropic.APIStatusError <span class="k">as</span> error:  <span class="c"># a bad key, no credit, overloaded: after the SDK's retries</span></span><span class="ln">            print(<span class="s">f"The API answered {error.status_code}: {error.message}"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    main()</span></pre></div></details><ul><li><b><code>get_client()</code></b> reads the keys and makes Langfuse the place traces go. The Anthropic SDK then sends a span for every Claude call there, with its tokens, without more code.</li><li><b><code>@observe(name="agent", as_type="agent")</code></b> wraps each run in one trace, so its model and tool calls appear inside it.</li><li><b><code>@observe(as_type="tool")</code></b> records each tool call with its arguments and result.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Look at a trace</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run agent.py</span><span class="ln">You: Who coined the term artificial intelligence?</span></pre></div><p>Open <b>Tracing</b> in Langfuse. The newest trace should look like this:</p><ul class="trace-tree"><li><span class="tk">agent</span> Who coined the term artificial intelligence? <span class="tm">· 6.1 s · $0.00067</span></li><li>&nbsp;&nbsp;<span class="tk">generation</span> anthropic.messages.create <span class="tm">· plan · 210 → 45 tokens</span></li><li>&nbsp;&nbsp;<span class="tk">generation</span> anthropic.messages.create <span class="tm">· 1,240 → 70</span></li><li>&nbsp;&nbsp;<span class="tk">tool</span> run_tool <span class="tm">· search_wikipedia</span></li><li>&nbsp;&nbsp;<span class="tk">generation</span> anthropic.messages.create <span class="tm">· 1,610 → 55</span></li><li>&nbsp;&nbsp;<span class="tk">tool</span> run_tool <span class="tm">· read_page</span></li><li>&nbsp;&nbsp;<span class="tk">generation</span> anthropic.messages.create <span class="tm">· 2,150 → 131</span></li></ul><p class="small">Click each one: the plan, the exact tool arguments and page text, and the tokens of every call are all there. Traces appear a few seconds after the run.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>The eval cases</h3><p>Save these 20 cases as <code>eval_cases.json</code>. Each has a question, what kind of answer to expect, words the answer must contain (<code>"1955|1956"</code> means either), and a reference answer for the judge.</p><div class="cb"><div class="cb-h"><span>eval_cases.json</span><button type="button" class="cb-copy" aria-label="Copy eval_cases.json">Copy</button></div><pre class="code"><span class="ln">[</span><span class="ln">  {"id": "ai-term", "question": "Who coined the term \"artificial intelligence\", and when?", "expect": "answer", "must_include": ["McCarthy", "1955|1956"], "reference": "John McCarthy and colleagues, in their 1955 proposal for the 1956 Dartmouth workshop."},</span><span class="ln">  {"id": "dartmouth-place", "question": "Where did the 1956 workshop that named the field of AI take place?", "expect": "answer", "must_include": ["Dartmouth"], "reference": "Dartmouth College in Hanover, New Hampshire."},</span><span class="ln">  {"id": "turing-name", "question": "What did Alan Turing call the test now known as the Turing test?", "expect": "answer", "must_include": ["imitation game"], "reference": "The imitation game, from his 1950 paper \"Computing Machinery and Intelligence\"."},</span><span class="ln">  {"id": "turing-one-line", "question": "In one sentence, what is the Turing test?", "expect": "answer", "must_include": ["Turing"], "reference": "A test of whether a machine can show behaviour indistinguishable from a human's in conversation, proposed by Alan Turing in 1950."},</span><span class="ln">  {"id": "eliza", "question": "Who created the ELIZA chatbot, and roughly when?", "expect": "answer", "must_include": ["Weizenbaum", "196"], "reference": "Joseph Weizenbaum at MIT, in the mid-1960s (1964 to 1967)."},</span><span class="ln">  {"id": "perceptron", "question": "Who invented the perceptron?", "expect": "answer", "must_include": ["Rosenblatt"], "reference": "Frank Rosenblatt, in 1957 and 1958."},</span><span class="ln">  {"id": "lisp", "question": "Which programming language did John McCarthy create?", "expect": "answer", "must_include": ["Lisp"], "reference": "Lisp, in 1958."},</span><span class="ln">  {"id": "older", "question": "Which came first, the perceptron or ELIZA?", "expect": "answer", "must_include": ["perceptron"], "reference": "The perceptron (1957 to 1958) came before ELIZA (1964 to 1967)."},</span><span class="ln">  {"id": "deep-blue", "question": "Which computer beat Garry Kasparov at chess in 1997?", "expect": "answer", "must_include": ["Deep Blue"], "reference": "IBM's Deep Blue."},</span><span class="ln">  {"id": "alphago", "question": "Who did AlphaGo beat in its famous 2016 match?", "expect": "answer", "must_include": ["Lee Sedol|Lee Se-dol"], "reference": "Lee Sedol, by four games to one, in March 2016."},</span><span class="ln">  {"id": "backprop", "question": "Who wrote the 1986 paper that made backpropagation popular for neural networks?", "expect": "answer", "must_include": ["Rumelhart|Hinton|Williams"], "reference": "David Rumelhart, Geoffrey Hinton and Ronald Williams, \"Learning representations by back-propagating errors\", Nature, 1986."},</span><span class="ln">  {"id": "alexnet", "question": "Which neural network won the 2012 ImageNet challenge by a wide margin?", "expect": "answer", "must_include": ["AlexNet"], "reference": "AlexNet, by Alex Krizhevsky, Ilya Sutskever and Geoffrey Hinton."},</span><span class="ln">  {"id": "transformer", "question": "Which 2017 paper introduced the Transformer architecture?", "expect": "answer", "must_include": ["Attention Is All You Need"], "reference": "\"Attention Is All You Need\" by Vaswani and colleagues at Google, 2017."},</span><span class="ln">  {"id": "rag-paper", "question": "In what year was the paper that named retrieval-augmented generation published?", "expect": "answer", "must_include": ["2020"], "reference": "2020, by Patrick Lewis and colleagues at Facebook AI Research."},</span><span class="ln">  {"id": "anthropic", "question": "When was Anthropic founded, and by whom?", "expect": "answer", "must_include": ["2021", "Amodei"], "reference": "In 2021, by former OpenAI staff including Dario and Daniela Amodei."},</span><span class="ln">  {"id": "mcp", "question": "What is the Model Context Protocol, and which company introduced it?", "expect": "answer", "must_include": ["Anthropic"], "reference": "An open standard for connecting AI applications to tools and data sources, introduced by Anthropic in November 2024."},</span><span class="ln">  {"id": "mccarthy-job", "question": "Which college was John McCarthy working at when he proposed the Dartmouth workshop?", "expect": "answer", "must_include": ["Dartmouth"], "reference": "Dartmouth College, where he was an assistant professor of mathematics."},</span><span class="ln">  {"id": "breakfast", "question": "What did I have for breakfast today?", "expect": "no_answer", "must_include": [], "reference": "The assistant can't know this. It should say so and not guess."},</span><span class="ln">  {"id": "future", "question": "Who will win the Turing Award in 2040?", "expect": "no_answer", "must_include": [], "reference": "Nobody can know this yet. The assistant should say so and not predict a winner as fact."},</span><span class="ln">  {"id": "book-club", "question": "How many people came to the first meeting of my book club?", "expect": "no_answer", "must_include": [], "reference": "The assistant has no way to know this. It should say it couldn't find it and not invent a number."}</span><span class="ln">]</span></pre></div><p class="small">They use stable Wikipedia facts, so they run anywhere, including GitHub's servers, which don't have your notes. Three ask things nobody could know, to check the agent says so.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Write run_evals.py</h3><div class="cb"><div class="cb-h"><span>run_evals.py</span><button type="button" class="cb-copy" aria-label="Copy run_evals.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E8 lab: run the eval cases against the agent, score them, and fail when the score is too low.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run run_evals.py      # every case</span></span><span class="ln"><span class="s">    uv run run_evals.py 3    # the first 3 cases, for a quick, cheap check</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> json</span><span class="ln"><span class="k">import</span> re</span><span class="ln"><span class="k">import</span> sys</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"> </span><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"><span class="k">from</span> langfuse <span class="k">import</span> observe, propagate_attributes</span><span class="ln"><span class="k">from</span> pydantic <span class="k">import</span> BaseModel</span><span class="ln"> </span><span class="ln"><span class="k">import</span> agent</span><span class="ln"> </span><span class="ln">MIN_SCORE = 0.85  <span class="c"># below this the run fails: set it just under your current score</span></span><span class="ln">JUDGE_MODEL = <span class="s">"claude-haiku-5-5"</span>  <span class="c"># a stronger judge costs more and agrees with people more often</span></span><span class="ln">CASES = Path(__file__).parent / <span class="s">"eval_cases.json"</span></span><span class="ln">REPORT = Path(__file__).parent / <span class="s">"eval_report.json"</span></span><span class="ln">JUDGE = <span class="s">"""You grade a research assistant's answer to a question.</span></span><span class="ln"> </span><span class="ln"><span class="s">&lt;question&gt;{question}&lt;/question&gt;</span></span><span class="ln"><span class="s">&lt;reference&gt;{reference}&lt;/reference&gt;</span></span><span class="ln"><span class="s">&lt;answer&gt;{answer}&lt;/answer&gt;</span></span><span class="ln"> </span><span class="ln"><span class="s">Pass the answer only if all of these are true:</span></span><span class="ln"><span class="s">- It answers the question. When the reference says the answer can't be known, it says so instead of guessing.</span></span><span class="ln"><span class="s">- Nothing in it contradicts the reference.</span></span><span class="ln"><span class="s">- Every fact in it has a citation in square brackets.</span></span><span class="ln"><span class="s">Give your reason in one sentence, then your verdict."""</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">class</span> Verdict(BaseModel):</span><span class="ln">    reason: str  <span class="c"># first, so the judge explains before it decides</span></span><span class="ln">    passed: bool</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> code_checks(case, answer):</span><span class="ln">    <span class="s">"""Checks that code can do exactly: free, instant, and the same every time."""</span></span><span class="ln">    problems = []</span><span class="ln">    <span class="k">for</span> words <span class="k">in</span> case[<span class="s">"must_include"</span>]:  <span class="c"># "1955|1956" means either one will do</span></span><span class="ln">        <span class="k">if</span> <span class="k">not</span> any(word.lower() <span class="k">in</span> answer.lower() <span class="k">for</span> word <span class="k">in</span> words.split(<span class="s">"|"</span>)):</span><span class="ln">            problems.append(<span class="s">f"doesn't mention {words}"</span>)</span><span class="ln">    <span class="k">if</span> case[<span class="s">"expect"</span>] == <span class="s">"answer"</span> <span class="k">and</span> <span class="k">not</span> re.search(<span class="s">r"\[[^\]]+\]"</span>, answer):</span><span class="ln">        problems.append(<span class="s">"no citation"</span>)</span><span class="ln">    <span class="k">if</span> len(answer.split()) &gt; 200:</span><span class="ln">        problems.append(<span class="s">"over 200 words"</span>)</span><span class="ln">    <span class="k">if</span> answer.startswith(<span class="s">"Stopped"</span>):</span><span class="ln">        problems.append(<span class="s">"hit a limit"</span>)</span><span class="ln">    <span class="k">return</span> problems</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> judge(case, answer):</span><span class="ln">    <span class="s">"""An LLM judge for what code can't check: is it right, and does it say so when it doesn't know?"""</span></span><span class="ln">    prompt = JUDGE.format(question=case[<span class="s">"question"</span>], reference=case[<span class="s">"reference"</span>], answer=answer)</span><span class="ln">    response = agent.client.messages.parse(</span><span class="ln">        model=JUDGE_MODEL, max_tokens=1000, output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>},</span><span class="ln">        messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: prompt}], output_format=Verdict,</span><span class="ln">    )</span><span class="ln">    usage = response.usage</span><span class="ln">    <span class="k">return</span> response.parsed_output, (usage.input_tokens * agent.PRICE_IN + usage.output_tokens * agent.PRICE_OUT) / 1_000_000</span><span class="ln"> </span><span class="ln"> </span><span class="ln">@observe(name=<span class="s">"eval-case"</span>)</span><span class="ln"><span class="k">def</span> run_case(case):</span><span class="ln">    <span class="s">"""Run one case through the agent, then grade it: code checks first, the judge only if they pass."""</span></span><span class="ln">    <span class="k">with</span> propagate_attributes(tags=[<span class="s">"eval"</span>], metadata={<span class="s">"case"</span>: case[<span class="s">"id"</span>]}):  <span class="c"># find eval runs in Langfuse</span></span><span class="ln">        <span class="k">for</span> event <span class="k">in</span> agent.steps(case[<span class="s">"question"</span>], [], approve=<span class="k">lambda</span> name, args: <span class="k">False</span>):  <span class="c"># evals never save notes</span></span><span class="ln">            <span class="k">pass</span>  <span class="c"># the last event is "done", with the answer</span></span><span class="ln">        problems = code_checks(case, event[<span class="s">"answer"</span>])</span><span class="ln">        cost = event[<span class="s">"cost"</span>]</span><span class="ln">        <span class="k">if</span> <span class="k">not</span> problems:</span><span class="ln">            verdict, judge_cost = judge(case, event[<span class="s">"answer"</span>])</span><span class="ln">            cost += judge_cost</span><span class="ln">            <span class="k">if</span> <span class="k">not</span> verdict.passed:</span><span class="ln">                problems.append(<span class="s">"judge: "</span> + verdict.reason)</span><span class="ln">        agent.langfuse.score_current_trace(name=<span class="s">"passed"</span>, value=float(<span class="k">not</span> problems), comment=<span class="s">"; "</span>.join(problems) <span class="k">or</span> <span class="k">None</span>)</span><span class="ln">    <span class="k">return</span> {<span class="s">"id"</span>: case[<span class="s">"id"</span>], <span class="s">"passed"</span>: <span class="k">not</span> problems, <span class="s">"problems"</span>: problems, <span class="s">"answer"</span>: event[<span class="s">"answer"</span>],</span><span class="ln">            <span class="s">"calls"</span>: event[<span class="s">"calls"</span>], <span class="s">"tools"</span>: event[<span class="s">"tools"</span>], <span class="s">"cost"</span>: round(cost, 6)}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main(limit=<span class="k">None</span>):</span><span class="ln">    cases = json.loads(CASES.read_text(encoding=<span class="s">"utf-8"</span>))[:limit]</span><span class="ln">    results = []</span><span class="ln">    <span class="k">for</span> n, case <span class="k">in</span> enumerate(cases, 1):</span><span class="ln">        <span class="k">try</span>:</span><span class="ln">            result = run_case(case)</span><span class="ln">        <span class="k">except</span> anthropic.APIError <span class="k">as</span> error:  <span class="c"># one failed request fails that case, not the whole run</span></span><span class="ln">            result = {<span class="s">"id"</span>: case[<span class="s">"id"</span>], <span class="s">"passed"</span>: <span class="k">False</span>, <span class="s">"problems"</span>: [<span class="s">f"API error: {error}"</span>], <span class="s">"calls"</span>: 0, <span class="s">"cost"</span>: 0.0}</span><span class="ln">        mark = <span class="s">"pass"</span> <span class="k">if</span> result[<span class="s">"passed"</span>] <span class="k">else</span> <span class="s">"FAIL"</span></span><span class="ln">        print(<span class="s">f"{n:2} {mark}  {case['id']:&lt;16} {result['calls']:2} calls  ${result['cost']:.5f}  {'; '.join(result['problems'])}"</span>)</span><span class="ln">        results.append(result)</span><span class="ln"> </span><span class="ln">    passed = sum(result[<span class="s">"passed"</span>] <span class="k">for</span> result <span class="k">in</span> results)</span><span class="ln">    score = passed / len(results)</span><span class="ln">    cost = sum(result[<span class="s">"cost"</span>] <span class="k">for</span> result <span class="k">in</span> results)</span><span class="ln">    REPORT.write_text(json.dumps({<span class="s">"score"</span>: score, <span class="s">"min_score"</span>: MIN_SCORE, <span class="s">"results"</span>: results}, indent=2), encoding=<span class="s">"utf-8"</span>)</span><span class="ln">    print(<span class="s">f"\nScore {passed}/{len(results)} = {score:.0%} (minimum {MIN_SCORE:.0%}). This run cost ${cost:.4f}."</span>)</span><span class="ln">    agent.langfuse.flush()  <span class="c"># send any traces still waiting before the program ends</span></span><span class="ln">    <span class="k">return</span> score &gt;= MIN_SCORE</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    limit = int(sys.argv[1]) <span class="k">if</span> len(sys.argv) &gt; 1 <span class="k">else</span> <span class="k">None</span></span><span class="ln">    sys.exit(0 <span class="k">if</span> main(limit) <span class="k">else</span> 1)  <span class="c"># exit code 1 tells GitHub Actions the check failed</span></span></pre></div><ul><li><b><code>code_checks</code></b> tests what code can: required words, a citation, the length, and no stopped run.</li><li><b><code>judge</code></b> asks Claude to grade against the reference, as structured output. <code>reason</code> comes before <code>passed</code>, so the judge explains before it decides.</li><li><b><code>run_case</code></b> runs the judge only when the code checks pass, tags the trace <code>eval</code>, and attaches the result to it as a score.</li><li><b><code>main</code></b> prints a table, saves <code>eval_report.json</code>, and returns whether the score reached <code>MIN_SCORE</code>; <code>sys.exit</code> turns that into an exit code.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Run three cases, then all of them</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run run_evals.py 3</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out"> 1 pass  ai-term           4 calls  $0.00071
+ 2 pass  dartmouth-place   4 calls  $0.00066
+ 3 pass  turing-name       4 calls  $0.00074
+
+Score 3/3 = 100% (minimum 85%). This run cost $0.0021.</pre></div><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run run_evals.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out"> 1 pass  ai-term           4 calls  $0.00071
+ 2 pass  dartmouth-place   4 calls  $0.00066
+ ...
+16 pass  mcp               4 calls  $0.00069
+17 FAIL  mccarthy-job      4 calls  $0.00062  judge: The answer says McCarthy was at MIT; the reference says Dartmouth College.
+18 pass  breakfast         2 calls  $0.00024
+19 pass  future            3 calls  $0.00041
+20 pass  book-club         2 calls  $0.00025
+
+Score 19/20 = 95% (minimum 85%). This run cost $0.0124.</pre><p class="small">Your failures and costs will differ, and can change from run to run: models aren't perfectly repeatable. That's why the threshold sits a little below your usual score.</p></div><p>Read the reason for any failure, then open that case's trace in Langfuse (filter by the <code>eval</code> tag) to see why it happened.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Break it on purpose</h3><p>Delete the sentence starting "Cite every fact" from <code>SYSTEM</code> in <code>agent.py</code>, run the evals again, and check the exit code:</p><div class="ost"><div class="ost-tabs" role="group" aria-label="Your computer"><button type="button" data-os="mac" aria-selected="true">Mac</button><button type="button" data-os="win" aria-selected="false">Windows</button></div><div class="ost-p" data-os="mac"><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run run_evals.py</span><span class="ln">echo $?</span></pre></div></div><div class="ost-p" data-os="win" hidden><div class="cb"><div class="cb-h"><span>PowerShell</span><button type="button" class="cb-copy" aria-label="Copy PowerShell">Copy</button></div><pre class="code"><span class="ln">uv run run_evals.py</span><span class="ln">echo $LASTEXITCODE</span></pre></div></div></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">...
+Score 8/20 = 40% (minimum 85%). This run cost $0.0114.
+1</pre><p class="small">Most answers lose their citations, the code check catches each one, and the exit code is 1: failure. Put the sentence back.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">8</span><div class="lab-b"><h3>Run the evals on every pull request</h3><p>Save the workflow as <code>.github/workflows/evals.yml</code> (create the folders):</p><div class="cb"><div class="cb-h"><span>.github/workflows/evals.yml</span><button type="button" class="cb-copy" aria-label="Copy .github/workflows/evals.yml">Copy</button></div><pre class="code"><span class="ln"><span class="c"># E8 lab: save this as .github/workflows/evals.yml in your repo.</span></span><span class="ln"><span class="c"># It runs the evals on every pull request, and the check fails when the score drops below MIN_SCORE.</span></span><span class="ln">name: evals</span><span class="ln"> </span><span class="ln">on:</span><span class="ln">  pull_request:</span><span class="ln">  workflow_dispatch:  # adds a "Run workflow" button on the Actions tab</span><span class="ln"> </span><span class="ln">jobs:</span><span class="ln">  evals:</span><span class="ln">    runs-on: ubuntu-latest</span><span class="ln">    timeout-minutes: 20</span><span class="ln">    steps:</span><span class="ln">      - uses: actions/checkout@v5</span><span class="ln">      - uses: astral-sh/setup-uv@v7</span><span class="ln">      - name: Install packages</span><span class="ln">        run: uv sync --frozen</span><span class="ln">      - name: Run the evals</span><span class="ln">        run: uv run run_evals.py</span><span class="ln">        env:  # from Settings → Secrets and variables → Actions in your repo</span><span class="ln">          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}</span><span class="ln">          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}</span><span class="ln">          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}</span><span class="ln">          LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}</span><span class="ln">      - name: Keep the report</span><span class="ln">        if: always()</span><span class="ln">        uses: actions/upload-artifact@v6</span><span class="ln">        with:</span><span class="ln">          name: eval-report</span><span class="ln">          path: eval_report.json</span></pre></div><p>On GitHub, open your repo's <b>Settings → Secrets and variables → Actions</b>, and add four <b>repository secrets</b> with the values from your <code>.env</code>: <code>ANTHROPIC_API_KEY</code>, <code>LANGFUSE_PUBLIC_KEY</code>, <code>LANGFUSE_SECRET_KEY</code> and <code>LANGFUSE_BASE_URL</code>.</p><p>Then push a branch and open a pull request:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git switch -c add-evals</span><span class="ln">git add agent.py run_evals.py eval_cases.json .github/workflows/evals.yml pyproject.toml uv.lock</span><span class="ln">git commit -m "Trace the agent and gate pull requests on evals"</span><span class="ln">git push -u origin add-evals</span></pre></div><p>Open the pull request on GitHub. An <b>evals</b> check starts and turns green after about four minutes. Its log has the same table, and the report is attached under <b>Artifacts</b>. Merge when it's green.</p><p class="small">To make the check required, add a rule in <b>Settings → Rules → Rulesets</b> (or <b>Branches</b>) that requires the <code>evals</code> status check before merging into <code>main</code>.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">9</span><div class="lab-b"><h3>Make it yours</h3><p>Pick at least one:</p><ul><li>Add five cases about your own notes for local runs (they need your notes database, so keep them in a separate file the workflow doesn't read).</li><li>Read ten of the judge's verdicts and mark where you disagree. If you disagree often, improve the rubric or use a stronger judge model.</li><li>Save each run's score in a file and print the change from last time.</li></ul></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>Authentication error: Langfuse client initialized without public_key. Client will be disabled.</code></dt><dd>The Langfuse keys aren't set: check <code>.env</code> on your laptop, or the repository secrets on GitHub. The agent still works; it just isn't traced.</dd><dt><code>error: Unable to find lockfile at `uv.lock`, but `--frozen` was provided.</code></dt><dd>Commit <code>uv.lock</code>. The workflow installs exactly the versions it records.</dd><dt><code>Error: Process completed with exit code 1.</code></dt><dd>If the log ends with a score below the minimum, that's the gate working: read the failures. If it stops earlier, read the first error; a missing secret is the usual cause.</dd><dt><code>(no traces appear in Langfuse)</code></dt><dd>Check <code>LANGFUSE_BASE_URL</code> matches your region, and that <code>get_client()</code> runs after <code>load_dotenv()</code>.</dd></dl></div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s8">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E8 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="e8"><li><label><input type="checkbox"><span>A run of <code>agent.py</code> shows up in Langfuse as one trace, with the plan, model calls and tool calls inside it</span></label></li><li><label><input type="checkbox"><span><code>run_evals.py</code> prints a score for all 20 cases, and you read at least one judge reason and its trace</span></label></li><li><label><input type="checkbox"><span>Breaking the prompt dropped the score and made <code>run_evals.py</code> exit with code 1</span></label></li><li><label><input type="checkbox"><span>A pull request on GitHub ran the <code>evals</code> check and it passed, and you merged it</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s9">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula"><em>Trace</em> every run → turn failures into <em>eval cases</em> → grade with <em>code checks</em>, then a <em>judge</em> → <em>score</em> vs <em>MIN_SCORE</em> → <em>exit code</em> → the <em>CI check</em> passes or blocks the merge.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>Tracing</h3><ul>
+        <li><code>langfuse = get_client()</code> after <code>load_dotenv()</code></li>
+        <li><code>@observe(as_type="agent")</code> on the run</li>
+        <li><code>@observe(as_type="tool")</code> on tools</li>
+        <li>Content capture on locally only</li>
+      </ul></div>
+      <div class="blk"><h3>Evals</h3><ul>
+        <li>Cases in git: question, must-include, reference</li>
+        <li>Include questions it can't answer</li>
+        <li>Code checks first; judge if they pass</li>
+        <li>Judge gives a reason, then a verdict</li>
+      </ul></div>
+      <div class="blk"><h3>CI</h3><ul>
+        <li><code>.github/workflows/evals.yml</code></li>
+        <li>Keys as repository secrets</li>
+        <li><code>sys.exit(1)</code> fails the check</li>
+        <li>Require the check before merging</li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s10">3 common eval mistakes</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>A judge for everything</h3><dl>
+      <dt>What it looks like</dt><dd>Every check is an LLM call, so evals are slow, cost more, and disagree with themselves on obvious cases.</dd>
+      <dt>Fix</dt><dd>Use code for anything code can decide. Keep the judge for meaning, and skip it when the code checks already failed.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>A threshold of 100%</h3><dl>
+      <dt>What it looks like</dt><dd>One flaky case fails the build every other run, and people learn to ignore the red check.</dd>
+      <dt>Fix</dt><dd>Set the threshold a little under your usual score, fix or rewrite flaky cases, and raise it as the agent improves.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>Evals that never grow</h3><dl>
+      <dt>What it looks like</dt><dd>The same 20 cases for a year, while users hit problems none of them cover.</dd>
+      <dt>Fix</dt><dd>Every bug found in a trace becomes a case before it's fixed.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="eng-agents.html" data-site-link>← Module E7 · Building agents</a>
+  <a href="eng-ship.html" data-site-link>Module E9 · Shipping it →</a>
+</div>
+
+<footer>
+  <p>The CI gate is a simulation built on the lab's real eval cases, with scripted results. The lab sends real traces to Langfuse and runs real evals with the Claude API.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic, Langfuse or GitHub.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "trace": {
+  "t": "Trace",
+  "d": "The record of one run: every step it took, with inputs, outputs, tokens, time and cost, shown as a tree."
+ },
+ "span": {
+  "t": "Span (observation)",
+  "d": "One step inside a trace, such as a model call or a tool call. Spans nest: the agent's span holds its model and tool spans."
+ },
+ "otel": {
+  "t": "OpenTelemetry",
+  "d": "An open standard for traces. The Anthropic SDK writes a span for every Claude call in it, and Langfuse can receive them."
+ },
+ "eval_set": {
+  "t": "Eval set",
+  "d": "A fixed list of test questions, each with what a good answer must contain, run against your app to score it."
+ },
+ "code_check": {
+  "t": "Code check",
+  "d": "A grader written in code, such as \"mentions McCarthy\" or \"has a citation\". Free, instant and the same every time."
+ },
+ "llm_judge": {
+  "t": "LLM judge",
+  "d": "A model call that grades an answer against a rubric and a reference. It handles what code can't, but must itself be checked."
+ },
+ "threshold": {
+  "t": "Threshold",
+  "d": "The lowest score that passes. Below it, the eval run exits with an error and the check fails."
+ },
+ "ci": {
+  "t": "CI (continuous integration)",
+  "d": "Automatic checks that run on every change, before it's merged. GitHub Actions is GitHub's CI."
+ },
+ "secret": {
+  "t": "Repository secret",
+  "d": "A value, such as an API key, stored encrypted in GitHub's settings and given to workflows at run time, never shown in logs or code."
+ },
+ "exit_code": {
+  "t": "Exit code",
+  "d": "The number a program returns when it ends: 0 means success, anything else means failure. CI reads it to pass or fail a check."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- CI gate (scripted results on the real eval set) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const CASES = [{"id": "ai-term", "question": "Who coined the term \"artificial intelligence\", and when?", "expect": "answer", "must_include": ["McCarthy", "1955|1956"], "reference": "John McCarthy and colleagues, in their 1955 proposal for the 1956 Dartmouth workshop."}, {"id": "dartmouth-place", "question": "Where did the 1956 workshop that named the field of AI take place?", "expect": "answer", "must_include": ["Dartmouth"], "reference": "Dartmouth College in Hanover, New Hampshire."}, {"id": "turing-name", "question": "What did Alan Turing call the test now known as the Turing test?", "expect": "answer", "must_include": ["imitation game"], "reference": "The imitation game, from his 1950 paper \"Computing Machinery and Intelligence\"."}, {"id": "turing-one-line", "question": "In one sentence, what is the Turing test?", "expect": "answer", "must_include": ["Turing"], "reference": "A test of whether a machine can show behaviour indistinguishable from a human's in conversation, proposed by Alan Turing in 1950."}, {"id": "eliza", "question": "Who created the ELIZA chatbot, and roughly when?", "expect": "answer", "must_include": ["Weizenbaum", "196"], "reference": "Joseph Weizenbaum at MIT, in the mid-1960s (1964 to 1967)."}, {"id": "perceptron", "question": "Who invented the perceptron?", "expect": "answer", "must_include": ["Rosenblatt"], "reference": "Frank Rosenblatt, in 1957 and 1958."}, {"id": "lisp", "question": "Which programming language did John McCarthy create?", "expect": "answer", "must_include": ["Lisp"], "reference": "Lisp, in 1958."}, {"id": "older", "question": "Which came first, the perceptron or ELIZA?", "expect": "answer", "must_include": ["perceptron"], "reference": "The perceptron (1957 to 1958) came before ELIZA (1964 to 1967)."}, {"id": "deep-blue", "question": "Which computer beat Garry Kasparov at chess in 1997?", "expect": "answer", "must_include": ["Deep Blue"], "reference": "IBM's Deep Blue."}, {"id": "alphago", "question": "Who did AlphaGo beat in its famous 2016 match?", "expect": "answer", "must_include": ["Lee Sedol|Lee Se-dol"], "reference": "Lee Sedol, by four games to one, in March 2016."}, {"id": "backprop", "question": "Who wrote the 1986 paper that made backpropagation popular for neural networks?", "expect": "answer", "must_include": ["Rumelhart|Hinton|Williams"], "reference": "David Rumelhart, Geoffrey Hinton and Ronald Williams, \"Learning representations by back-propagating errors\", Nature, 1986."}, {"id": "alexnet", "question": "Which neural network won the 2012 ImageNet challenge by a wide margin?", "expect": "answer", "must_include": ["AlexNet"], "reference": "AlexNet, by Alex Krizhevsky, Ilya Sutskever and Geoffrey Hinton."}, {"id": "transformer", "question": "Which 2017 paper introduced the Transformer architecture?", "expect": "answer", "must_include": ["Attention Is All You Need"], "reference": "\"Attention Is All You Need\" by Vaswani and colleagues at Google, 2017."}, {"id": "rag-paper", "question": "In what year was the paper that named retrieval-augmented generation published?", "expect": "answer", "must_include": ["2020"], "reference": "2020, by Patrick Lewis and colleagues at Facebook AI Research."}, {"id": "anthropic", "question": "When was Anthropic founded, and by whom?", "expect": "answer", "must_include": ["2021", "Amodei"], "reference": "In 2021, by former OpenAI staff including Dario and Daniela Amodei."}, {"id": "mcp", "question": "What is the Model Context Protocol, and which company introduced it?", "expect": "answer", "must_include": ["Anthropic"], "reference": "An open standard for connecting AI applications to tools and data sources, introduced by Anthropic in November 2024."}, {"id": "mccarthy-job", "question": "Which college was John McCarthy working at when he proposed the Dartmouth workshop?", "expect": "answer", "must_include": ["Dartmouth"], "reference": "Dartmouth College, where he was an assistant professor of mathematics."}, {"id": "breakfast", "question": "What did I have for breakfast today?", "expect": "no_answer", "must_include": [], "reference": "The assistant can't know this. It should say so and not guess."}, {"id": "future", "question": "Who will win the Turing Award in 2040?", "expect": "no_answer", "must_include": [], "reference": "Nobody can know this yet. The assistant should say so and not predict a winner as fact."}, {"id": "book-club", "question": "How many people came to the first meeting of my book club?", "expect": "no_answer", "must_include": [], "reference": "The assistant has no way to know this. It should say it couldn't find it and not invent a number."}], CHANGES = [{"id": "none", "label": "No change", "title": "main, as it is", "fail": {"mccarthy-job": ["judge", "Says McCarthy was at MIT; the reference says Dartmouth College."]}}, {"id": "tidy", "label": "Tidy the prompt's wording", "title": "Tidy the system prompt's wording", "fail": {"older": ["judge", "Says ELIZA came first; the perceptron came before it."]}}, {"id": "nocite", "label": "Remove the citation rule", "title": "Remove the citation rule from the system prompt", "fail": {"ai-term": ["code", "no citation"], "dartmouth-place": ["code", "no citation"], "turing-name": ["code", "no citation"], "turing-one-line": ["code", "no citation"], "eliza": ["code", "no citation"], "perceptron": ["code", "no citation"], "lisp": ["code", "no citation"], "deep-blue": ["code", "no citation"], "alexnet": ["code", "no citation"], "transformer": ["code", "no citation"], "anthropic": ["code", "no citation"], "mcp": ["code", "no citation"]}}, {"id": "short", "label": "Answer in 50 words", "title": "Answer in at most 50 words", "fail": {"backprop": ["judge", "Names only Hinton and leaves out the paper and the other authors."], "anthropic": ["judge", "Gives the year but not who founded it."]}}, {"id": "guess", "label": "Drop \"say so if you can't find it\"", "title": "Remove \"If you can't find the answer, say so\"", "fail": {"mccarthy-job": ["judge", "Says McCarthy was at MIT; the reference says Dartmouth College."], "breakfast": ["judge", "Guesses \"toast and coffee\" instead of saying it can't know."], "future": ["judge", "Names a likely winner as if it were known."], "book-club": ["judge", "Invents a number: 12 people."]}}];
+const AGENT_COST = 0.00055, JUDGE_COST = 0.00008;
+let change = 0, min = 0.85, picked = CASES.length - 4;
+function result(c){
+  const f = CHANGES[change].fail[c.id];
+  return f ? {kind: f[0], why: f[1]} : {kind: "pass"};
+}
+function render(){
+  $("cgChange").innerHTML = CHANGES.map((ch, i) => '<button type="button" data-v="' + i + '" aria-pressed="' + (i === change) + '">' + esc(ch.label) + '</button>').join("");
+  $("cgMin").innerHTML = [0.75, 0.85, 0.95].map(v => '<button type="button" data-v="' + v + '" aria-pressed="' + (v === min) + '">' + Math.round(v * 100) + '%</button>').join("");
+  const res = CASES.map(result), passed = res.filter(r => r.kind === "pass").length, score = passed / CASES.length;
+  const judged = res.filter(r => r.kind !== "code").length, ok = score >= min - 1e-9;
+  $("cgGrid").innerHTML = CASES.map((c, i) => {
+    const r = res[i], st = r.kind === "pass" ? "✓ pass" : r.kind === "code" ? "✗ code check" : "✗ judge";
+    return '<button type="button" class="cg-case s-' + (r.kind === "pass" ? "pass" : r.kind) + '" data-i="' + i + '" aria-pressed="' + (i === picked) + '"><span class="id">' + esc(c.id) + '</span><span class="st">' + st + '</span></button>';
+  }).join("");
+  const c = CASES[picked], r = res[picked];
+  const words = c.must_include.map(w => '<li class="' + (r.kind === "code" && r.why.includes(w) ? "n" : "y") + '">mentions ' + esc(w.replace("|", " or ")) + '</li>').join("");
+  const cite = c.expect === "answer" ? '<li class="' + (r.kind === "code" ? "n" : "y") + '">has a [citation]' + (r.kind === "code" ? ": no" : "") + '</li>' : '<li class="m">no citation needed: nothing to cite</li>';
+  const judge = r.kind === "code" ? '<li class="m">judge: skipped, the code checks already failed</li>' : '<li class="' + (r.kind === "judge" ? "n" : "y") + '">judge: ' + (r.kind === "judge" ? esc(r.why) : "pass, \"Correct and cited.\"") + '</li>';
+  $("cgDetail").innerHTML = '<p class="dm-h">Case ' + (picked + 1) + ' · ' + esc(c.id) + '</p><p><b>' + esc(c.question) + '</b></p><p class="small">Reference: ' + esc(c.reference) + '</p><ul>' + words + cite + '<li class="y">at most 200 words; no limit hit</li>' + judge + '</ul>';
+  const sv = $("mScore"); sv.querySelector(".v").textContent = Math.round(score * 100) + "%"; sv.classList.toggle("good", ok); sv.classList.toggle("warn", !ok);
+  $("mJudged").querySelector(".v").textContent = judged + " of 20";
+  $("mRunCost").querySelector(".v").textContent = "$" + (CASES.length * AGENT_COST + judged * JUDGE_COST).toFixed(3);
+  $("cgScoreTxt").textContent = passed + " of 20 = " + Math.round(score * 100) + "% (minimum " + Math.round(min * 100) + "%)";
+  const fill = $("cgFill"); fill.style.width = (score * 100) + "%"; fill.classList.toggle("low", !ok);
+  $("cgMark").style.left = "calc(" + (min * 100) + "% - 1px)";
+  $("cgTitle").textContent = CHANGES[change].title;
+  const icon = $("cgIcon"); icon.className = "cg-icon " + (ok ? "i-ok" : "i-no"); icon.textContent = ok ? "✓" : "✗";
+  $("cgCheck").innerHTML = ok
+    ? "<b>evals / evals (pull_request)</b><br>Successful in 3m 52s · Score " + passed + "/20 = " + Math.round(score * 100) + "%"
+    : "<b>evals / evals (pull_request)</b><br>Failing after 3m 41s · Score " + passed + "/20 = " + Math.round(score * 100) + "% (minimum " + Math.round(min * 100) + "%) · Process completed with exit code 1.";
+  $("cgMerge").disabled = !ok;
+  $("cgMergeNote").textContent = ok ? "All checks have passed." : "Merging is blocked: a required check failed.";
+  const notes = {
+    none: "The agent as it is on main. One case fails on the judge, so 95%: this is the baseline the threshold is set against.",
+    tidy: "A harmless change, and still 95%, but a different case failed. Runs vary a little; that's why MIN_SCORE sits below the usual score.",
+    nocite: "Twelve answers lose their citations and fail the free code check, so the judge never reads them. A big regression, caught before merging.",
+    short: "Two answers get too terse to be complete. The code checks pass; only the judge notices. 90% still clears 85%, but not 95%.",
+    guess: "All three \"can't know\" cases now get confident guesses. Only those cases catch it: keep some questions in your set that should have no answer."
+  };
+  $("cgNote").textContent = notes[CHANGES[change].id];
+}
+$("cgChange").addEventListener("click", e => { const b = e.target.closest("button"); if(b){ change = +b.dataset.v; render(); } });
+$("cgMin").addEventListener("click", e => { const b = e.target.closest("button"); if(b){ min = +b.dataset.v; render(); } });
+$("cgGrid").addEventListener("click", e => { const b = e.target.closest("button"); if(b){ picked = +b.dataset.i; render(); } });
+render();
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  if(!btn) return;  /* diffs have no copy button: copy the whole file instead */
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e8";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E6 Embeddings and RAG</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E6 of the AI engineer track. A chunk-and-retrieve demo with real embedding distances up top, then why RAG, embeddings, chunking, vector search, citations and failure modes, a RAG lab over your own documents, a done-when checklist and the cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage p code,.stage li code,.stage td code{overflow-wrap:anywhere}
+.cb-diff pre.code .ln.d-add{background:var(--final-soft)}
+.cb-diff pre.code .ln.d-del{background:var(--bad-soft)}
+.cb-diff pre.code .ln.d-gap{color:var(--muted)}
+.cb-key{display:flex;gap:10px}
+.cb-key .k-add{color:var(--final)}
+.cb-key .k-del{color:var(--bad)}
+.whole{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.whole>summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:.92rem}
+.whole[open]>summary{border-bottom:1px solid var(--line)}
+.whole>.cb{border:0;border-radius:0 0 var(--radius) var(--radius)}
+
+/* ---------- E6: chunk and retrieve ---------- */
+.cr-body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+@media (max-width:860px){.cr-body{grid-template-columns:minmax(0,1fr)}}
+.cr-col{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:start;min-width:0}
+.cr-col+.cr-col{border-left:1px solid var(--line)}
+@media (max-width:860px){.cr-col+.cr-col{border-left:0;border-top:1px solid var(--line)}}
+.cr-list{display:grid;gap:6px;max-height:520px;overflow-y:auto;padding-right:4px}
+.cr-chunk{display:grid;grid-template-columns:30px minmax(0,1fr);gap:4px 10px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface)}
+.cr-chunk.sent{border-color:var(--accent);background:var(--accent-soft)}
+.cr-chunk.far{opacity:.55}
+.cr-rank{font-family:var(--font-mono);font-size:.8rem;color:var(--muted);padding-top:2px}
+.cr-main{display:grid;gap:4px;min-width:0}
+.cr-top{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.cr-dist{font-family:var(--font-mono);font-size:.8rem;font-variant-numeric:tabular-nums}
+.cr-bar{flex:1 1 80px;min-width:60px;max-width:160px;height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.cr-bar span{display:block;height:100%;background:var(--accent)}
+.cr-tag{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 7px;border:1px solid var(--line);color:var(--muted)}
+.cr-tag.t-sent{border-color:var(--accent);color:var(--accent)}
+.cr-tag.t-ans{border-color:var(--final);color:var(--final);background:var(--final-soft)}
+.cr-tag.t-far{border-color:var(--bad);color:var(--bad)}
+.cr-txt{font-size:.84rem;color:var(--muted);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cr-txt b{color:var(--ink);font-weight:600}
+.cr-prompt{font-family:var(--font-mono);font-size:.76rem;line-height:1.55;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow-y:auto;margin:0}
+.cr-prompt .cr-t{color:var(--accent)}
+.cr-prompt .none{color:var(--muted)}
+.dist-table td:nth-child(2){font-family:var(--font-mono)}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E6 · Embeddings and RAG</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#why" data-nav="why"><span class="n">1</span>Why RAG</a>
+      <a href="#embed" data-nav="embed"><span class="n">2</span>Embeddings</a>
+      <a href="#chunk" data-nav="chunk"><span class="n">3</span>Chunking</a>
+      <a href="#search" data-nav="search"><span class="n">4</span>Vector search</a>
+      <a href="#cite" data-nav="cite"><span class="n">5</span>Citations</a>
+      <a href="#fail" data-nav="fail"><span class="n">6</span>When RAG fails</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E6 · AI engineer track · about 4 hours</p>
+  <h1>Embeddings and RAG: answer from your own documents</h1>
+  <p class="lede">Claude knows what it learned in training, not what's in your notes. <button type="button" class="term" data-term="rag" aria-expanded="false">RAG</button> fixes that: find the passages of your documents that match a question, put them in the prompt, and have the model answer from them with citations. This module covers <button type="button" class="term" data-term="embedding" aria-expanded="false">embeddings</button>, chunking, vector search with Chroma, citations, and the ways RAG fails. You'll build a tool that answers questions over <strong>your own PDFs and notes</strong>.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="chunk" aria-expanded="false">chunk</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">A command that finds the right passages in your documents and answers with page citations:</p>
+    <pre class="out">% uv run rag.py ask "How much will I pay if I bring a book back late?"
+  0.25  library-handbook.md, page 1: ## Late returns and lost items Since 1 March...
+  0.50  library-handbook.md, page 1: ## Borrowing You can borrow up to 12 items...
+Late adult items cost 20 cents a day, up to a maximum of $5 per item [library-handbook.md, page 1].</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">Chunk and retrieve</h2>
+    <p>The lab's sample document is a library handbook. Pick a question, cut the handbook into chunks of a different size, and choose how many to send. See which chunks come out closest, and whether the one holding the answer reaches Claude.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Real distances.</b><span>Every distance here was computed with all-MiniLM-L6-v2, the embedding model Chroma uses by default, on the handbook from the lab. Only Claude's answer is left out.</span></div>
+    <div class="demo-top">
+      <div class="ctl"><span>Question</span><div class="seg" id="crQ" role="group" aria-label="Question"></div></div>
+      <div class="ctl"><span>Chunk size</span><div class="seg" id="crSize" role="group" aria-label="Chunk size in characters"></div></div>
+      <div class="ctl"><span>Top-k</span><div class="seg" id="crK" role="group" aria-label="Chunks to send"></div></div>
+      <div class="dm-metrics" aria-live="polite">
+        <div class="metric" id="mChunks"><span class="v">0</span><span class="k">chunks in the database</span></div>
+        <div class="metric" id="mBest"><span class="v">0.00</span><span class="k">closest distance</span></div>
+        <div class="metric" id="mTokens"><span class="v">0</span><span class="k">tokens sent to Claude, about</span></div>
+        <div class="metric" id="mFound"><span class="v">–</span><span class="k">answer in what Claude sees</span></div>
+      </div>
+    </div>
+    <div class="cr-body">
+      <div class="cr-col"><p class="dm-h" id="crListH">Chunks, closest first</p><div class="cr-list" id="crList"></div></div>
+      <div class="cr-col">
+        <p class="dm-h">What Claude receives</p>
+        <pre class="cr-prompt" id="crPrompt"></pre>
+        <p class="dm-note" id="crNote"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. WHY RAG ============ -->
+<section class="stage" id="why" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · Why RAG</p>
+    <h2 id="s1">The model hasn't read your notes</h2>
+    <p>To answer from your documents, the model has to see them. You can send everything, or send only the parts that matter. RAG is the second way.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>Send everything</h4><p class="small">Paste the documents into the prompt. Simple and exact, and fine for a few pages. But every question pays for every page again, and 500 pages won't fit or will cost too much.</p></div>
+    <div class="box"><h4>Train it in</h4><p class="small">Fine-tuning changes how a model writes, not reliably what it knows, and it can't cite a page. E11 covers when it's worth it.</p></div>
+    <div class="box tint"><h4>Retrieve, then answer</h4><p class="small">Find the few passages that match the question and send only those. Cheap per question, works for thousands of files, and every fact can point to its page.</p></div>
+  </div>
+  <ol class="steps-list">
+    <li><b>Index, once:</b> read each file, cut it into chunks, turn each chunk into an embedding, and store them.</li>
+    <li><b>Retrieve, per question:</b> turn the question into an embedding and find the closest chunks.</li>
+    <li><b>Generate:</b> send those chunks and the question to Claude, which answers from them and cites each one.</li>
+  </ol>
+  <p class="prose">This is the context engineering of <a href="context.html" data-site-link>module 8</a> in code: decide what the model sees, and nothing more. It also answers module 1's question of how an agent knows things it was never trained on.</p>
+  <div class="quiz" data-quiz="qe6a">
+    <p class="quiz-label">Check your understanding · Why RAG</p>
+    <p class="quiz-q">Your notes are three pages long. What's the simplest way to have Claude answer questions about them?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. That works, but for three pages it&#x27;s more machinery than you need."><span class="l">A</span><span>Build a RAG pipeline with a vector database</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. A few pages fit easily and cost little. RAG pays off when documents are too big or too many to send with every question."><span class="l">B</span><span>Put all three pages in the prompt</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Fine-tuning doesn&#x27;t reliably teach facts, and can&#x27;t cite a page."><span class="l">C</span><span>Fine-tune a model on the notes</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 2. EMBEDDINGS ============ -->
+<section class="stage" id="embed" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · Embeddings</p>
+    <h2 id="s2">Meaning as a list of numbers</h2>
+    <p>An <button type="button" class="term" data-term="embedding_model" aria-expanded="false">embedding model</button> turns any text into a fixed-length list of numbers, 384 of them for the model Chroma uses. Texts that mean similar things get similar lists, even when they share no words.</p>
+  </div>
+  <p class="prose">The gap between two embeddings is a <button type="button" class="term" data-term="cosine" aria-expanded="false">cosine distance</button>: 0 means the same meaning, around 1 means unrelated. These are real distances from the lab, for the question "How much will I pay if I bring a book back late?":</p>
+  <div class="tablewrap">
+    <table class="dist-table">
+      <thead><tr><th>Handbook section</th><th>Distance</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Late returns and lost items</td><td>0.25</td><td>About charges for late books, though it never says "pay" or "bring back"</td></tr>
+        <tr><td>Borrowing</td><td>0.50</td><td>Related: loan periods and renewals</td></tr>
+        <tr><td>E-books and audiobooks</td><td>0.56</td><td>Loosely related: borrowing, again</td></tr>
+        <tr><td>(any section, for "What is the capital of France?")</td><td>0.97</td><td>Nothing to do with the handbook</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g2">
+    <div class="box"><h4>A separate model</h4><p class="small">Embeddings come from their own model, not from Claude. Chroma's default, all-MiniLM-L6-v2, is small, free and runs on your laptop, so the lab needs no second API key. Anthropic doesn't make embedding models; hosted ones such as Voyage AI's are stronger on hard cases.</p></div>
+    <div class="box"><h4>Same model for both sides</h4><p class="small">Chunks and questions must be embedded by the same model. Change the model and you must index everything again, because the numbers from two models can't be compared.</p></div>
+  </div>
+</section>
+
+<!-- ============ 3. CHUNKING ============ -->
+<section class="stage" id="chunk" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · Chunking</p>
+    <h2 id="s3">Cut documents into the right-sized pieces</h2>
+    <p>Retrieval returns <button type="button" class="term" data-term="chunk" aria-expanded="false">chunks</button>, not files, so how you cut decides what can be found. Each chunk gets one embedding, which blends everything in it.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Chunk size</th><th>What happens</th><th>In the demo</th></tr></thead>
+      <tbody>
+        <tr><td>Small (250 characters)</td><td>Precise matches, but a fact split across two chunks may need both</td><td>17 chunks. "Connect to Wi-Fi" finds the Wi-Fi sentence first, at 0.55</td></tr>
+        <tr><td>Medium (500, the lab's size)</td><td>About one section each: a good start for notes and articles</td><td>9 chunks. The late-fee section comes first, at 0.25</td></tr>
+        <tr><td>Large (1,500)</td><td>Each chunk mixes many topics, distances bunch together, and every question sends a lot of text</td><td>2 chunks, all distances between 0.56 and 0.74</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g3">
+    <div class="box tint"><h4>Follow the structure</h4><p class="small">Cut at paragraph breaks, keep a heading with the text under it, and cut long paragraphs at a full stop, never mid-sentence.</p></div>
+    <div class="box tint"><h4>Keep where it came from</h4><p class="small">Store the file and page with every chunk. Without them, the answer can't cite anything.</p></div>
+    <div class="box tint"><h4>Overlap, if facts get split</h4><p class="small">Many splitters repeat a little text between neighbouring chunks so a fact on the boundary survives. Keeping paragraphs whole does the same job for most notes.</p></div>
+  </div>
+  <div class="quiz" data-quiz="qe6b">
+    <p class="quiz-label">Check your understanding · Chunking</p>
+    <p class="quiz-q">You index a 200-page report in chunks of 5,000 characters. Answers are vague and each question costs more than expected. Why?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A stronger model helps a little, but the chunks themselves are the problem."><span class="l">A</span><span>The embedding model is too small</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. One embedding per 5,000 characters blends many ideas, and 4 of them make a long prompt. Try about 500."><span class="l">B</span><span>Each chunk mixes many topics, so matches are blurry and every chunk sent is long</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. With huge chunks, raising k makes the cost problem worse."><span class="l">C</span><span>Top-k is too small</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 4. VECTOR SEARCH ============ -->
+<section class="stage" id="search" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Vector search</p>
+    <h2 id="s4">Find the closest chunks</h2>
+    <p>A <button type="button" class="term" data-term="vector_db" aria-expanded="false">vector database</button> stores each chunk with its embedding and details, and finds the ones closest to a question fast. Chroma runs inside your Python program and saves to a folder: nothing to sign up for.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Asking Chroma for the 4 closest chunks</span><button type="button" class="cb-copy" aria-label="Copy Asking Chroma for the 4 closest chunks">Copy</button></div><pre class="code"><span class="ln">found = notes.query(query_texts=[<span class="s">"How much will I pay if I bring a book back late?"</span>], n_results=4)</span><span class="ln"><span class="k">for</span> text, meta, distance <span class="k">in</span> zip(found[<span class="s">"documents"</span>][0], found[<span class="s">"metadatas"</span>][0], found[<span class="s">"distances"</span>][0]):</span><span class="ln">    print(round(distance, 2), meta[<span class="s">"source"</span>], meta[<span class="s">"page"</span>], text[:40])</span></pre></div>
+  <div class="grid g2">
+    <div class="box"><h4><button type="button" class="term" data-term="top_k" aria-expanded="false">Top-k</button>: how many</h4><p class="small">The lab sends the 4 closest. Too few and a two-part question misses half its answer; too many and the prompt fills with noise you pay for.</p></div>
+    <div class="box"><h4>A distance cut-off</h4><p class="small">Something is always closest, even for nonsense. <code>MAX_DISTANCE = 0.75</code> drops chunks too far away to help, and when nothing is left, the lab answers without calling Claude.</p></div>
+  </div>
+</section>
+
+<!-- ============ 5. CITATIONS ============ -->
+<section class="stage" id="cite" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Citations</p>
+    <h2 id="s5">Prompt with sources, answer with citations</h2>
+    <p>The chunks go into the prompt inside tags that carry their file and page. The system prompt sets three rules: answer only from the sources, cite each fact, and say so when the sources don't cover the question.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>What Claude receives (the user message)</span><button type="button" class="cb-copy" aria-label="Copy What Claude receives (the user message)">Copy</button></div><pre class="code"><span class="ln">&lt;sources&gt;</span><span class="ln">&lt;source file="library-handbook.md" page="1"&gt;</span><span class="ln"><span class="c">## Late returns and lost items</span></span><span class="ln">Since 1 March 2026 there are no charges for late children's books. For adult items...</span><span class="ln">&lt;/source&gt;</span><span class="ln">&lt;source file="library-handbook.md" page="1"&gt;</span><span class="ln"><span class="c">## Borrowing</span></span><span class="ln">You can borrow up to 12 items at a time...</span><span class="ln">&lt;/source&gt;</span><span class="ln">&lt;/sources&gt;</span><span class="ln"> </span><span class="ln">Question: How much will I pay if I bring a book back late?</span></pre></div>
+  <p class="callout"><b>Citations make answers checkable.</b> A <button type="button" class="term" data-term="grounding" aria-expanded="false">grounded</button> answer can still be wrong, but anyone can open the page it cites and see. E8 turns "every fact has a citation" into a check that runs on every change. Claude also has a built-in citations feature for documents sent whole, which returns the exact passage for each claim.</p>
+</section>
+
+<!-- ============ 6. WHEN RAG FAILS ============ -->
+<section class="stage" id="fail" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · When RAG fails</p>
+    <h2 id="s6">Most bad answers are bad retrieval</h2>
+    <p>When an answer is wrong, look at what retrieval returned before you touch the prompt. In most RAG failures, the model was never shown the right text.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Failure</th><th>What it looks like</th><th>What helps</th></tr></thead>
+      <tbody>
+        <tr><td><button type="button" class="term" data-term="retrieval_miss" aria-expanded="false">Retrieval miss</button></td><td>"How do I get online?" never reaches the Wi-Fi section</td><td>Rephrase the question, raise k, add keyword search alongside vectors, or use a stronger embedding model</td></tr>
+        <tr><td>Not in the documents</td><td>"Who founded the library?" still retrieves the closest chunks, at 0.64</td><td>A system prompt that says "say you couldn't find it", and an eval case that checks it does</td></tr>
+        <tr><td>Answer spread across many chunks</td><td>"Summarise all my notes" gets 4 chunks of 500</td><td>A different design: summarise file by file, then combine</td></tr>
+        <tr><td>Stale index</td><td>You edited a file but answers quote the old version</td><td>Index again after changes; the lab replaces a file's chunks each time</td></tr>
+        <tr><td>Bad text from PDFs</td><td>Scanned pages give no text; tables come out jumbled</td><td>OCR scanned files; check the chunk count for each file</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="quiz" data-quiz="qe6c">
+    <p class="quiz-label">Check your understanding · When RAG fails</p>
+    <p class="quiz-q">rag.py gives a wrong answer about your meeting notes. What do you check first?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="1" data-why="Correct. If the right chunk wasn&#x27;t sent, no prompt change can fix it. uv run rag.py search shows you, for free."><span class="l">A</span><span>Which chunks search returned for that question, and their distances</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A stronger model can&#x27;t use text it never received."><span class="l">B</span><span>Whether a bigger Claude model gets it right</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Check retrieval first: most RAG failures happen before the model is called."><span class="l">C</span><span>The wording of the system prompt</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · on your laptop</p>
+    <h2 id="s7">Ask questions over your own documents</h2>
+    <p>One file, <code>rag.py</code>, with three commands: <code>index</code>, <code>search</code> and <code>ask</code>. In E7, your agent gets <code>search</code> as a tool.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>3–4 hours</b></span><span>API cost <b>under $0.010</b></span><span>You need <b>E3 and E4 done</b></span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Install Chroma and pypdf</h3><p><button type="button" class="term" data-term="vector_db" aria-expanded="false">Chroma</button> stores your chunks and finds the closest ones. pypdf reads the text out of PDFs.</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv add chromadb pypdf</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Resolved 103 packages in 2.41s
+Prepared 79 packages in 9.87s
+Installed 79 packages in 512ms
+ + chromadb==1.5.9
+ ...
+ + pypdf==6.21.1
+ ...</pre><p class="small">Numbers and versions will differ. Chroma brings many packages with it, including the runtime for its embedding model.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Gather your documents</h3><p>Make a folder called <code>docs</code> in your project and put 3 to 10 files in it: PDFs of articles or papers you have read, your meeting notes, a course handout. Text-based <code>.pdf</code>, <code>.md</code> and <code>.txt</code> files all work.</p><p>To start with something known, also add the lab's sample, <a href="https://github.com/lalwalataukir/how-ai-agents-work/blob/main/labs/e06/docs/library-handbook.md" target="_blank" rel="noopener">library-handbook.md</a>: the expected outputs below use it.</p><p>Then add two lines to <code>.gitignore</code>. The database can be rebuilt any time, and your documents may be private:</p><div class="cb"><div class="cb-h"><span>.gitignore (add these lines)</span><button type="button" class="cb-copy" aria-label="Copy .gitignore (add these lines)">Copy</button></div><pre class="code"><span class="ln">chroma/</span><span class="ln">docs/</span></pre></div><p class="small">If your documents are fine to share and your repo is private, you can leave <code>docs/</code> out of <code>.gitignore</code>.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Write rag.py</h3><p>Create <code>rag.py</code>. It does the two halves of RAG: <b>indexing</b> (read, chunk, store) once, and <b>answering</b> (search, then ask Claude) for every question.</p><div class="cb"><div class="cb-h"><span>rag.py</span><button type="button" class="cb-copy" aria-label="Copy rag.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E6 lab: ask questions over your own notes and PDFs, and get answers with citations.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run rag.py index docs                  # read every file in docs/ into the database</span></span><span class="ln"><span class="s">    uv run rag.py search "late fees"          # see what retrieval finds (free: no model call)</span></span><span class="ln"><span class="s">    uv run rag.py ask "How much is the fine for a late book?"</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> sys</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"> </span><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"><span class="k">import</span> chromadb</span><span class="ln"><span class="k">from</span> dotenv <span class="k">import</span> load_dotenv</span><span class="ln"><span class="k">from</span> pypdf <span class="k">import</span> PdfReader</span><span class="ln"> </span><span class="ln">load_dotenv()</span><span class="ln"> </span><span class="ln">MODEL = <span class="s">"claude-haiku-5-5"</span></span><span class="ln">PRICE_IN, PRICE_OUT = 0.10, 0.50  <span class="c"># dollars per million tokens, for this model</span></span><span class="ln">CHUNK_SIZE = 500     <span class="c"># most characters in one chunk, about 125 tokens</span></span><span class="ln">TOP_K = 4            <span class="c"># how many chunks to give the model</span></span><span class="ln">MAX_DISTANCE = 0.75  <span class="c"># skip chunks further than this from the question (0 = same meaning, 1 = unrelated)</span></span><span class="ln">SYSTEM = (</span><span class="ln">    <span class="s">"Answer the question using only the sources below. After each fact, cite the source it came from "</span></span><span class="ln">    <span class="s">"as [file, page N]. If the sources don't contain the answer, say you couldn't find it in the notes. "</span></span><span class="ln">    <span class="s">"Answer in at most 150 words."</span></span><span class="ln">)</span><span class="ln"> </span><span class="ln">client = anthropic.Anthropic()</span><span class="ln">db = chromadb.PersistentClient(path=Path(__file__).parent / <span class="s">"chroma"</span>)  <span class="c"># a folder next to this file</span></span><span class="ln">notes = db.get_or_create_collection(<span class="s">"notes"</span>, configuration={<span class="s">"hnsw"</span>: {<span class="s">"space"</span>: <span class="s">"cosine"</span>}})</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> read_file(path):</span><span class="ln">    <span class="s">"""Return a list of (page number, text). A text or Markdown file counts as one page."""</span></span><span class="ln">    <span class="k">if</span> path.suffix.lower() == <span class="s">".pdf"</span>:</span><span class="ln">        <span class="k">return</span> [(number, page.extract_text() <span class="k">or</span> <span class="s">""</span>) <span class="k">for</span> number, page <span class="k">in</span> enumerate(PdfReader(path).pages, 1)]</span><span class="ln">    <span class="k">return</span> [(1, path.read_text(encoding=<span class="s">"utf-8"</span>))]</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> chunk_text(text, size=CHUNK_SIZE):</span><span class="ln">    <span class="s">"""Split text into chunks of at most `size` characters, keeping paragraphs and sentences whole."""</span></span><span class="ln">    pieces, heading = [], <span class="s">""</span></span><span class="ln">    <span class="k">for</span> paragraph <span class="k">in</span> text.split(<span class="s">"\n\n"</span>):</span><span class="ln">        lines = paragraph.strip().split(<span class="s">"\n"</span>)</span><span class="ln">        <span class="k">if</span> lines[0].startswith(<span class="s">"#"</span>):  <span class="c"># a Markdown heading: keep it with the text below it</span></span><span class="ln">            heading = (heading + <span class="s">"\n"</span> + lines.pop(0).strip()).strip()</span><span class="ln">        paragraph = <span class="s">" "</span>.join(<span class="s">" "</span>.join(lines).split())  <span class="c"># tidy line breaks and spaces</span></span><span class="ln">        <span class="k">if</span> <span class="k">not</span> paragraph:</span><span class="ln">            <span class="k">continue</span></span><span class="ln">        <span class="k">if</span> heading:</span><span class="ln">            paragraph, heading = heading + <span class="s">"\n"</span> + paragraph, <span class="s">""</span></span><span class="ln">        <span class="k">while</span> len(paragraph) &gt; size:  <span class="c"># too long: cut at the last sentence end that fits</span></span><span class="ln">            cut = paragraph.rfind(<span class="s">". "</span>, 0, size)</span><span class="ln">            cut = cut + 1 <span class="k">if</span> cut &gt; 0 <span class="k">else</span> size</span><span class="ln">            pieces.append(paragraph[:cut].strip())</span><span class="ln">            paragraph = paragraph[cut:].strip()</span><span class="ln">        <span class="k">if</span> paragraph:</span><span class="ln">            pieces.append(paragraph)</span><span class="ln">    chunks = []</span><span class="ln">    <span class="k">for</span> piece <span class="k">in</span> pieces:  <span class="c"># join short pieces until a chunk is full</span></span><span class="ln">        <span class="k">if</span> chunks <span class="k">and</span> len(chunks[-1]) + 1 + len(piece) &lt;= size:</span><span class="ln">            chunks[-1] += <span class="s">"\n"</span> + piece</span><span class="ln">        <span class="k">else</span>:</span><span class="ln">            chunks.append(piece)</span><span class="ln">    <span class="k">return</span> chunks</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> index_file(path, folder):</span><span class="ln">    <span class="s">"""Chunk one file and store the chunks. Indexing a file again replaces its old chunks."""</span></span><span class="ln">    source = path.relative_to(folder).as_posix()</span><span class="ln">    notes.delete(where={<span class="s">"source"</span>: source})</span><span class="ln">    count = 0</span><span class="ln">    <span class="k">for</span> page, text <span class="k">in</span> read_file(path):</span><span class="ln">        chunks = chunk_text(text)</span><span class="ln">        <span class="k">if</span> chunks:</span><span class="ln">            notes.add(</span><span class="ln">                ids=[<span class="s">f"{source}:{page}:{n}"</span> <span class="k">for</span> n <span class="k">in</span> range(len(chunks))],</span><span class="ln">                documents=chunks,  <span class="c"># Chroma turns each chunk into an embedding as it stores it</span></span><span class="ln">                metadatas=[{<span class="s">"source"</span>: source, <span class="s">"page"</span>: page} <span class="k">for</span> _ <span class="k">in</span> chunks],</span><span class="ln">            )</span><span class="ln">            count += len(chunks)</span><span class="ln">    <span class="k">return</span> count</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> index_folder(folder):</span><span class="ln">    <span class="s">"""Index every .md, .txt and .pdf file in a folder and the folders inside it."""</span></span><span class="ln">    folder = Path(folder)</span><span class="ln">    total = 0</span><span class="ln">    <span class="k">for</span> path <span class="k">in</span> sorted(folder.rglob(<span class="s">"*"</span>)):</span><span class="ln">        <span class="k">if</span> path.suffix.lower() <span class="k">in</span> (<span class="s">".md"</span>, <span class="s">".txt"</span>, <span class="s">".pdf"</span>):</span><span class="ln">            count = index_file(path, folder)</span><span class="ln">            print(<span class="s">f"  {path.relative_to(folder)}: {count} chunks"</span>)</span><span class="ln">            total += count</span><span class="ln">    <span class="k">return</span> total</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> search(question, k=TOP_K):</span><span class="ln">    <span class="s">"""The k chunks closest in meaning to the question, skipping any that are too far away."""</span></span><span class="ln">    <span class="k">if</span> notes.count() == 0:</span><span class="ln">        <span class="k">return</span> []</span><span class="ln">    found = notes.query(query_texts=[question], n_results=min(k, notes.count()))</span><span class="ln">    hits = []</span><span class="ln">    <span class="k">for</span> text, meta, distance <span class="k">in</span> zip(found[<span class="s">"documents"</span>][0], found[<span class="s">"metadatas"</span>][0], found[<span class="s">"distances"</span>][0]):</span><span class="ln">        <span class="k">if</span> distance &lt;= MAX_DISTANCE:</span><span class="ln">            hits.append({<span class="s">"source"</span>: meta[<span class="s">"source"</span>], <span class="s">"page"</span>: meta[<span class="s">"page"</span>], <span class="s">"text"</span>: text, <span class="s">"distance"</span>: round(distance, 2)})</span><span class="ln">    <span class="k">return</span> hits</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> answer(question, hits):</span><span class="ln">    <span class="s">"""Ask Claude to answer the question from the retrieved chunks."""</span></span><span class="ln">    <span class="k">if</span> <span class="k">not</span> hits:  <span class="c"># nothing close enough: say so, and don't pay for a model call</span></span><span class="ln">        <span class="k">return</span> <span class="s">"I couldn't find anything about that in your notes."</span></span><span class="ln">    sources = <span class="s">"\n"</span>.join(</span><span class="ln">        <span class="s">f'&lt;source file="{hit["source"]}" page="{hit["page"]}"&gt;\n{hit["text"]}\n&lt;/source&gt;'</span> <span class="k">for</span> hit <span class="k">in</span> hits</span><span class="ln">    )</span><span class="ln">    response = client.messages.create(</span><span class="ln">        model=MODEL, max_tokens=2000, system=SYSTEM, output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>},</span><span class="ln">        messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">f"&lt;sources&gt;\n{sources}\n&lt;/sources&gt;\n\nQuestion: {question}"</span>}],</span><span class="ln">    )</span><span class="ln">    cost = (response.usage.input_tokens * PRICE_IN + response.usage.output_tokens * PRICE_OUT) / 1_000_000</span><span class="ln">    print(<span class="s">f"  [{response.usage.input_tokens} tokens in, {response.usage.output_tokens} out, ${cost:.5f}]\n"</span>)</span><span class="ln">    <span class="k">return</span> <span class="s">""</span>.join(block.text <span class="k">for</span> block <span class="k">in</span> response.content <span class="k">if</span> block.type == <span class="s">"text"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> show(hits):</span><span class="ln">    <span class="k">for</span> hit <span class="k">in</span> hits:</span><span class="ln">        preview = hit[<span class="s">"text"</span>].replace(<span class="s">"\n"</span>, <span class="s">" "</span>)[:70]</span><span class="ln">        print(<span class="s">f"  {hit['distance']:.2f}  {hit['source']}, page {hit['page']}: {preview}..."</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main(args):</span><span class="ln">    <span class="k">if</span> len(args) == 2 <span class="k">and</span> args[0] == <span class="s">"index"</span>:</span><span class="ln">        total = index_folder(args[1])</span><span class="ln">        print(<span class="s">f"Indexed {total} chunks. The database holds {notes.count()}."</span>)</span><span class="ln">    <span class="k">elif</span> len(args) &gt;= 2 <span class="k">and</span> args[0] <span class="k">in</span> (<span class="s">"search"</span>, <span class="s">"ask"</span>):</span><span class="ln">        question = <span class="s">" "</span>.join(args[1:])</span><span class="ln">        hits = search(question)</span><span class="ln">        <span class="k">if</span> hits:</span><span class="ln">            show(hits)</span><span class="ln">        <span class="k">else</span>:</span><span class="ln">            print(<span class="s">"  Nothing close enough in your notes."</span>)</span><span class="ln">        <span class="k">if</span> args[0] == <span class="s">"ask"</span>:</span><span class="ln">            print(answer(question, hits))</span><span class="ln">    <span class="k">else</span>:</span><span class="ln">        print(__doc__)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    main(sys.argv[1:])</span></pre></div><ul><li><b><code>notes</code></b> is a Chroma collection saved in the <code>chroma</code> folder next to <code>rag.py</code>. Cosine distance makes 0 mean "same meaning".</li><li><b><code>read_file</code></b> returns text page by page, so every chunk knows its page for citations.</li><li><b><code>chunk_text</code></b> keeps paragraphs whole, keeps each heading with the text under it, and cuts long paragraphs at a full stop.</li><li><b><code>index_file</code></b> deletes a file's old chunks first, so indexing again after an edit doesn't leave stale copies.</li><li><b><code>search</code></b> asks Chroma for the <code>TOP_K</code> closest chunks and drops any further away than <code>MAX_DISTANCE</code>.</li><li><b><code>answer</code></b> puts the chunks in <code>&lt;source&gt;</code> tags with file and page, and skips the model call when nothing was close.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Index your documents</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run rag.py index docs</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">/Users/you/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz: 100%|██████████| 79.3M/79.3M [00:06&lt;00:00, 12.1MiB/s]
+  library-handbook.md: 9 chunks
+  meeting-notes.md: 4 chunks
+  rag-paper.pdf: 61 chunks
+Indexed 74 chunks. The database holds 74.</pre><p class="small">The first run downloads Chroma's embedding model, about 80 MB, once. It runs on your laptop: no second API key and no cost per chunk. Your file names and counts will differ.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Look at retrieval before you ask</h3><p><code>search</code> shows what retrieval finds, with distances, and costs nothing. Always check it first: if the right chunk isn't here, no model can answer well.</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run rag.py search "late fees"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  0.47  library-handbook.md, page 1: ## Late returns and lost items Since 1 March 2026 there are no charges...
+  0.68  library-handbook.md, page 1: ## Computers, printing and Wi-Fi Members get two hours of free compute...
+  0.73  library-handbook.md, page 1: ## E-books and audiobooks Members can borrow e-books and audiobooks on...</pre><p class="small">Only three chunks come back: the fourth closest is further than 0.75.</p></div><p>Now a question the handbook does answer, worded differently from it:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run rag.py search "How do I get online at the library?"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  0.61  library-handbook.md, page 1: ## E-books and audiobooks Members can borrow e-books and audiobooks on...
+  0.63  library-handbook.md, page 1: # Riverside Public Library: members' handbook This handbook covers the...
+  0.64  library-handbook.md, page 1: ## Accessibility Both branches have step-free access and accessible to...
+  0.65  library-handbook.md, page 1: ## Joining the library Membership is free for anyone who lives, works ...</pre><p class="small">The Wi-Fi section isn't there. This small embedding model doesn't link "get online" with "Wi-Fi" strongly enough: a <b>retrieval miss</b>. The demo above shows the same miss.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Ask questions</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run rag.py ask "How much will I pay if I bring a book back late?"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  0.25  library-handbook.md, page 1: ## Late returns and lost items Since 1 March 2026 there are no charges...
+  0.50  library-handbook.md, page 1: ## Borrowing You can borrow up to 12 items at a time. Books can be kep...
+  0.56  library-handbook.md, page 1: ## E-books and audiobooks Members can borrow e-books and audiobooks on...
+  0.66  library-handbook.md, page 1: ## Computers, printing and Wi-Fi Members get two hours of free compute...
+  [431 tokens in, 88 out, $0.00009]
+
+Late adult items cost 20 cents a day, up to a maximum of $5 per item [library-handbook.md, page 1]. Late children's books have been free since 1 March 2026 [library-handbook.md, page 1]. If you owe more than $10, you can't borrow anything until you pay [library-handbook.md, page 1].</pre><p class="small">Your wording and token counts will differ.</p></div><p>Then two questions that should <em>not</em> get an answer:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run rag.py ask "Who founded the library?"</span><span class="ln">uv run rag.py ask "What is the capital of France?"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  0.64  library-handbook.md, page 1: ## Joining the library Membership is free for anyone who lives, works ...
+  ...
+  [446 tokens in, 41 out, $0.00007]
+
+Your notes don't say who founded the library. The handbook covers membership, hours, borrowing and services, but not its history.
+
+  Nothing close enough in your notes.
+I couldn't find anything about that in your notes.</pre><p class="small">The first finds on-topic chunks without the answer, and the model says so. The second finds nothing within 0.75, so no model call is made at all.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Make it yours</h3><p>Pick at least one:</p><ul><li>Ask five questions about your own documents and check each citation against the file.</li><li>Set <code>CHUNK_SIZE</code> to 250, then 1500. Index again each time and compare the distances for the same question.</li><li>Fix the Wi-Fi miss without changing the handbook: rephrase the question, raise <code>TOP_K</code>, or add a line to the handbook's Wi-Fi section that uses the words people search with.</li><li>Print the full prompt that <code>answer</code> sends, to see exactly what Claude reads.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">8</span><div class="lab-b"><h3>Commit and push</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add rag.py pyproject.toml uv.lock .gitignore</span><span class="ln">git status</span><span class="ln">git commit -m "Add RAG over my documents"</span><span class="ln">git push</span></pre></div><p>Check <code>git status</code> before committing: <code>chroma/</code> and, if private, <code>docs/</code> must not be listed.</p></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>  scanned-report.pdf: 0 chunks</code></dt><dd>The PDF is scanned pages, which are images with no text in them. Run it through OCR first (Preview or Acrobat can do this, as can the free <code>ocrmypdf</code>), or leave it out.</dd><dt><code>Nothing close enough in your notes. (for every question)</code></dt><dd>The database is empty or holds other files. Run <code>uv run rag.py index docs</code> from the folder that holds <code>rag.py</code>, and check the chunk count it prints.</dd><dt><code>pypdf.errors.PdfReadError: EOF marker not found</code></dt><dd>The file is damaged or isn't really a PDF. Download it again, or remove it from <code>docs</code>.</dd><dt><code>httpx.ConnectError (while downloading onnx.tar.gz)</code></dt><dd>The one-time download of the embedding model was blocked, often by a work network. Try another network once; after that it runs offline.</dd></dl></div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s8">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E6 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="e6"><li><label><input type="checkbox"><span><code>uv run rag.py index docs</code> indexes at least three files, including some of your own</span></label></li><li><label><input type="checkbox"><span>You looked at <code>search</code> results for three questions before asking, and found one miss</span></label></li><li><label><input type="checkbox"><span><code>rag.py ask</code> answers with <code>[file, page N]</code> citations, and says so when your documents don't have the answer</span></label></li><li><label><input type="checkbox"><span><code>chroma/</code> is in <code>.gitignore</code>, and you finished one “Make it yours” change and pushed it</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s9">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula"><em>Read</em> → <em>chunk</em> → <em>embed and store</em>, once. Then per question: <em>embed</em> → <em>top-k closest</em> → <em>prompt with sources</em> → <em>cited answer</em>.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>Index</h3><ul>
+        <li>Chunks of about 500 characters</li>
+        <li>Headings stay with their text</li>
+        <li>Store file and page with each chunk</li>
+        <li>Index again after edits</li>
+      </ul></div>
+      <div class="blk"><h3>Retrieve</h3><ul>
+        <li>Same embedding model for chunks and questions</li>
+        <li>Top-k of 3 to 5 to start</li>
+        <li>A distance cut-off; nothing close means no model call</li>
+        <li>Check retrieval before the prompt</li>
+      </ul></div>
+      <div class="blk"><h3>Answer</h3><ul>
+        <li>Sources in tags with file and page</li>
+        <li>"Only from the sources; cite each fact"</li>
+        <li>"Say so if they don't cover it"</li>
+        <li>Spot-check citations against the files</li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s10">3 common RAG mistakes</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>Tuning the prompt when retrieval is the problem</h3><dl>
+      <dt>What it looks like</dt><dd>Hours of prompt changes for a question whose answer was never in the chunks sent.</dd>
+      <dt>Fix</dt><dd>Print the retrieved chunks and distances first. If the answer isn't there, work on chunking, the question or k.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>Chunks without sources</h3><dl>
+      <dt>What it looks like</dt><dd>Answers that sound right but can't say where a fact came from, so nobody can check them.</dd>
+      <dt>Fix</dt><dd>Store the file and page with every chunk, pass them in the prompt, and require a citation per fact.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>No way to say "not found"</h3><dl>
+      <dt>What it looks like</dt><dd>A question the documents don't cover still gets a confident answer, built from loosely related chunks.</dd>
+      <dt>Fix</dt><dd>A distance cut-off, a system prompt rule to say when the sources don't answer, and test questions that check it.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="eng-tools.html" data-site-link>← Module E5 · Tool calling</a>
+  <a href="eng-agents.html" data-site-link>Module E7 · Building agents →</a>
+</div>
+
+<footer>
+  <p>The demo's distances are real, computed with all-MiniLM-L6-v2 on the lab's sample handbook. The Riverside Public Library and its handbook are invented for teaching. The lab calls the real Claude API from your laptop; embeddings run locally.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic, Chroma or the Wikimedia Foundation.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "rag": {
+  "t": "RAG (retrieval-augmented generation)",
+  "d": "Find the passages of your documents that match a question, put them in the prompt, and have the model answer from them with citations."
+ },
+ "embedding": {
+  "t": "Embedding",
+  "d": "A list of numbers that stands for a text's meaning. Texts that mean similar things get similar numbers, so a computer can measure how close two meanings are."
+ },
+ "embedding_model": {
+  "t": "Embedding model",
+  "d": "A model that turns text into embeddings. It's separate from Claude: Chroma's default, all-MiniLM-L6-v2, is small and runs on your laptop."
+ },
+ "chunk": {
+  "t": "Chunk",
+  "d": "A piece of a document, a paragraph or a few, stored and searched on its own. Retrieval returns chunks, not whole files."
+ },
+ "cosine": {
+  "t": "Cosine distance",
+  "d": "How far apart two embeddings point: 0 means the same meaning, about 1 means unrelated. Chroma reports it for every match."
+ },
+ "vector_db": {
+  "t": "Vector database",
+  "d": "A store for chunks and their embeddings that finds the nearest ones to a question quickly. Chroma is one that runs inside your Python program."
+ },
+ "top_k": {
+  "t": "Top-k",
+  "d": "How many of the closest chunks retrieval returns. Too few can miss the answer; too many adds noise and cost."
+ },
+ "grounding": {
+  "t": "Grounded answer",
+  "d": "An answer built only from sources you supplied, with each fact traceable to one of them."
+ },
+ "retrieval_miss": {
+  "t": "Retrieval miss",
+  "d": "The answer is in your documents, but the chunk holding it isn't among those sent to the model, so the model can't use it."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Chunk and retrieve (real distances, precomputed) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DATA = {"questions": ["How much will I pay if I bring a book back late?", "Can I read library books on my phone?", "Is the library open on Sunday afternoon?", "How do I get online at the library?", "How do I connect to the library's Wi-Fi?", "Who founded the library?"], "sizes": {"250": {"chunks": ["# Riverside Public Library: members' handbook\nThis handbook covers the Main branch on Market Street and the East branch on Harbour Road. It was last updated in March 2026.", "## Joining the library\nMembership is free for anyone who lives, works or studies in Riverside County. Bring a photo ID and something with your address on it, such as a bill or a bank statement, to either help desk.", "Children under 16 need a parent or carer to sign the form. People from outside the county can join for $25 a year.", "## Opening hours\nThe Main branch is open Monday to Friday from 9 am to 8 pm, on Saturdays from 10 am to 5 pm, and on Sundays from noon to 4 pm. The East branch keeps the same weekday and Saturday hours but is closed on Sundays.", "Both branches close on public holidays.\n## Borrowing\nYou can borrow up to 12 items at a time. Books can be kept for three weeks, new releases for two weeks and DVDs for one week.", "You can renew an item up to three times online, in the app or at the desk, unless another member has reserved it.", "## Late returns and lost items\nSince 1 March 2026 there are no charges for late children's books. For adult items the charge is 20 cents a day, up to a maximum of $5 per item.", "If you lose an item, you pay what it costs to replace it plus a $5 processing fee. You can't borrow anything while you owe more than $10.", "## E-books and audiobooks\nMembers can borrow e-books and audiobooks on a phone, tablet or computer with the free Libby app. Sign in with your library card number and PIN.", "You can have up to 10 digital loans at once, for 14 or 21 days, and they return themselves when the time is up.", "## Computers, printing and Wi-Fi\nMembers get two hours of free computer time a day; book a computer at the desk or online. Printing costs 10 cents a page in black and white and 50 cents a page in colour.", "The free Wi-Fi network is called Riverside-Guest and has no password.", "## Meeting rooms\nMembers can book a meeting room for free for non-commercial use, up to two weeks ahead and for at most three hours at a time. Book online or at the Main branch desk. Rooms for paid events cost $15 an hour.", "## The AI research helper\nUntil September 2026 the library is trialling an AI assistant that helps you find sources for school and work projects.", "It answers using only the library's catalogue and licensed databases, and every answer links to the books or articles it used. Librarians review a sample of its answers every week.", "## Accessibility\nBoth branches have step-free access and accessible toilets. We lend large-print books and audiobooks on CD, and a home delivery service brings books to members who can't visit because of illness or disability.", "## Contact us\nCall the help desk on 555-0142 or email help@riverside-library.example. Staff answer emails within two working days."], "d": [[0.9, 0.81, 0.79, 0.95, 0.54, 0.77, 0.26, 0.52, 0.65, 0.69, 0.61, 0.95, 0.67, 0.89, 0.78, 0.79, 0.78], [0.7, 0.67, 1.01, 0.99, 0.75, 0.85, 0.73, 0.98, 0.51, 0.88, 0.85, 0.78, 0.86, 0.85, 0.67, 0.68, 0.75], [0.61, 0.71, 0.99, 0.39, 0.63, 0.89, 0.8, 1.08, 0.7, 0.84, 0.85, 0.9, 0.76, 0.79, 0.61, 0.7, 0.66], [0.63, 0.6, 0.91, 0.86, 0.8, 0.85, 0.78, 1.0, 0.56, 0.89, 0.82, 0.77, 0.77, 0.73, 0.56, 0.73, 0.64], [0.76, 0.73, 0.92, 0.93, 0.91, 0.95, 0.93, 1.04, 0.7, 0.93, 0.86, 0.55, 0.85, 0.84, 0.73, 0.87, 0.73], [0.65, 0.64, 0.93, 0.89, 0.77, 1.02, 0.82, 1.04, 0.7, 0.91, 0.89, 0.9, 0.81, 0.8, 0.56, 0.76, 0.69]]}, "500": {"chunks": ["# Riverside Public Library: members' handbook\nThis handbook covers the Main branch on Market Street and the East branch on Harbour Road. It was last updated in March 2026.", "## Joining the library\nMembership is free for anyone who lives, works or studies in Riverside County. Bring a photo ID and something with your address on it, such as a bill or a bank statement, to either help desk. Children under 16 need a parent or carer to sign the form. People from outside the county can join for $25 a year.", "## Opening hours\nThe Main branch is open Monday to Friday from 9 am to 8 pm, on Saturdays from 10 am to 5 pm, and on Sundays from noon to 4 pm. The East branch keeps the same weekday and Saturday hours but is closed on Sundays. Both branches close on public holidays.", "## Borrowing\nYou can borrow up to 12 items at a time. Books can be kept for three weeks, new releases for two weeks and DVDs for one week. You can renew an item up to three times online, in the app or at the desk, unless another member has reserved it.", "## Late returns and lost items\nSince 1 March 2026 there are no charges for late children's books. For adult items the charge is 20 cents a day, up to a maximum of $5 per item. If you lose an item, you pay what it costs to replace it plus a $5 processing fee. You can't borrow anything while you owe more than $10.", "## E-books and audiobooks\nMembers can borrow e-books and audiobooks on a phone, tablet or computer with the free Libby app. Sign in with your library card number and PIN. You can have up to 10 digital loans at once, for 14 or 21 days, and they return themselves when the time is up.", "## Computers, printing and Wi-Fi\nMembers get two hours of free computer time a day; book a computer at the desk or online. Printing costs 10 cents a page in black and white and 50 cents a page in colour. The free Wi-Fi network is called Riverside-Guest and has no password.\n## Meeting rooms\nMembers can book a meeting room for free for non-commercial use, up to two weeks ahead and for at most three hours at a time. Book online or at the Main branch desk. Rooms for paid events cost $15 an hour.", "## The AI research helper\nUntil September 2026 the library is trialling an AI assistant that helps you find sources for school and work projects. It answers using only the library's catalogue and licensed databases, and every answer links to the books or articles it used. Librarians review a sample of its answers every week.", "## Accessibility\nBoth branches have step-free access and accessible toilets. We lend large-print books and audiobooks on CD, and a home delivery service brings books to members who can't visit because of illness or disability.\n## Contact us\nCall the help desk on 555-0142 or email help@riverside-library.example. Staff answer emails within two working days."], "d": [[0.9, 0.75, 0.95, 0.5, 0.25, 0.56, 0.66, 0.87, 0.75], [0.7, 0.71, 0.98, 0.68, 0.77, 0.57, 0.77, 0.83, 0.65], [0.61, 0.73, 0.39, 0.76, 0.87, 0.69, 0.77, 0.74, 0.65], [0.63, 0.65, 0.86, 0.77, 0.82, 0.61, 0.76, 0.7, 0.64], [0.76, 0.74, 0.93, 0.87, 0.93, 0.73, 0.74, 0.84, 0.8], [0.65, 0.64, 0.89, 0.8, 0.86, 0.71, 0.81, 0.77, 0.72]]}, "1500": {"chunks": ["# Riverside Public Library: members' handbook\nThis handbook covers the Main branch on Market Street and the East branch on Harbour Road. It was last updated in March 2026.\n## Joining the library\nMembership is free for anyone who lives, works or studies in Riverside County. Bring a photo ID and something with your address on it, such as a bill or a bank statement, to either help desk. Children under 16 need a parent or carer to sign the form. People from outside the county can join for $25 a year.\n## Opening hours\nThe Main branch is open Monday to Friday from 9 am to 8 pm, on Saturdays from 10 am to 5 pm, and on Sundays from noon to 4 pm. The East branch keeps the same weekday and Saturday hours but is closed on Sundays. Both branches close on public holidays.\n## Borrowing\nYou can borrow up to 12 items at a time. Books can be kept for three weeks, new releases for two weeks and DVDs for one week. You can renew an item up to three times online, in the app or at the desk, unless another member has reserved it.\n## Late returns and lost items\nSince 1 March 2026 there are no charges for late children's books. For adult items the charge is 20 cents a day, up to a maximum of $5 per item. If you lose an item, you pay what it costs to replace it plus a $5 processing fee. You can't borrow anything while you owe more than $10.", "## E-books and audiobooks\nMembers can borrow e-books and audiobooks on a phone, tablet or computer with the free Libby app. Sign in with your library card number and PIN. You can have up to 10 digital loans at once, for 14 or 21 days, and they return themselves when the time is up.\n## Computers, printing and Wi-Fi\nMembers get two hours of free computer time a day; book a computer at the desk or online. Printing costs 10 cents a page in black and white and 50 cents a page in colour. The free Wi-Fi network is called Riverside-Guest and has no password.\n## Meeting rooms\nMembers can book a meeting room for free for non-commercial use, up to two weeks ahead and for at most three hours at a time. Book online or at the Main branch desk. Rooms for paid events cost $15 an hour.\n## The AI research helper\nUntil September 2026 the library is trialling an AI assistant that helps you find sources for school and work projects. It answers using only the library's catalogue and licensed databases, and every answer links to the books or articles it used. Librarians review a sample of its answers every week.\n## Accessibility\nBoth branches have step-free access and accessible toilets. We lend large-print books and audiobooks on CD, and a home delivery service brings books to members who can't visit because of illness or disability.\n## Contact us\nCall the help desk on 555-0142 or email help@riverside-library.example. Staff answer emails within two working days."], "d": [[0.66, 0.63], [0.71, 0.61], [0.56, 0.65], [0.68, 0.58], [0.79, 0.66], [0.72, 0.68]]}}};
+const LABELS = ["Late fee", "E-books on my phone", "Open on Sunday?", "Get online", "Connect to Wi-Fi", "Who founded it?"], KEYS = ["20 cents a day", "Libby", "Sundays from noon", "Wi-Fi network", "Wi-Fi network", null];
+const MAX = 0.75;
+let q = 0, size = "500", k = 4;
+function seg(id, items, cur, on){
+  $(id).innerHTML = items.map(([v, t]) => '<button type="button" data-v="'+v+'" aria-pressed="'+(String(v) === String(cur))+'">'+esc(t)+'</button>').join("");
+  $(id).onclick = e => { const b = e.target.closest("button"); if(b){ on(b.dataset.v); render(); } };
+}
+function heading(c){ const lines = c.split("\n"); return lines[0].startsWith("#") ? lines[0].replace(/^#+\s*/, "") : ""; }
+function body(c){ const lines = c.split("\n"); return (lines[0].startsWith("#") ? lines.slice(1) : lines).join(" "); }
+function render(){
+  seg("crQ", LABELS.map((t, i) => [i, t]), q, v => q = +v);
+  seg("crSize", [["250","250"],["500","500"],["1500","1,500 characters"]], size, v => size = v);
+  seg("crK", [[1,"1"],[2,"2"],[4,"4"]], k, v => k = +v);
+  const S = DATA.sizes[size], d = S.d[q], key = KEYS[q];
+  const order = d.map((x, i) => i).sort((a, b) => d[a] - d[b]);
+  const sent = order.slice(0, k).filter(i => d[i] <= MAX);
+  const ansIdx = key ? order.filter(i => S.chunks[i].includes(key)) : [];
+  $("crListH").textContent = "Question: " + DATA.questions[q] + " · chunks, closest first";
+  $("crList").innerHTML = order.map((i, r) => {
+    const isSent = sent.includes(i), far = d[i] > MAX, ans = ansIdx.includes(i), h = heading(S.chunks[i]);
+    const tags = (isSent ? '<span class="cr-tag t-sent">sent</span>' : "") + (ans ? '<span class="cr-tag t-ans">has the answer</span>' : "") + (far ? '<span class="cr-tag t-far">too far</span>' : "");
+    return '<div class="cr-chunk'+(isSent?" sent":"")+(far?" far":"")+'"><span class="cr-rank">#'+(r+1)+'</span><div class="cr-main"><div class="cr-top"><span class="cr-dist">'+d[i].toFixed(2)+'</span><span class="cr-bar" aria-hidden="true"><span style="width:'+Math.max(4, Math.round((1 - Math.min(d[i], 1)) * 100))+'%"></span></span>'+tags+'</div><span class="cr-txt">'+(h ? "<b>"+esc(h)+"</b> " : "")+esc(body(S.chunks[i]))+'</span></div></div>';
+  }).join("");
+  const chars = sent.reduce((n, i) => n + S.chunks[i].length + 60, 0);
+  const tokens = sent.length ? Math.round((chars + DATA.questions[q].length + 320) / 4) : 0;
+  $("mChunks").querySelector(".v").textContent = S.chunks.length;
+  $("mBest").querySelector(".v").textContent = d[order[0]].toFixed(2);
+  $("mTokens").querySelector(".v").textContent = tokens ? tokens.toLocaleString("en") : "0";
+  const found = sent.some(i => ansIdx.includes(i));
+  const fm = $("mFound"); fm.classList.toggle("good", found); fm.classList.toggle("warn", !found);
+  fm.querySelector(".v").textContent = !sent.length ? "No call" : (key ? (found ? "Yes" : "No") : "Not in the handbook");
+  $("crPrompt").innerHTML = sent.length
+    ? '<span class="cr-t">&lt;sources&gt;</span>\n' + sent.map(i => '<span class="cr-t">&lt;source file="library-handbook.md" page="1"&gt;</span>\n' + esc(S.chunks[i]) + '\n<span class="cr-t">&lt;/source&gt;</span>').join("\n") + '\n<span class="cr-t">&lt;/sources&gt;</span>\n\nQuestion: ' + esc(DATA.questions[q])
+    : '<span class="none">Nothing is within ' + MAX + ', so rag.py answers "I couldn\'t find anything about that in your notes." without calling Claude.</span>';
+  let note;
+  const rank = ansIdx.length ? order.indexOf(ansIdx[0]) + 1 : 0;
+  if(!key) note = "The handbook never says who founded the library. Retrieval still returns the closest chunks, because something is always closest. The system prompt's rule to say when the sources don't answer is what stops a made-up answer.";
+  else if(found) note = "The answer is in the chunk ranked #" + rank + " (distance " + d[ansIdx[0]].toFixed(2) + "), so Claude can answer and cite [library-handbook.md, page 1].";
+  else if(d[ansIdx[0]] > MAX) note = "The answer is in the chunk ranked #" + rank + ", but at " + d[ansIdx[0]].toFixed(2) + " it's past the 0.75 cut-off. A retrieval miss: Claude never sees it." + (q === 3 ? " \"Get online\" and \"Wi-Fi\" mean the same to you, but this small model doesn't link them strongly. Try \"Connect to Wi-Fi\"." : "");
+  else note = "The answer is in the chunk ranked #" + rank + ", but you only send the top " + k + ". A retrieval miss: raise k, or rephrase the question.";
+  if(size === "1500") note += " With only 2 huge chunks, every distance lands between 0.56 and 0.74, so the ranking says little, and each question sends most of the handbook.";
+  if(size === "250" && found && q === 0) note += " Small chunks split the late-returns section in two: the lost-items half is a separate chunk.";
+  $("crNote").textContent = note;
+}
+render();
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  if(!btn) return;  /* diffs have no copy button: copy the whole file instead */
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e6";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>

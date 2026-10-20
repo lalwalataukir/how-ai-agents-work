@@ -1,0 +1,30 @@
+# E8 lab: save this as .github/workflows/evals.yml in your repo.
+# It runs the evals on every pull request, and the check fails when the score drops below MIN_SCORE.
+name: evals
+
+on:
+  pull_request:
+  workflow_dispatch:  # adds a "Run workflow" button on the Actions tab
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - name: Install packages
+        run: uv sync --frozen
+      - name: Run the evals
+        run: uv run run_evals.py
+        env:  # from Settings → Secrets and variables → Actions in your repo
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: eval-report
+          path: eval_report.json

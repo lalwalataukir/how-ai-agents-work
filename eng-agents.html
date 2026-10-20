@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E7 Building Agents</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E7 of the AI engineer track. An agent-trace demo with state, memory and approval up top, then the loop, planning, memory, stop conditions, approval, LangGraph and MCP, a lab that builds the research agent three ways, a done-when checklist and the cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stage p code,.stage li code,.stage td code{overflow-wrap:anywhere}
+.cb-diff pre.code .ln.d-add{background:var(--final-soft)}
+.cb-diff pre.code .ln.d-del{background:var(--bad-soft)}
+.cb-diff pre.code .ln.d-gap{color:var(--muted)}
+.cb-key{display:flex;gap:10px}
+.cb-key .k-add{color:var(--final)}
+.cb-key .k-del{color:var(--bad)}
+.whole{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.whole>summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:.92rem}
+.whole[open]>summary{border-bottom:1px solid var(--line)}
+.whole>.cb{border:0;border-radius:0 0 var(--radius) var(--radius)}
+
+/* ---------- E7: agent trace ---------- */
+.at-body{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+@media (max-width:860px){.at-body{grid-template-columns:minmax(0,1fr)}}
+.at-col{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:start;min-width:0}
+.at-col+.at-col{border-left:1px solid var(--line)}
+@media (max-width:860px){.at-col+.at-col{border-left:0;border-top:1px solid var(--line)}}
+.at-trace{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:500px;overflow-y:auto;padding-right:4px}
+.at-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:start;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--surface);font-size:.85rem}
+.at-row.cur{border-color:var(--accent)}
+.at-row.q{background:var(--surface-2);border-style:dashed}
+.at-kind{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;margin-top:1px}
+.at-kind.k-plan{border-color:var(--think);color:var(--think)}
+.at-kind.k-model{border-color:var(--accent);color:var(--accent)}
+.at-kind.k-tool{border-color:var(--act);color:var(--act);background:var(--act-soft)}
+.at-kind.k-ask{border-color:var(--observe);color:var(--observe);background:var(--observe-soft)}
+.at-kind.k-stop{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
+.at-kind.k-answer{border-color:var(--final);color:var(--final);background:var(--final-soft)}
+.at-kind.k-user{border-color:var(--ink);color:var(--ink)}
+.at-txt{min-width:0;overflow-wrap:anywhere}
+.at-txt code{font-size:.78rem}
+.at-cost{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (max-width:520px){.at-row{grid-template-columns:auto minmax(0,1fr)}.at-cost{grid-column:2}}
+.at-state{display:grid;gap:8px}
+.at-gauge{display:grid;gap:4px}
+.at-gauge-top{display:flex;justify-content:space-between;gap:8px;font-size:.84rem}
+.at-gauge-top b{font-family:var(--font-mono);font-weight:500;font-variant-numeric:tabular-nums}
+.at-bar{height:7px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.at-bar span{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.at-bar.hot span{background:var(--bad)}
+.at-list{margin:0;padding-left:1.1em;font-size:.84rem;display:grid;gap:2px}
+.at-list:empty::before{content:"none yet";color:var(--muted);margin-left:-1.1em}
+.at-now{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:4px;background:var(--surface)}
+.at-now h3{font-size:1rem}
+.at-prompt{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--observe);border-radius:8px;padding:8px 10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.at-prompt:empty{display:none}
+.gr-flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-family:var(--font-mono);font-size:.85rem}
+.gr-node{border:1.5px solid var(--accent);border-radius:8px;padding:4px 12px;background:var(--surface)}
+.gr-node.end{border-radius:999px;border-color:var(--muted);color:var(--muted)}
+.gr-arrow{color:var(--muted)}
+.cmp-table td:first-child{font-weight:600}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E7 · Building agents</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#loop" data-nav="loop"><span class="n">1</span>The agent loop</a>
+      <a href="#planning" data-nav="planning"><span class="n">2</span>Planning</a>
+      <a href="#memory" data-nav="memory"><span class="n">3</span>Memory and state</a>
+      <a href="#stopping" data-nav="stopping"><span class="n">4</span>Stop conditions</a>
+      <a href="#approval" data-nav="approval"><span class="n">5</span>Human approval</a>
+      <a href="#graphs" data-nav="graphs"><span class="n">6</span>Code or LangGraph</a>
+      <a href="#mcp" data-nav="mcp"><span class="n">7</span>MCP</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E7 · AI engineer track · about 5 hours</p>
+  <h1>Building agents: plan, act, remember, stop</h1>
+  <p class="lede">An <button type="button" class="term" data-term="agent" aria-expanded="false">agent</button> is E5's tool loop with four additions: a plan before it acts, memory between questions, stop conditions that end a bad run, and a person's approval before anything changes. This module builds all four into the research assistant, using your notes from E6 and Wikipedia from E5. Then you'll rebuild it in LangGraph, and share your notes with other apps over MCP.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="stop_condition" aria-expanded="false">stop condition</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">A research agent that plans, uses your notes and Wikipedia, remembers the conversation, and asks before it saves:</p>
+    <pre class="out">You: Save that as a note.
+  plan: Save the answer about who coined the term as a note | Confirm to the user
+  -> save_note({"title": "Who coined artificial intelligence", ...})
+  The agent wants to run save_note:
+  Allow it? [y/N] y
+Saved your note as 2026-10-20-who-coined-artificial-intelligence.md.</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">Agent trace</h2>
+    <p>Step through a two-question session with the research assistant you'll build. The first question needs your notes and Wikipedia. The second says only "Save that as a note". Watch the agent's state, memory and limits change at each step, then change the settings and run it again.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>The session is scripted to follow the lab's code. Token counts are typical for Claude Haiku 5.5, and the page text is abridged.</span></div>
+    <div class="demo-top">
+      <div class="ctl"><span>Memory</span><div class="seg" id="atMem" role="group" aria-label="Memory"></div></div>
+      <div class="ctl"><span>Your answer</span><div class="seg" id="atOk" role="group" aria-label="Approval"></div></div>
+      <div class="ctl"><span>MAX_CALLS</span><div class="seg" id="atMax" role="group" aria-label="Call limit"></div></div>
+    </div>
+    <div class="at-body">
+      <div class="at-col">
+        <p class="dm-h">Trace</p>
+        <ol class="at-trace" id="atTrace" aria-live="polite"></ol>
+        <div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="btn btn-primary" id="atNext">Next step ▶</button><button type="button" class="btn btn-sm" id="atAll">Run to the end</button><button type="button" class="btn btn-sm" id="atReset">↺ Restart</button></div>
+      </div>
+      <div class="at-col">
+        <div class="at-now"><p class="dm-h" id="atStepN">Step 0</p><h3 id="atT">Press "Next step" to start</h3><p class="small" id="atWhy">The first question is about to arrive.</p></div>
+        <pre class="at-prompt" id="atPrompt"></pre>
+        <div class="at-state">
+          <p class="dm-h">State of this question</p>
+          <div class="at-gauge"><div class="at-gauge-top"><span>Model calls</span><b id="atCalls">0 / 10</b></div><div class="at-bar" id="atCallsBar"><span></span></div></div>
+          <div class="at-gauge"><div class="at-gauge-top"><span>Cost limit used</span><b id="atCost">0% of $0.020</b></div><div class="at-bar" id="atCostBar"><span></span></div></div>
+          <p class="dm-h">Memory</p>
+          <ul class="at-list" id="atMemory"></ul>
+          <p class="dm-h">Notes folder</p>
+          <ul class="at-list" id="atNotes"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. THE AGENT LOOP ============ -->
+<section class="stage" id="loop" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · The agent loop</p>
+    <h2 id="s1">A loop that decides its own next step</h2>
+    <p>In a <button type="button" class="term" data-term="workflow" aria-expanded="false">workflow</button>, your code fixes the steps: search, then summarise. In an agent, the model picks the next step each time round the loop, and decides when it's done. That's the plan, act, observe cycle from <a href="how-ai-agents-work.html" data-site-link>module 1</a>, in your code.</p>
+  </div>
+  <div class="grid g2">
+    <div class="box"><h4>Build an agent when</h4><p class="small">The steps can't be known in advance, the result is worth extra cost and time, the model is good at this kind of task, and mistakes can be caught before they matter.</p></div>
+    <div class="box"><h4>Stay with a workflow when</h4><p class="small">You can write the steps down. "Retrieve, then answer" is E6's workflow, and it's cheaper and easier to test than an agent doing the same job.</p></div>
+  </div>
+  <p class="prose">Your code still owns everything that matters: which tools exist, how many calls a run may make, what it may spend, and what needs a person's yes. The model only chooses among the options you give it.</p>
+  <div class="quiz" data-quiz="qe7a">
+    <p class="quiz-label">Check your understanding · The agent loop</p>
+    <p class="quiz-q">Every Monday you want a summary of the five newest articles in a folder. Agent or workflow?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The steps are known: list, read, summarise. An agent adds cost and unpredictability for no gain."><span class="l">A</span><span>An agent, so it can decide how to summarise</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. When you can write the steps down, code should run them. Save agents for open-ended work."><span class="l">B</span><span>A workflow: fixed steps in code, with the model writing the summaries</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Summarising is one of the things models do well."><span class="l">C</span><span>Neither: models can't summarise reliably</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 2. PLANNING ============ -->
+<section class="stage" id="planning" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · Planning</p>
+    <h2 id="s2">Plan before acting</h2>
+    <p>Before any tool runs, one small call asks for a <button type="button" class="term" data-term="plan" aria-expanded="false">plan</button> of 1 to 4 steps, as structured output. The plan goes into the loop's first message, and the system prompt lets the model change it when a tool shows it won't work.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Planning with structured output (from the lab)</span><button type="button" class="cb-copy" aria-label="Copy Planning with structured output (from the lab)">Copy</button></div><pre class="code"><span class="ln"><span class="k">class</span> Plan(BaseModel):</span><span class="ln">    steps: list[str]</span><span class="ln"> </span><span class="ln">response = client.messages.parse(</span><span class="ln">    model=MODEL, max_tokens=1000, system=PLANNER, output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>},</span><span class="ln">    messages=memory + [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}], output_format=Plan,</span><span class="ln">)</span><span class="ln">response.parsed_output.steps   <span class="c"># ["Search the user's notes for late fees", "Answer with citations"]</span></span></pre></div>
+  <div class="grid g3">
+    <div class="box tint"><h4>Intent you can read</h4><p class="small">The plan shows what the agent means to do before it does it. A bad plan explains a bad run.</p></div>
+    <div class="box tint"><h4>Fewer wasted calls</h4><p class="small">A run that follows a plan wanders less than one that decides every step from scratch.</p></div>
+    <div class="box tint"><h4>Cheap</h4><p class="small">The planning call sees only the question and memory, not tools or pages: a few hundred tokens.</p></div>
+  </div>
+</section>
+
+<!-- ============ 3. MEMORY AND STATE ============ -->
+<section class="stage" id="memory" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · Memory and state</p>
+    <h2 id="s3">What the agent keeps, and for how long</h2>
+    <p>The API remembers nothing between requests (E3). Everything an agent "knows" about this run, this conversation or last week is something your code chose to keep and send.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Kind</th><th>Lasts</th><th>In the lab</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td><button type="button" class="term" data-term="state" aria-expanded="false">State</button></td><td>One question</td><td>The <code>state</code> dict: calls, tokens, cost, tools used, calls already made</td><td>None: it stays in your code</td></tr>
+        <tr><td>Short-term <button type="button" class="term" data-term="memory" aria-expanded="false">memory</button></td><td>One session</td><td>The <code>memory</code> list: earlier questions and answers, not the tool calls behind them</td><td>Sent with every request, so it grows</td></tr>
+        <tr><td>Long-term memory</td><td>Until deleted</td><td>Notes saved by <code>save_note</code>, indexed into E6's database and found by <code>search_notes</code></td><td>Only what retrieval brings back</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="callout"><b>Memory is a design choice.</b> The lab keeps answers and drops the tool calls and pages behind them: a follow-up still knows what "that" means, at a fraction of the tokens. <a href="context.html" data-site-link>Module 8</a> covers the other options, such as summarising old turns.</p>
+</section>
+
+<!-- ============ 4. STOP CONDITIONS ============ -->
+<section class="stage" id="stopping" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Stop conditions</p>
+    <h2 id="s4">Every loop needs a way out</h2>
+    <p>A confused agent can loop for ever, and every lap costs money. The lab checks its <button type="button" class="term" data-term="stop_condition" aria-expanded="false">stop conditions</button> before every model call, not after.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Condition</th><th>Catches</th><th>In the lab</th></tr></thead>
+      <tbody>
+        <tr><td>The model answers</td><td>The normal end</td><td><code>stop_reason</code> isn't <code>"tool_use"</code></td></tr>
+        <tr><td>Call limit</td><td>Wandering and endless retries</td><td><code>MAX_CALLS = 10</code> per question, the plan included</td></tr>
+        <tr><td>Cost limit</td><td>A few huge pages or long answers</td><td><code>MAX_COST = 0.02</code> dollars per question</td></tr>
+        <tr><td>Repeat guard</td><td>Asking for the same thing again and again</td><td>An identical call gets "You already made this exact call"</td></tr>
+        <tr><td>Cut off</td><td>An answer longer than <code>max_tokens</code></td><td>The answer is flagged "(Stopped early: max_tokens)"</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="quiz" data-quiz="qe7b">
+    <p class="quiz-label">Check your understanding · Stop conditions</p>
+    <p class="quiz-q">A tool keeps failing and the agent keeps retrying with tiny changes to the query. Which check stops it soonest?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The queries differ slightly, so they aren&#x27;t identical calls."><span class="l">A</span><span>The repeat guard</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. However the calls vary, the count only goes up. MAX_CALLS ends the run, and the trace shows why."><span class="l">B</span><span>The call limit, checked before every model call</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. max_tokens limits one reply&#x27;s length, not the number of laps."><span class="l">C</span><span>max_tokens</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 5. HUMAN APPROVAL ============ -->
+<section class="stage" id="approval" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Human approval</p>
+    <h2 id="s5">A person says yes to anything that changes something</h2>
+    <p>Reading is safe to automate; writing, sending and deleting are not. Tools in <code>NEEDS_APPROVAL</code> run only after a person sees exactly what will happen and says yes. That's <button type="button" class="term" data-term="hitl" aria-expanded="false">human in the loop</button>.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>Show the real action</h4><p class="small">The approval shows the tool and its exact arguments, the note's real title and text, not the model's summary of them.</p></div>
+    <div class="box"><h4>No means no</h4><p class="small">A refusal goes back as an error the model must respect: "The user said no. Don't try again."</p></div>
+    <div class="box"><h4>Offer less in risky places</h4><p class="small">The <code>tools</code> list decides what a run may use, whatever the model asks for. E9's public web app gets the read-only tools only.</p></div>
+  </div>
+  <p class="prose"><a href="security.html" data-site-link>Module 9</a> shows why this matters: an instruction hidden in a web page can ask your agent to do things. Approval and a short tool list mean a tricked agent can't act on it alone. E10 adds more defences in code.</p>
+  <div class="quiz" data-quiz="qe7c">
+    <p class="quiz-label">Check your understanding · Human approval</p>
+    <p class="quiz-q">Where should "ask before saving a note" be enforced?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A prompt guides the model, and a tricked or confused model can ignore it."><span class="l">A</span><span>In the system prompt: "Always ask the user before saving"</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The model can only ask; your code decides what runs. That holds even if the model is tricked."><span class="l">B</span><span>In the code that runs the tool, before it writes anything</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The description helps the model use the tool well, but enforces nothing."><span class="l">C</span><span>In the tool's description</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 6. CODE OR LANGGRAPH ============ -->
+<section class="stage" id="graphs" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · Plain code or LangGraph</p>
+    <h2 id="s6">The same agent, as a graph</h2>
+    <p><button type="button" class="term" data-term="langgraph" aria-expanded="false">LangGraph</button> (<a href="langgraph.html" data-site-link>module 4</a>) describes an agent as nodes and edges over a shared state. In the lab you'll rebuild your agent in it, reusing the same tools and prompts:</p>
+  </div>
+  <div class="gr-flow" aria-label="The graph: start, plan, model, approve, tools, back to model; model goes to end when it answers">
+    <span class="gr-node end">START</span><span class="gr-arrow">→</span><span class="gr-node">plan</span><span class="gr-arrow">→</span><span class="gr-node">model</span><span class="gr-arrow">→</span><span class="gr-node">approve</span><span class="gr-arrow">→</span><span class="gr-node">tools</span><span class="gr-arrow">→ back to model</span><span class="gr-arrow">· model ⇢</span><span class="gr-node end">END</span><span class="gr-arrow">when it answers</span>
+  </div>
+  <div class="tablewrap">
+    <table class="cmp-table">
+      <thead><tr><th></th><th>Plain Python (agent.py)</th><th>LangGraph (agent_graph.py)</th></tr></thead>
+      <tbody>
+        <tr><td>The loop</td><td>A <code>while</code> loop you can read top to bottom</td><td>Nodes and edges; LangGraph runs the loop</td></tr>
+        <tr><td>Pausing for a person</td><td><code>input()</code> blocks the program</td><td><code>interrupt()</code> saves state and stops; resume later, even in another process with a database saver</td></tr>
+        <tr><td>Saving progress</td><td>Your job</td><td>A <button type="button" class="term" data-term="checkpointer" aria-expanded="false">checkpointer</button> saves after every step</td></tr>
+        <tr><td>Seeing the design</td><td>Read the code</td><td><code>draw_mermaid()</code> draws it</td></tr>
+        <tr><td>Cost</td><td>No extra package</td><td>A dependency and its ideas to learn</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="prose">Start with plain code. Reach for LangGraph when you need runs that pause for hours and resume, branches and parallel steps, or several agents working together. <a href="langchain.html" data-site-link>Module 3</a> covers LangChain, the wider toolkit around it.</p>
+</section>
+
+<!-- ============ 7. MCP ============ -->
+<section class="stage" id="mcp" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow"><b>7</b> · MCP</p>
+    <h2 id="s7">Write a tool once, use it in any app</h2>
+    <p>Your <code>search_notes</code> tool works inside your agent. <button type="button" class="term" data-term="mcp" aria-expanded="false">MCP</button> lets other AI apps use it too: wrap it in a small server, and Claude Code, Claude Desktop and other MCP apps can search your notes.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>A whole MCP server (the lab's, slightly shortened)</span><button type="button" class="cb-copy" aria-label="Copy A whole MCP server (the lab's, slightly shortened)">Copy</button></div><pre class="code"><span class="ln"><span class="k">from</span> mcp.server <span class="k">import</span> MCPServer</span><span class="ln"><span class="k">from</span> rag <span class="k">import</span> search</span><span class="ln"> </span><span class="ln">mcp = MCPServer(<span class="s">"research-notes"</span>)</span><span class="ln"> </span><span class="ln">@mcp.tool()</span><span class="ln"><span class="k">def</span> search_notes(query: str) -&gt; list[dict]:</span><span class="ln">    <span class="s">"""Search the user's own notes and PDFs. Returns up to 4 passages, each with its file and page."""</span></span><span class="ln">    <span class="k">return</span> search(query)</span><span class="ln"> </span><span class="ln">mcp.run()</span></pre></div>
+  <div class="grid g2">
+    <div class="box"><h4>How it talks</h4><p class="small">The app starts your server as a program and exchanges messages over its input and output (stdio). The type hints become the tool's input schema; the docstring becomes its description.</p></div>
+    <div class="box"><h4>Whom it trusts</h4><p class="small">An MCP server runs on your machine with your permissions. Install only servers you trust, and review their tool descriptions: <a href="security.html" data-site-link>module 9</a> shows a poisoned one.</p></div>
+  </div>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · on your laptop</p>
+    <h2 id="s8">The research assistant as an agent</h2>
+    <p>Three files: the agent in plain Python, the same agent in LangGraph, and an MCP server for your notes. All three reuse E5's and E6's code.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>4–5 hours</b></span><span>API cost <b>under $0.050</b></span><span>You need <b>E5 and E6 done</b></span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Install LangGraph and MCP</h3><p>The first agent is plain Python and needs nothing new. These two are for the LangGraph version and the MCP server later in the lab.</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv add langgraph "mcp[cli]"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Resolved 131 packages in 1.88s
+Installed 24 packages in 140ms
+ + langgraph==1.2.16
+ + mcp==2.3.0
+ ...</pre><p class="small">Numbers and versions will differ. Keep the quotes around mcp[cli]: some terminals treat square brackets specially.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write agent.py</h3><p>Create <code>agent.py</code> next to <code>research_bot.py</code> (E5) and <code>rag.py</code> (E6): it imports from both. Read it in four parts: the tools, the plan, the loop with its limits, and the terminal session with its memory.</p><div class="cb"><div class="cb-h"><span>agent.py</span><button type="button" class="cb-copy" aria-label="Copy agent.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E7 lab: the research assistant as an agent. It makes a plan, searches your notes and</span></span><span class="ln"><span class="s">Wikipedia, remembers the conversation, stops at its limits, and asks before it saves anything.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run agent.py</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> json</span><span class="ln"><span class="k">import</span> re</span><span class="ln"><span class="k">from</span> datetime <span class="k">import</span> date</span><span class="ln"><span class="k">from</span> pathlib <span class="k">import</span> Path</span><span class="ln"> </span><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"><span class="k">from</span> dotenv <span class="k">import</span> load_dotenv</span><span class="ln"><span class="k">from</span> pydantic <span class="k">import</span> BaseModel</span><span class="ln"> </span><span class="ln"><span class="k">from</span> rag <span class="k">import</span> index_file, search  <span class="c"># E6: your notes</span></span><span class="ln"><span class="k">from</span> research_bot <span class="k">import</span> TOOLS <span class="k">as</span> WIKI_TOOLS, run_tool <span class="k">as</span> run_wiki_tool  <span class="c"># E5: Wikipedia</span></span><span class="ln"> </span><span class="ln">load_dotenv()</span><span class="ln"> </span><span class="ln">MODEL = <span class="s">"claude-haiku-5-5"</span></span><span class="ln">PRICE_IN, PRICE_OUT = 0.10, 0.50  <span class="c"># dollars per million tokens, for this model</span></span><span class="ln">MAX_CALLS = 10   <span class="c"># stop condition: most model calls for one question</span></span><span class="ln">MAX_COST = 0.02  <span class="c"># stop condition: most dollars for one question</span></span><span class="ln">NOTES = Path(__file__).parent / <span class="s">"notes"</span>  <span class="c"># save_note writes Markdown files here</span></span><span class="ln">SYSTEM = (</span><span class="ln">    <span class="s">"You are a research assistant. Use the tools to search the user's notes and Wikipedia, and follow "</span></span><span class="ln">    <span class="s">"the plan you're given, changing it if a tool shows it won't work. Cite every fact: [Page title] "</span></span><span class="ln">    <span class="s">"for Wikipedia, [file, page N] for the user's notes. Save a note only when the user asks you to. "</span></span><span class="ln">    <span class="s">"If you can't find the answer, say so. Answer in at most 200 words."</span></span><span class="ln">)</span><span class="ln">PLANNER = (</span><span class="ln">    <span class="s">"You plan the work of a research assistant. Its tools: search_notes (the user's own notes and PDFs), "</span></span><span class="ln">    <span class="s">"search_wikipedia and read_page (Wikipedia), and save_note (only when the user asks to save something). "</span></span><span class="ln">    <span class="s">"Write a plan of 1 to 4 short steps for the latest request. Don't answer it."</span></span><span class="ln">)</span><span class="ln"> </span><span class="ln">TOOLS = WIKI_TOOLS + [</span><span class="ln">    {</span><span class="ln">        <span class="s">"name"</span>: <span class="s">"search_notes"</span>,</span><span class="ln">        <span class="s">"description"</span>: <span class="s">"Search the user's own notes and PDFs. Returns up to 4 passages, each with its file "</span></span><span class="ln">                       <span class="s">"and page. Use it first for anything the user may have notes on."</span>,</span><span class="ln">        <span class="s">"input_schema"</span>: {</span><span class="ln">            <span class="s">"type"</span>: <span class="s">"object"</span>,</span><span class="ln">            <span class="s">"properties"</span>: {<span class="s">"query"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"What to look for, in plain words"</span>}},</span><span class="ln">            <span class="s">"required"</span>: [<span class="s">"query"</span>],</span><span class="ln">            <span class="s">"additionalProperties"</span>: <span class="k">False</span>,</span><span class="ln">        },</span><span class="ln">        <span class="s">"strict"</span>: <span class="k">True</span>,</span><span class="ln">    },</span><span class="ln">    {</span><span class="ln">        <span class="s">"name"</span>: <span class="s">"save_note"</span>,</span><span class="ln">        <span class="s">"description"</span>: <span class="s">"Save a note for the user as a Markdown file. Only use it when the user asks to save "</span></span><span class="ln">                       <span class="s">"something. The user approves every save."</span>,</span><span class="ln">        <span class="s">"input_schema"</span>: {</span><span class="ln">            <span class="s">"type"</span>: <span class="s">"object"</span>,</span><span class="ln">            <span class="s">"properties"</span>: {</span><span class="ln">                <span class="s">"title"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"A short title"</span>},</span><span class="ln">                <span class="s">"text"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"The note, with its citations"</span>},</span><span class="ln">            },</span><span class="ln">            <span class="s">"required"</span>: [<span class="s">"title"</span>, <span class="s">"text"</span>],</span><span class="ln">            <span class="s">"additionalProperties"</span>: <span class="k">False</span>,</span><span class="ln">        },</span><span class="ln">        <span class="s">"strict"</span>: <span class="k">True</span>,</span><span class="ln">    },</span><span class="ln">]</span><span class="ln">ALL_TOOLS = [tool[<span class="s">"name"</span>] <span class="k">for</span> tool <span class="k">in</span> TOOLS]</span><span class="ln">NEEDS_APPROVAL = {<span class="s">"save_note"</span>}  <span class="c"># tools that change something: a person says yes first</span></span><span class="ln"> </span><span class="ln">client = anthropic.Anthropic()</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">class</span> Plan(BaseModel):</span><span class="ln">    steps: list[str]</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> make_plan(question, memory):</span><span class="ln">    <span class="s">"""Ask for a short plan before any tool runs. Returns the steps and the call's token usage."""</span></span><span class="ln">    response = client.messages.parse(</span><span class="ln">        model=MODEL, max_tokens=1000, system=PLANNER, output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>},</span><span class="ln">        messages=memory + [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}], output_format=Plan,</span><span class="ln">    )</span><span class="ln">    <span class="k">return</span> response.parsed_output.steps, response.usage</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> save_note(title, text):</span><span class="ln">    <span class="s">"""Write a Markdown note, and add it to your notes so search_notes can find it later."""</span></span><span class="ln">    NOTES.mkdir(exist_ok=<span class="k">True</span>)</span><span class="ln">    slug = re.sub(<span class="s">r"[^a-z0-9]+"</span>, <span class="s">"-"</span>, title.lower()).strip(<span class="s">"-"</span>)[:50] <span class="k">or</span> <span class="s">"note"</span></span><span class="ln">    path = NOTES / <span class="s">f"{date.today()}-{slug}.md"</span></span><span class="ln">    path.write_text(<span class="s">f"# {title}\n\n{text}\n"</span>, encoding=<span class="s">"utf-8"</span>)</span><span class="ln">    index_file(path, NOTES)</span><span class="ln">    <span class="k">return</span> {<span class="s">"saved"</span>: path.name}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> ask_to_approve(name, args):</span><span class="ln">    <span class="s">"""Human approval: show what the agent wants to do and wait for a yes."""</span></span><span class="ln">    print(<span class="s">f"\n  The agent wants to run {name}:"</span>)</span><span class="ln">    <span class="k">for</span> key, value <span class="k">in</span> args.items():</span><span class="ln">        print(<span class="s">f"    {key}: {value}"</span>)</span><span class="ln">    <span class="k">return</span> input(<span class="s">"  Allow it? [y/N] "</span>).strip().lower() == <span class="s">"y"</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> run_tool(name, args, approve):</span><span class="ln">    <span class="s">"""Run one tool call. Returns the text to send back, and whether it failed."""</span></span><span class="ln">    <span class="k">if</span> name <span class="k">in</span> (<span class="s">"search_wikipedia"</span>, <span class="s">"read_page"</span>):</span><span class="ln">        <span class="k">return</span> run_wiki_tool(name, args)  <span class="c"># E5's code, with its error handling</span></span><span class="ln">    <span class="k">if</span> name <span class="k">in</span> NEEDS_APPROVAL <span class="k">and</span> <span class="k">not</span> approve(name, args):</span><span class="ln">        <span class="k">return</span> <span class="s">"The user said no. Don't try again; tell them it wasn't saved."</span>, <span class="k">True</span></span><span class="ln">    <span class="k">if</span> name == <span class="s">"search_notes"</span>:</span><span class="ln">        <span class="k">return</span> json.dumps(search(args[<span class="s">"query"</span>]) <span class="k">or</span> <span class="s">"No notes matched."</span>), <span class="k">False</span></span><span class="ln">    <span class="k">if</span> name == <span class="s">"save_note"</span>:</span><span class="ln">        <span class="k">return</span> json.dumps(save_note(args[<span class="s">"title"</span>], args[<span class="s">"text"</span>])), <span class="k">False</span></span><span class="ln">    <span class="k">return</span> <span class="s">f"There is no tool called {name}."</span>, <span class="k">True</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> add_usage(state, usage):</span><span class="ln">    state[<span class="s">"calls"</span>] += 1</span><span class="ln">    state[<span class="s">"tokens_in"</span>] += usage.input_tokens</span><span class="ln">    state[<span class="s">"tokens_out"</span>] += usage.output_tokens</span><span class="ln">    state[<span class="s">"cost"</span>] = (state[<span class="s">"tokens_in"</span>] * PRICE_IN + state[<span class="s">"tokens_out"</span>] * PRICE_OUT) / 1_000_000</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> steps(question, memory, tools=ALL_TOOLS, approve=ask_to_approve):</span><span class="ln">    <span class="s">"""Run the agent on one question, yielding an event for each thing it does:</span></span><span class="ln"><span class="s">    a plan, each tool call, and finally "done" with the answer and what it cost."""</span></span><span class="ln">    state = {<span class="s">"calls"</span>: 0, <span class="s">"tokens_in"</span>: 0, <span class="s">"tokens_out"</span>: 0, <span class="s">"cost"</span>: 0.0, <span class="s">"tools"</span>: []}  <span class="c"># this run's state</span></span><span class="ln">    plan, usage = make_plan(question, memory)</span><span class="ln">    add_usage(state, usage)</span><span class="ln">    <span class="k">yield</span> {<span class="s">"type"</span>: <span class="s">"plan"</span>, <span class="s">"steps"</span>: plan}</span><span class="ln"> </span><span class="ln">    numbered = <span class="s">"\n"</span>.join(<span class="s">f"{n}. {step}"</span> <span class="k">for</span> n, step <span class="k">in</span> enumerate(plan, 1))</span><span class="ln">    messages = memory + [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">f"{question}\n\n&lt;plan&gt;\n{numbered}\n&lt;/plan&gt;"</span>}]</span><span class="ln">    offered = [tool <span class="k">for</span> tool <span class="k">in</span> TOOLS <span class="k">if</span> tool[<span class="s">"name"</span>] <span class="k">in</span> tools]</span><span class="ln">    seen = set()  <span class="c"># tool calls already made, to catch a loop asking for the same thing</span></span><span class="ln">    <span class="k">while</span> <span class="k">True</span>:</span><span class="ln">        <span class="k">if</span> state[<span class="s">"calls"</span>] &gt;= MAX_CALLS <span class="k">or</span> state[<span class="s">"cost"</span>] &gt;= MAX_COST:  <span class="c"># stop conditions, before every call</span></span><span class="ln">            answer = <span class="s">f"Stopped: this question reached its limit of {MAX_CALLS} model calls or ${MAX_COST}."</span></span><span class="ln">            <span class="k">break</span></span><span class="ln">        response = client.messages.create(</span><span class="ln">            model=MODEL, max_tokens=4000, system=SYSTEM, tools=offered, messages=messages,</span><span class="ln">        )</span><span class="ln">        add_usage(state, response.usage)</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: response.content})</span><span class="ln">        <span class="k">if</span> response.stop_reason != <span class="s">"tool_use"</span>:  <span class="c"># the model answered</span></span><span class="ln">            answer = <span class="s">""</span>.join(block.text <span class="k">for</span> block <span class="k">in</span> response.content <span class="k">if</span> block.type == <span class="s">"text"</span>)</span><span class="ln">            <span class="k">if</span> response.stop_reason != <span class="s">"end_turn"</span>:</span><span class="ln">                answer += <span class="s">f"\n(Stopped early: {response.stop_reason})"</span></span><span class="ln">            <span class="k">break</span></span><span class="ln"> </span><span class="ln">        results = []</span><span class="ln">        <span class="k">for</span> block <span class="k">in</span> response.content:</span><span class="ln">            <span class="k">if</span> block.type != <span class="s">"tool_use"</span>:</span><span class="ln">                <span class="k">continue</span></span><span class="ln">            <span class="k">yield</span> {<span class="s">"type"</span>: <span class="s">"tool"</span>, <span class="s">"name"</span>: block.name, <span class="s">"input"</span>: block.input}</span><span class="ln">            state[<span class="s">"tools"</span>].append(block.name)</span><span class="ln">            key = block.name + json.dumps(block.input, sort_keys=<span class="k">True</span>)</span><span class="ln">            <span class="k">if</span> block.name <span class="k">not</span> <span class="k">in</span> tools:  <span class="c"># only the tools offered for this run, whatever the model asks</span></span><span class="ln">                text, failed = <span class="s">f"There is no tool called {block.name}."</span>, <span class="k">True</span></span><span class="ln">            <span class="k">elif</span> key <span class="k">in</span> seen:</span><span class="ln">                text, failed = <span class="s">"You already made this exact call. Use its result above."</span>, <span class="k">True</span></span><span class="ln">            <span class="k">else</span>:</span><span class="ln">                seen.add(key)</span><span class="ln">                text, failed = run_tool(block.name, block.input, approve)</span><span class="ln">            results.append({<span class="s">"type"</span>: <span class="s">"tool_result"</span>, <span class="s">"tool_use_id"</span>: block.id, <span class="s">"content"</span>: text, <span class="s">"is_error"</span>: failed})</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: results})</span><span class="ln">    <span class="k">yield</span> {<span class="s">"type"</span>: <span class="s">"done"</span>, <span class="s">"answer"</span>: answer, **state}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> ask(question, memory):</span><span class="ln">    <span class="s">"""Run the agent in the terminal, then remember the question and answer for follow-ups."""</span></span><span class="ln">    <span class="k">for</span> event <span class="k">in</span> steps(question, memory):</span><span class="ln">        <span class="k">if</span> event[<span class="s">"type"</span>] == <span class="s">"plan"</span>:</span><span class="ln">            print(<span class="s">"  plan: "</span> + <span class="s">" | "</span>.join(event[<span class="s">"steps"</span>]))</span><span class="ln">        <span class="k">elif</span> event[<span class="s">"type"</span>] == <span class="s">"tool"</span>:</span><span class="ln">            print(<span class="s">f"  -&gt; {event['name']}({json.dumps(event['input'])})"</span>)</span><span class="ln">        <span class="k">elif</span> event[<span class="s">"type"</span>] == <span class="s">"done"</span>:</span><span class="ln">            print(<span class="s">f"  [{event['calls']} model calls, {event['tokens_in']} tokens in, "</span></span><span class="ln">                  <span class="s">f"{event['tokens_out']} out, ${event['cost']:.5f}]\n"</span>)</span><span class="ln">            print(event[<span class="s">"answer"</span>])</span><span class="ln">            memory.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question})  <span class="c"># memory keeps the answers, not the tool calls</span></span><span class="ln">            memory.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: event[<span class="s">"answer"</span>]})</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main():</span><span class="ln">    memory = []  <span class="c"># earlier questions and answers in this session</span></span><span class="ln">    print(<span class="s">"Ask a research question. Type quit to stop."</span>)</span><span class="ln">    <span class="k">while</span> <span class="k">True</span>:</span><span class="ln">        question = input(<span class="s">"\nYou: "</span>).strip()</span><span class="ln">        <span class="k">if</span> question.lower() <span class="k">in</span> (<span class="s">"quit"</span>, <span class="s">"exit"</span>):</span><span class="ln">            <span class="k">break</span></span><span class="ln">        <span class="k">if</span> <span class="k">not</span> question:</span><span class="ln">            <span class="k">continue</span></span><span class="ln">        <span class="k">try</span>:</span><span class="ln">            ask(question, memory)</span><span class="ln">        <span class="k">except</span> anthropic.APIConnectionError:</span><span class="ln">            print(<span class="s">"Could not reach the API. Check your internet connection and try again."</span>)</span><span class="ln">        <span class="k">except</span> anthropic.APIStatusError <span class="k">as</span> error:  <span class="c"># a bad key, no credit, overloaded: after the SDK's retries</span></span><span class="ln">            print(<span class="s">f"The API answered {error.status_code}: {error.message}"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    main()</span></pre></div><ul><li><b><code>TOOLS</code></b> reuses E5's two Wikipedia tools and adds <code>search_notes</code> (E6's search) and <code>save_note</code>.</li><li><b><code>make_plan</code></b> asks for 1 to 4 steps as structured output (E4), before any tool runs.</li><li><b><code>run_tool</code></b> asks a person before anything in <code>NEEDS_APPROVAL</code>, and <code>save_note</code> indexes the new note so <code>search_notes</code> can find it later.</li><li><b><code>steps</code></b> is the loop. It checks the call and cost limits before every model call, refuses tools not offered for this run and repeated identical calls, and <code>yield</code>s an event for each thing it does.</li><li><b><code>ask</code></b> prints those events, then adds the question and answer to <code>memory</code>, so a follow-up like "save that" has something to refer to.</li></ul><p class="small"><code>yield</code> makes <code>steps</code> a generator: it hands back one event at a time while it keeps running. The terminal prints them here; E8 records them for evals, and E9 streams them to a web page.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Talk to your agent</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run agent.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Ask a research question. Type quit to stop.
+
+You: What does my handbook say about late fees for children's books?
+  plan: Search the user's notes for late fees on children's books | Answer with citations
+  -&gt; search_notes({"query": "late fees children's books"})
+  [3 model calls, 2894 tokens in, 168 out, $0.00037]
+
+Since 1 March 2026 the library doesn't charge for late children's books [library-handbook.md, page 1]. Adult items cost 20 cents a day, up to $5 per item [library-handbook.md, page 1].
+
+You: Who coined the term artificial intelligence?
+  plan: Search Wikipedia for where the term came from | Read the most relevant page | Answer with a citation
+  -&gt; search_wikipedia({"query": "term artificial intelligence coined"})
+  -&gt; read_page({"title": "Dartmouth workshop"})
+  [4 model calls, 5210 tokens in, 301 out, $0.00067]
+
+John McCarthy coined it, in the 1955 proposal for the 1956 Dartmouth workshop [Dartmouth workshop].
+
+You: Save that as a note.
+  plan: Save the answer about who coined the term as a note | Confirm to the user
+  -&gt; save_note({"title": "Who coined artificial intelligence", "text": "John McCarthy coined the term in the 1955 proposal for the 1956 Dartmouth workshop [Dartmouth workshop]."})
+
+  The agent wants to run save_note:
+    title: Who coined artificial intelligence
+    text: John McCarthy coined the term in the 1955 proposal for the 1956 Dartmouth workshop [Dartmouth workshop].
+  Allow it? [y/N] y
+  [3 model calls, 3120 tokens in, 142 out, $0.00038]
+
+Saved your note as 2026-10-20-who-coined-artificial-intelligence.md.</pre><p class="small">Your plans, wording and numbers will differ. The third question works only because of memory: "that" means the previous answer.</p></div><p>Quit, start again, and ask <code>"What have I saved about AI?"</code>. The new note comes back from <code>search_notes</code>: long-term memory, through E6's database.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Watch the guard rails work</h3><ul><li>Answer <code>n</code> when it asks to save. The agent should tell you nothing was saved, and the <code>notes</code> folder stays as it was.</li><li>Set <code>MAX_CALLS = 3</code> and ask something that needs more steps. The run stops itself. Put it back to 10 afterwards.</li></ul><div class="cb"><div class="cb-h"><span>With MAX_CALLS = 3</span><button type="button" class="cb-copy" aria-label="Copy With MAX_CALLS = 3">Copy</button></div><pre class="code"><span class="ln">You: Compare the Dartmouth workshop with the Turing test.</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  plan: Search Wikipedia for both | Read both pages | Compare them with citations
+  -&gt; search_wikipedia({"query": "Dartmouth workshop"})
+  -&gt; search_wikipedia({"query": "Turing test"})
+  -&gt; read_page({"title": "Dartmouth workshop"})
+  -&gt; read_page({"title": "Turing test"})
+  [3 model calls, 4630 tokens in, 205 out, $0.00057]
+
+Stopped: this question reached its limit of 3 model calls or $0.02.</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Rebuild it in LangGraph</h3><p>Same agent, as a graph: <code>plan</code> → <code>model</code> → <code>approve</code> → <code>tools</code> → back to <code>model</code>, until the model answers. It reuses the tools, prompts and limits from <code>agent.py</code>.</p><div class="cb"><div class="cb-h"><span>agent_graph.py</span><button type="button" class="cb-copy" aria-label="Copy agent_graph.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E7 lab, part 2: the same agent as a LangGraph graph. LangGraph saves the state after every</span></span><span class="ln"><span class="s">step, so the graph can pause for your approval and pick up where it left off.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run agent_graph.py          # chat with it</span></span><span class="ln"><span class="s">    uv run agent_graph.py --draw   # print the graph as a Mermaid diagram</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> json</span><span class="ln"><span class="k">import</span> operator</span><span class="ln"><span class="k">import</span> sys</span><span class="ln"><span class="k">from</span> typing <span class="k">import</span> Annotated, TypedDict</span><span class="ln"> </span><span class="ln"><span class="k">from</span> langgraph.checkpoint.memory <span class="k">import</span> InMemorySaver</span><span class="ln"><span class="k">from</span> langgraph.graph <span class="k">import</span> END, START, StateGraph</span><span class="ln"><span class="k">from</span> langgraph.types <span class="k">import</span> Command, interrupt</span><span class="ln"> </span><span class="ln"><span class="k">import</span> agent  <span class="c"># the model, prompts, tools and limits from agent.py</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">class</span> State(TypedDict):</span><span class="ln">    messages: Annotated[list, operator.add]  <span class="c"># each step's new messages are added to the list</span></span><span class="ln">    calls: int      <span class="c"># model calls for the current question</span></span><span class="ln">    cost: float     <span class="c"># dollars for the current question</span></span><span class="ln">    approved: dict  <span class="c"># tool_use id -&gt; the person's yes or no</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> call_cost(usage):</span><span class="ln">    <span class="k">return</span> (usage.input_tokens * agent.PRICE_IN + usage.output_tokens * agent.PRICE_OUT) / 1_000_000</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> plan(state):</span><span class="ln">    <span class="s">"""Make a plan for the newest question, and reset the per-question limits."""</span></span><span class="ln">    steps, usage = agent.make_plan(state[<span class="s">"messages"</span>][-1][<span class="s">"content"</span>], [])</span><span class="ln">    print(<span class="s">"  plan: "</span> + <span class="s">" | "</span>.join(steps))</span><span class="ln">    numbered = <span class="s">"\n"</span>.join(<span class="s">f"{n}. {step}"</span> <span class="k">for</span> n, step <span class="k">in</span> enumerate(steps, 1))</span><span class="ln">    <span class="k">return</span> {<span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">f"&lt;plan&gt;\n{numbered}\n&lt;/plan&gt;"</span>}],</span><span class="ln">            <span class="s">"calls"</span>: 1, <span class="s">"cost"</span>: call_cost(usage), <span class="s">"approved"</span>: {}}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> model(state):</span><span class="ln">    <span class="s">"""Call Claude, unless this question has used its limits."""</span></span><span class="ln">    <span class="k">if</span> state[<span class="s">"calls"</span>] &gt;= agent.MAX_CALLS <span class="k">or</span> state[<span class="s">"cost"</span>] &gt;= agent.MAX_COST:</span><span class="ln">        text = <span class="s">f"Stopped: this question reached its limit of {agent.MAX_CALLS} model calls or ${agent.MAX_COST}."</span></span><span class="ln">        <span class="k">return</span> {<span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: [{<span class="s">"type"</span>: <span class="s">"text"</span>, <span class="s">"text"</span>: text}]}]}</span><span class="ln">    response = agent.client.messages.create(</span><span class="ln">        model=agent.MODEL, max_tokens=4000, system=agent.SYSTEM, tools=agent.TOOLS, messages=state[<span class="s">"messages"</span>],</span><span class="ln">    )</span><span class="ln">    content = [block.to_dict() <span class="k">for</span> block <span class="k">in</span> response.content]  <span class="c"># plain data, so the checkpoint can save it</span></span><span class="ln">    <span class="k">return</span> {<span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: content}],</span><span class="ln">            <span class="s">"calls"</span>: state[<span class="s">"calls"</span>] + 1, <span class="s">"cost"</span>: state[<span class="s">"cost"</span>] + call_cost(response.usage)}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> approve(state):</span><span class="ln">    <span class="s">"""Pause the graph for a yes or no on every call that changes something."""</span></span><span class="ln">    decisions = {}</span><span class="ln">    <span class="k">for</span> block <span class="k">in</span> state[<span class="s">"messages"</span>][-1][<span class="s">"content"</span>]:</span><span class="ln">        <span class="k">if</span> block[<span class="s">"type"</span>] == <span class="s">"tool_use"</span> <span class="k">and</span> block[<span class="s">"name"</span>] <span class="k">in</span> agent.NEEDS_APPROVAL:</span><span class="ln">            decisions[block[<span class="s">"id"</span>]] = interrupt({<span class="s">"tool"</span>: block[<span class="s">"name"</span>], <span class="s">"input"</span>: block[<span class="s">"input"</span>]})</span><span class="ln">    <span class="k">return</span> {<span class="s">"approved"</span>: decisions}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> tools(state):</span><span class="ln">    <span class="s">"""Run every tool the model asked for and send all the results back together."""</span></span><span class="ln">    results = []</span><span class="ln">    <span class="k">for</span> block <span class="k">in</span> state[<span class="s">"messages"</span>][-1][<span class="s">"content"</span>]:</span><span class="ln">        <span class="k">if</span> block[<span class="s">"type"</span>] == <span class="s">"tool_use"</span>:</span><span class="ln">            print(<span class="s">f"  -&gt; {block['name']}({json.dumps(block['input'])})"</span>)</span><span class="ln">            decision = state[<span class="s">"approved"</span>].get(block[<span class="s">"id"</span>], <span class="k">False</span>)</span><span class="ln">            text, failed = agent.run_tool(block[<span class="s">"name"</span>], block[<span class="s">"input"</span>], <span class="k">lambda</span> name, args: decision)</span><span class="ln">            results.append({<span class="s">"type"</span>: <span class="s">"tool_result"</span>, <span class="s">"tool_use_id"</span>: block[<span class="s">"id"</span>], <span class="s">"content"</span>: text, <span class="s">"is_error"</span>: failed})</span><span class="ln">    <span class="k">return</span> {<span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: results}]}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> next_step(state):</span><span class="ln">    <span class="s">"""After the model: run tools if it asked for any, otherwise finish."""</span></span><span class="ln">    asked = any(block[<span class="s">"type"</span>] == <span class="s">"tool_use"</span> <span class="k">for</span> block <span class="k">in</span> state[<span class="s">"messages"</span>][-1][<span class="s">"content"</span>])</span><span class="ln">    <span class="k">return</span> <span class="s">"approve"</span> <span class="k">if</span> asked <span class="k">else</span> END</span><span class="ln"> </span><span class="ln"> </span><span class="ln">builder = StateGraph(State)</span><span class="ln">builder.add_node(<span class="s">"plan"</span>, plan)</span><span class="ln">builder.add_node(<span class="s">"model"</span>, model)</span><span class="ln">builder.add_node(<span class="s">"approve"</span>, approve)</span><span class="ln">builder.add_node(<span class="s">"tools"</span>, tools)</span><span class="ln">builder.add_edge(START, <span class="s">"plan"</span>)</span><span class="ln">builder.add_edge(<span class="s">"plan"</span>, <span class="s">"model"</span>)</span><span class="ln">builder.add_conditional_edges(<span class="s">"model"</span>, next_step, [<span class="s">"approve"</span>, END])</span><span class="ln">builder.add_edge(<span class="s">"approve"</span>, <span class="s">"tools"</span>)</span><span class="ln">builder.add_edge(<span class="s">"tools"</span>, <span class="s">"model"</span>)</span><span class="ln">graph = builder.compile(checkpointer=InMemorySaver())  <span class="c"># saves the state after every step</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> ask(question, config):</span><span class="ln">    result = graph.invoke({<span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}]}, config)</span><span class="ln">    <span class="k">while</span> <span class="s">"__interrupt__"</span> <span class="k">in</span> result:  <span class="c"># the graph paused for approval: ask, then resume it</span></span><span class="ln">        request = result[<span class="s">"__interrupt__"</span>][0].value</span><span class="ln">        yes = agent.ask_to_approve(request[<span class="s">"tool"</span>], request[<span class="s">"input"</span>])</span><span class="ln">        result = graph.invoke(Command(resume=yes), config)</span><span class="ln">    answer = <span class="s">""</span>.join(block[<span class="s">"text"</span>] <span class="k">for</span> block <span class="k">in</span> result[<span class="s">"messages"</span>][-1][<span class="s">"content"</span>] <span class="k">if</span> block[<span class="s">"type"</span>] == <span class="s">"text"</span>)</span><span class="ln">    print(<span class="s">f"  [{result['calls']} model calls, ${result['cost']:.5f}]\n"</span>)</span><span class="ln">    print(answer)</span><span class="ln">    <span class="k">return</span> answer</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main():</span><span class="ln">    config = {<span class="s">"configurable"</span>: {<span class="s">"thread_id"</span>: <span class="s">"terminal"</span>}}  <span class="c"># one conversation, remembered by the checkpointer</span></span><span class="ln">    print(<span class="s">"Ask a research question. Type quit to stop."</span>)</span><span class="ln">    <span class="k">while</span> <span class="k">True</span>:</span><span class="ln">        question = input(<span class="s">"\nYou: "</span>).strip()</span><span class="ln">        <span class="k">if</span> question.lower() <span class="k">in</span> (<span class="s">"quit"</span>, <span class="s">"exit"</span>):</span><span class="ln">            <span class="k">break</span></span><span class="ln">        <span class="k">if</span> question:</span><span class="ln">            ask(question, config)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    <span class="k">if</span> sys.argv[1:] == [<span class="s">"--draw"</span>]:</span><span class="ln">        print(graph.get_graph().draw_mermaid())</span><span class="ln">    <span class="k">else</span>:</span><span class="ln">        main()</span></pre></div><ul><li><b><code>State</code></b> is everything the graph tracks. <code>Annotated[list, operator.add]</code> tells LangGraph to add each step's messages to the list rather than replace it.</li><li><b>Each node is a function</b> that takes the state and returns the parts it changes.</li><li><b><code>approve</code></b> calls <button type="button" class="term" data-term="interrupt" aria-expanded="false">interrupt()</button>: the graph stops, <code>ask</code> gets your answer, and <code>Command(resume=yes)</code> carries on from that exact point.</li><li><b><code>InMemorySaver</code></b> is the <button type="button" class="term" data-term="checkpointer" aria-expanded="false">checkpointer</button>: it saves the state after every step under a <code>thread_id</code>, which is also how the graph remembers earlier questions.</li><li><b><code>block.to_dict()</code></b> stores plain data, which the checkpointer can save.</li></ul><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run agent_graph.py --draw</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([&lt;p&gt;__start__&lt;/p&gt;]):::first
+	plan(plan)
+	model(model)
+	approve(approve)
+	tools(tools)
+	__end__([&lt;p&gt;__end__&lt;/p&gt;]):::last
+	__start__ --&gt; plan;
+	approve --&gt; tools;
+	model -.-&gt; __end__;
+	model -.-&gt; approve;
+	plan --&gt; model;
+	tools --&gt; model;
+	...</pre><p class="small">Paste it into mermaid.live to see the picture. Dotted arrows are the choices <code>next_step</code> makes.</p></div><p>Then run <code>uv run agent_graph.py</code> and repeat step 3's session. It should behave the same, pausing for your yes before it saves.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Share your notes over MCP</h3><p><code>notes_server.py</code> offers <code>search_notes</code> to any MCP app. The type hints and docstring become the tool's schema and description.</p><div class="cb"><div class="cb-h"><span>notes_server.py</span><button type="button" class="cb-copy" aria-label="Copy notes_server.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E7 lab, part 3: a tiny MCP server, so any MCP app (Claude Code, Claude Desktop and others)</span></span><span class="ln"><span class="s">can search your notes with the same code as your agent.</span></span><span class="ln"> </span><span class="ln"><span class="s">Test it with:</span></span><span class="ln"><span class="s">    uv run mcp dev notes_server.py</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">from</span> mcp.server <span class="k">import</span> MCPServer</span><span class="ln"> </span><span class="ln"><span class="k">from</span> rag <span class="k">import</span> search  <span class="c"># E6: your notes</span></span><span class="ln"> </span><span class="ln">mcp = MCPServer(<span class="s">"research-notes"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln">@mcp.tool()</span><span class="ln"><span class="k">def</span> search_notes(query: str) -&gt; list[dict]:</span><span class="ln">    <span class="s">"""Search the user's own notes and PDFs. Returns up to 4 passages, each with its file and page."""</span></span><span class="ln">    <span class="k">return</span> search(query)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    mcp.run()  <span class="c"># talks to the app over stdin and stdout</span></span></pre></div><p>Connect it to an app you use. It needs the full path to your project folder: run <code>pwd</code> there to see it.</p><div class="ost"><div class="ost-tabs" role="group" aria-label="Your computer"><button type="button" data-os="mac" aria-selected="true">Mac</button><button type="button" data-os="win" aria-selected="false">Windows</button></div><div class="ost-p" data-os="mac"><div class="cb"><div class="cb-h"><span>Claude Code, in a terminal</span><button type="button" class="cb-copy" aria-label="Copy Claude Code, in a terminal">Copy</button></div><pre class="code"><span class="ln">claude mcp add research-notes -- uv --directory /Users/you/research-assistant run notes_server.py</span></pre></div><div class="cb"><div class="cb-h"><span>Claude Desktop: Settings → Developer → Edit Config</span><button type="button" class="cb-copy" aria-label="Copy Claude Desktop: Settings → Developer → Edit Config">Copy</button></div><pre class="code"><span class="ln">{</span><span class="ln">  "mcpServers": {</span><span class="ln">    "research-notes": {</span><span class="ln">      "command": "uv",</span><span class="ln">      "args": ["--directory", "/Users/you/research-assistant", "run", "notes_server.py"]</span><span class="ln">    }</span><span class="ln">  }</span><span class="ln">}</span></pre></div></div><div class="ost-p" data-os="win" hidden><div class="cb"><div class="cb-h"><span>Claude Code, in a terminal</span><button type="button" class="cb-copy" aria-label="Copy Claude Code, in a terminal">Copy</button></div><pre class="code"><span class="ln">claude mcp add research-notes -- uv --directory C:\Users\you\research-assistant run notes_server.py</span></pre></div><div class="cb"><div class="cb-h"><span>Claude Desktop: Settings → Developer → Edit Config</span><button type="button" class="cb-copy" aria-label="Copy Claude Desktop: Settings → Developer → Edit Config">Copy</button></div><pre class="code"><span class="ln">{</span><span class="ln">  "mcpServers": {</span><span class="ln">    "research-notes": {</span><span class="ln">      "command": "uv",</span><span class="ln">      "args": ["--directory", "C:\\Users\\you\\research-assistant", "run", "notes_server.py"]</span><span class="ln">    }</span><span class="ln">  }</span><span class="ln">}</span></pre></div></div></div><p>Restart the app and ask it to "search my research notes for late fees". It should call <code>search_notes</code> and show the handbook passage. Without either app, <code>uv run mcp dev notes_server.py</code> opens the MCP Inspector in your browser (it needs Node.js).</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Make it yours</h3><p>Pick at least one:</p><ul><li>Add a <code>list_notes</code> tool that returns the names of your saved notes. Decide whether it needs approval.</li><li>Keep only the last 6 messages of <code>memory</code>, and find a question where that matters.</li><li>Print the plan and the tools actually used side by side, and spot a run where the agent changed its plan.</li><li>Add <code>search_notes</code>'s cousin to the MCP server: a tool that returns one note by file name.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">8</span><div class="lab-b"><h3>Commit and push</h3><p>Add <code>notes/</code> to <code>.gitignore</code> if your notes are private, then:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add agent.py agent_graph.py notes_server.py pyproject.toml uv.lock .gitignore</span><span class="ln">git commit -m "Add research agent, LangGraph version and MCP server"</span><span class="ln">git push</span></pre></div></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>ModuleNotFoundError: No module named 'rag'</code></dt><dd><code>agent.py</code> imports <code>rag.py</code> and <code>research_bot.py</code>. Keep all three in the same folder and run from there.</dd><dt><code>ValueError: Checkpointer requires one or more of the following 'configurable' keys: thread_id, checkpoint_ns, checkpoint_id</code></dt><dd>A graph with a checkpointer needs a thread: pass <code>{"configurable": {"thread_id": "..."}}</code> as the second argument to <code>invoke</code>.</dd><dt><code>Stopped: this question reached its limit of 10 model calls or $0.02.</code></dt><dd>Read the <code>-&gt;</code> lines. A tool may be failing, the plan may be too broad, or the question needs more steps than the limits allow. Fix the cause before raising the limits.</dd><dt><code>research-notes: ✘ failed  (in Claude Code's /mcp list)</code></dt><dd>Run the same command in a terminal: <code>uv --directory /your/path run notes_server.py</code> should sit silently waiting. Any error it prints is the problem, often a wrong path.</dd></dl></div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s9">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E7 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="e7"><li><label><input type="checkbox"><span><code>agent.py</code> answers from your notes and from Wikipedia with citations, and shows its plan</span></label></li><li><label><input type="checkbox"><span>A follow-up used memory ("save that"), and the save waited for your yes</span></label></li><li><label><input type="checkbox"><span>You saw a stop condition end a run, and a refused save leave the notes folder unchanged</span></label></li><li><label><input type="checkbox"><span><code>agent_graph.py</code> does the same, and you can explain what the checkpointer and <code>interrupt()</code> do</span></label></li><li><label><input type="checkbox"><span>An MCP app found <code>search_notes</code> in your <code>notes_server.py</code>, and everything is pushed</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s10">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula"><em>Plan</em> → loop: <em>check limits</em> → <em>call the model</em> → <em>run allowed tools</em> (approval for writes) → <em>send results</em> → until it <em>answers</em> → <em>remember</em> the answer.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>Design</h3><ul>
+        <li>Workflow if you can write the steps down</li>
+        <li>A short plan before acting</li>
+        <li>Memory: keep answers, drop tool calls</li>
+        <li>Long-term memory through your RAG store</li>
+      </ul></div>
+      <div class="blk"><h3>Safety</h3><ul>
+        <li>Check call and cost limits before every call</li>
+        <li>Refuse repeated identical calls</li>
+        <li>Offer only the tools a run needs</li>
+        <li>A person approves anything that writes</li>
+      </ul></div>
+      <div class="blk"><h3>Tools to know</h3><ul>
+        <li><code>yield</code> events from the loop</li>
+        <li>LangGraph: State, nodes, edges</li>
+        <li>Checkpointer + <code>interrupt()</code> to pause</li>
+        <li><code>MCPServer</code> + <code>@mcp.tool()</code></li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s11">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s11">3 common agent-building mistakes</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>An agent where a workflow would do</h3><dl>
+      <dt>What it looks like</dt><dd>Five model calls to do what two fixed steps could, with more ways to go wrong and harder testing.</dd>
+      <dt>Fix</dt><dd>Write the steps down if you can. Use an agent only for the open-ended part.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>Limits checked too late, or not at all</h3><dl>
+      <dt>What it looks like</dt><dd>A run that loops on a failing tool and spends dollars before anyone notices.</dd>
+      <dt>Fix</dt><dd>Check call and cost limits before every model call, refuse repeats, and log each step (E8 adds traces).</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>Approval in the prompt, not the code</h3><dl>
+      <dt>What it looks like</dt><dd>"Always ask before saving" in the system prompt, and nothing in the code that enforces it.</dd>
+      <dt>Fix</dt><dd>Enforce approval where the tool runs. Prompts guide the model; code decides what actually happens.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="eng-rag.html" data-site-link>← Module E6 · Embeddings and RAG</a>
+  <a href="eng-evals.html" data-site-link>Module E8 · Tracing and evals in code →</a>
+</div>
+
+<footer>
+  <p>The agent trace is a simulation of the lab's code, with abridged page text and typical token counts. The lab calls the real Claude API and Wikipedia from your laptop.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic, LangChain or the Wikimedia Foundation.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "agent": {
+  "t": "Agent",
+  "d": "A program where the model decides which steps to take and when it's done, using tools in a loop. Your code sets the tools, the limits and what needs a person's approval."
+ },
+ "workflow": {
+  "t": "Workflow",
+  "d": "A fixed series of steps written in code, with the model doing parts of the work. Cheaper and more predictable than an agent when the steps are known."
+ },
+ "plan": {
+  "t": "Plan",
+  "d": "A short list of steps the agent writes before acting. It makes its intent visible and gives the loop something to follow and check."
+ },
+ "state": {
+  "t": "State",
+  "d": "What the agent tracks during one run: messages so far, calls made, tokens, cost, tools used."
+ },
+ "memory": {
+  "t": "Memory",
+  "d": "What carries over between runs. Short-term: the earlier questions and answers. Long-term: notes saved to disk and found again later."
+ },
+ "stop_condition": {
+  "t": "Stop condition",
+  "d": "A rule that ends the loop: the model answered, or a limit on calls, cost or repeats was reached."
+ },
+ "hitl": {
+  "t": "Human in the loop",
+  "d": "A person approves an action before it runs. Used for anything that changes, sends or deletes something."
+ },
+ "langgraph": {
+  "t": "LangGraph",
+  "d": "A library for building agents as graphs: nodes are steps, edges decide what runs next, and a checkpointer saves the state after every step."
+ },
+ "checkpointer": {
+  "t": "Checkpointer",
+  "d": "LangGraph's saver: it stores the graph's state after each step, so a run can pause, resume or be inspected."
+ },
+ "interrupt": {
+  "t": "interrupt()",
+  "d": "LangGraph's pause: a node calls it to stop the graph and wait for input, such as a person's yes or no."
+ },
+ "mcp": {
+  "t": "MCP (Model Context Protocol)",
+  "d": "An open standard for offering tools and data to AI apps. Write a tool once as an MCP server, and Claude Code, Claude Desktop and other apps can use it."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Agent trace (scripted) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const PIN = 0.10, POUT = 0.50, MAXCOST = 0.02;
+const Q1 = "What does my handbook say about the library's AI research helper, and what is retrieval-augmented generation?";
+const Q2 = "Save that as a note.";
+const A1 = "The handbook says the library is trialling an AI assistant until September 2026 that answers only from its catalogue and licensed databases, and links every answer to its sources [library-handbook.md, page 1]. That is retrieval-augmented generation: a model that retrieves documents and answers from them [Retrieval-augmented generation].";
+let mem = true, ok = true, max = 10, ev = [], i = 0, rows = [], calls = 0, cost = 0, memory = [], notes = [];
+function script(){
+  const e = [];
+  const call = (tin, tout) => ({tin, tout});
+  e.push({kind:"user", t:"Question 1 arrives", txt:Q1, why:"A new question starts a new run: the call count and cost go back to zero.", reset:true});
+  e.push({kind:"plan", t:"The agent plans first", txt:"1. Search the notes for the AI research helper  2. Search Wikipedia for retrieval-augmented generation  3. Read the best page  4. Answer, citing both", why:"One small call with structured output. The plan goes into the loop's first message.", call:call(210, 45)});
+  e.push({kind:"model", t:"Call 2: the model follows step 1", txt:'tool_use search_notes {"query": "AI research helper trial"}', why:"Before every call the code checks the limits. 1 call used so far, so it goes ahead.", call:call(1350, 70)});
+  e.push({kind:"tool", t:"Your code runs search_notes", txt:"2 passages · library-handbook.md, page 1 (0.31) · …", why:"A read-only tool: it runs straight away, no approval needed."});
+  e.push({kind:"model", t:"Call 3: step 2", txt:'tool_use search_wikipedia {"query": "retrieval-augmented generation"}', why:"The loop goes round again with the notes' result in the messages.", call:call(1720, 60)});
+  e.push({kind:"tool", t:"Your code runs search_wikipedia", txt:"Retrieval-augmented generation · Large language model · …", why:"E5's tool, reused unchanged."});
+  e.push({kind:"model", t:"Call 4: step 3", txt:'tool_use read_page {"title": "Retrieval-augmented generation"}', why:"Each call re-sends everything so far, so input tokens keep growing.", call:call(2180, 55)});
+  e.push({kind:"tool", t:"Your code runs read_page", txt:"Retrieval-augmented generation (RAG) is a technique that enables large language models to retrieve and incorporate new information …", why:"The page summary goes back as a tool_result."});
+  if(max === 4){
+    e.push({kind:"stop", t:"Stop condition: MAX_CALLS", txt:"Stopped: this question reached its limit of 4 model calls or $0.02.", why:"4 of 4 calls used, so the check before the next call ends the run. No answer, but no runaway cost either.", answer:"Stopped: this question reached its limit of 4 model calls or $0.02."});
+  } else {
+    e.push({kind:"model", t:"Call 5: the answer", txt:"stop_reason: end_turn", why:"No more tools wanted: the loop ends.", call:call(2950, 190)});
+    e.push({kind:"answer", t:"The answer, with citations", txt:A1, why:mem ? "The question and this answer go into memory. The tool calls behind them don't." : "Memory is off, so nothing is kept for the next question.", answer:A1});
+  }
+  e.push({kind:"user", t:"Question 2 arrives", txt:Q2, why:mem ? "Memory holds question 1 and its answer, so \"that\" has a meaning." : "With memory off, the agent sees only these five words.", reset:true});
+  if(!mem){
+    e.push({kind:"plan", t:"The agent plans", txt:"1. Ask the user what to save", why:"Without memory there's nothing to refer to.", call:call(120, 25)});
+    e.push({kind:"model", t:"Call 2: the answer", txt:"stop_reason: end_turn", why:"Nothing to save, so no tool call.", call:call(1190, 40)});
+    e.push({kind:"answer", t:"The agent has to ask", txt:"What would you like me to save? I don't have anything from earlier in this conversation.", why:"Memory is what makes follow-ups like \"save that\" work.", answer:"What would you like me to save?"});
+    return e;
+  }
+  if(max === 4){
+    e.push({kind:"plan", t:"The agent plans", txt:"1. Tell the user the last question didn't finish", why:"Memory holds the stopped run's message, not an answer worth saving.", call:call(300, 30)});
+    e.push({kind:"model", t:"Call 2: the answer", txt:"stop_reason: end_turn", why:"No tool call: there's nothing to save.", call:call(1320, 45)});
+    e.push({kind:"answer", t:"Nothing worth saving", txt:"The last question stopped before it found an answer, so there's nothing to save yet.", why:"Raise MAX_CALLS to 10 and run it again to see the save.", answer:"Nothing to save yet."});
+    return e;
+  }
+  const what = "the comparison of the AI helper and RAG";
+  e.push({kind:"plan", t:"The agent plans", txt:"1. Save " + what + " as a note  2. Confirm to the user", why:"The planner reads memory, so it knows what \"that\" is.", call:call(420, 30)});
+  const title = "AI research helper and RAG", text = A1;
+  e.push({kind:"model", t:"Call 2: asks to save", txt:'tool_use save_note {"title": "' + title + '", "text": "…"}', why:"save_note is in NEEDS_APPROVAL, so the code won't run it yet.", call:call(1650, 160)});
+  e.push({kind:"ask", t:"Your code asks you first", prompt:"  The agent wants to run save_note:\n    title: " + title + "\n    text: " + text.slice(0, 120) + "…\n  Allow it? [y/N] " + (ok ? "y" : "n"), txt:ok ? "You said yes." : "You said no.", why:"A person sees the real title and text, not the model's summary of them."});
+  if(ok){
+    const file = "2026-10-20-" + title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".md";
+    e.push({kind:"tool", t:"save_note runs", txt:'{"saved": "' + file + '"} · indexed into the notes database', why:"Long-term memory: search_notes will find this note in later sessions.", note:file});
+    e.push({kind:"model", t:"Call 3: the answer", txt:"stop_reason: end_turn", why:"The tool_result says it was saved.", call:call(1900, 40)});
+    e.push({kind:"answer", t:"Confirmed", txt:"Saved your note as " + file + ".", why:"Done: 3 calls for this question.", answer:"Saved."});
+  } else {
+    e.push({kind:"tool", t:"save_note is refused", txt:"is_error: true · The user said no. Don't try again; tell them it wasn't saved.", why:"A no goes back as an error the model must respect."});
+    e.push({kind:"model", t:"Call 3: the answer", txt:"stop_reason: end_turn", why:"The model reads the refusal.", call:call(1880, 30)});
+    e.push({kind:"answer", t:"Nothing saved", txt:"OK, I didn't save it.", why:"The notes folder is unchanged.", answer:"Not saved."});
+  }
+  return e;
+}
+const KIND = {user:"question", plan:"plan", model:"model", tool:"tool", ask:"approval", stop:"stop", answer:"answer"};
+function draw(){
+  $("atTrace").innerHTML = rows.map((r, k) => '<li class="at-row' + (r.kind === "user" ? " q" : "") + (k === rows.length - 1 ? " cur" : "") + '"><span class="at-kind k-' + r.kind + '">' + KIND[r.kind] + '</span><span class="at-txt">' + esc(r.txt) + '</span>' + (r.cost ? '<span class="at-cost">' + r.cost + '</span>' : '<span class="at-cost"></span>') + '</li>').join("");
+  const box = $("atTrace"); box.scrollTop = box.scrollHeight;
+  $("atCalls").textContent = calls + " / " + max;
+  $("atCallsBar").querySelector("span").style.width = Math.min(100, calls / max * 100) + "%";
+  $("atCallsBar").classList.toggle("hot", calls >= max);
+  $("atCost").textContent = Math.round(cost / MAXCOST * 100) + "% of $" + MAXCOST.toFixed(3);
+  $("atCostBar").querySelector("span").style.width = Math.min(100, cost / MAXCOST * 100) + "%";
+  $("atMemory").innerHTML = memory.map(m => "<li>" + esc(m) + "</li>").join("");
+  $("atNotes").innerHTML = notes.map(n => "<li><code>" + esc(n) + "</code></li>").join("");
+}
+function next(){
+  if(i >= ev.length) return;
+  const e = ev[i++];
+  if(e.reset){ calls = 0; cost = 0; }
+  let c = "";
+  if(e.call){ calls++; const d = (e.call.tin * PIN + e.call.tout * POUT) / 1e6; cost += d; c = e.call.tin.toLocaleString("en") + " in · " + e.call.tout + " out"; }
+  rows.push({kind:e.kind, txt:e.txt, cost:c});
+  if(e.note) notes.push(e.note);
+  if(e.answer && mem){
+    const q = rows.filter(r => r.kind === "user").length === 1 ? Q1 : Q2;
+    memory.push("user: " + q.slice(0, 60) + (q.length > 60 ? "…" : ""), "assistant: " + e.answer.slice(0, 60) + (e.answer.length > 60 ? "…" : ""));
+  }
+  $("atStepN").textContent = "Step " + i + " of " + ev.length;
+  $("atT").textContent = e.t;
+  $("atWhy").textContent = e.why;
+  $("atPrompt").textContent = e.prompt || "";
+  draw();
+  const done = i >= ev.length;
+  $("atNext").disabled = done; $("atAll").disabled = done;
+  $("atNext").textContent = done ? "Finished ✓" : "Next step ▶";
+}
+function reset(){
+  ev = script(); i = 0; rows = []; calls = 0; cost = 0; memory = []; notes = [];
+  $("atStepN").textContent = "Step 0 of " + ev.length;
+  $("atT").textContent = "Press \"Next step\" to start";
+  $("atWhy").textContent = "The first question is about to arrive.";
+  $("atPrompt").textContent = "";
+  $("atNext").disabled = false; $("atAll").disabled = false; $("atNext").textContent = "Next step ▶";
+  [["atMem", mem ? "on" : "off"], ["atOk", ok ? "y" : "n"], ["atMax", String(max)]].forEach(([id, cur]) =>
+    $(id).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === cur))));
+  draw();
+}
+$("atMem").innerHTML = '<button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button>';
+$("atOk").innerHTML = '<button type="button" data-v="y">y: allow the save</button><button type="button" data-v="n">n: refuse it</button>';
+$("atMax").innerHTML = '<button type="button" data-v="10">10</button><button type="button" data-v="4">4</button>';
+$("atMem").addEventListener("click", e => { const b = e.target.closest("button"); if(b){ mem = b.dataset.v === "on"; reset(); } });
+$("atOk").addEventListener("click", e => { const b = e.target.closest("button"); if(b){ ok = b.dataset.v === "y"; reset(); } });
+$("atMax").addEventListener("click", e => { const b = e.target.closest("button"); if(b){ max = +b.dataset.v; reset(); } });
+$("atNext").addEventListener("click", next);
+$("atAll").addEventListener("click", () => { while(i < ev.length) next(); });
+$("atReset").addEventListener("click", reset);
+reset();
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  if(!btn) return;  /* diffs have no copy button: copy the whole file instead */
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e7";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>
