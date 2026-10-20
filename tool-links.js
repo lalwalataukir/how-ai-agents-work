@@ -30,6 +30,13 @@ const TOOLS = [
   {names:["Vercel AI SDK"], url:"https://ai-sdk.dev/docs", what:"TypeScript toolkit for AI apps"},
   {names:["ClickHouse"], url:"https://clickhouse.com/docs", what:"Analytics database"},
   {names:["OWASP Top 10 for LLM applications", "OWASP"], url:"https://genai.owasp.org/llm-top-10/", what:"The OWASP list of top security risks for LLM apps"},
+  {names:["uv"], url:"https://docs.astral.sh/uv/", what:"Installs Python, manages a project's packages and runs its code"},
+  {names:["VS Code", "Visual Studio Code"], url:"https://code.visualstudio.com/docs", what:"Free code editor with a built-in terminal"},
+  {names:["GitHub Copilot"], url:"https://docs.github.com/en/copilot", what:"AI coding assistant inside your editor"},
+  {names:["GitHub"], url:"https://docs.github.com/en/get-started", what:"Hosts git repositories online"},
+  {names:["Claude Code"], url:"https://docs.claude.com/en/docs/claude-code/overview", what:"Anthropic's AI coding assistant for the terminal and editor"},
+  {names:["Cursor"], url:"https://cursor.com/docs", what:"Code editor built around an AI assistant"},
+  {names:["httpx"], url:"https://www.python-httpx.org/", what:"Python package for making web requests"},
   {names:["promptfoo"], url:"https://www.promptfoo.dev/docs/intro/", what:"Open-source CLI for testing prompts and running evals"},
   {names:["PostgreSQL", "Postgres"], url:"https://www.postgresql.org/docs/", what:"Open-source relational database"}
 ];

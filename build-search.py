@@ -20,6 +20,9 @@ PAGES = [
     ("context.html", "8 · Context engineering"),
     ("security.html", "9 · Agent security"),
     ("evals.html", "10 · Evals in practice"),
+    ("engineer.html", "AI engineer track"),
+    ("eng-setup.html", "E1 · Your dev setup"),
+    ("eng-python.html", "E2 · Python for AI work"),
     ("reference.html", "Glossary"),
 ]
 

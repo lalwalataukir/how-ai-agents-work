@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E1 Dev Setup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E1 of the AI engineer track. A terminal practice demo up top, then the four tools explained, then a lab on your own laptop, a done-when checklist and the usual cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- E1: terminal practice demo ---------- */
+.tty-wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+@media (max-width:820px){.tty-wrap{grid-template-columns:minmax(0,1fr)}}
+.tty{background:var(--code-bg);font-family:var(--font-mono);font-size:.84rem;line-height:1.6;display:flex;flex-direction:column;min-height:340px;max-height:420px;min-width:0;border-right:1px solid var(--line)}
+@media (max-width:820px){.tty{border-right:0;border-bottom:1px solid var(--line);min-height:280px}}
+.tty-out{flex:1;overflow-y:auto;padding:12px 14px 4px;min-height:0}
+.tty-out div{white-space:pre-wrap;overflow-wrap:anywhere}
+.tty-in{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;padding:4px 14px 12px}
+.tty-in label{color:var(--final);white-space:nowrap;flex:none}
+.tty-in input{flex:1 1 140px;min-width:0;font:inherit;background:transparent;border:0;border-bottom:1px dashed var(--line);color:var(--ink);padding:2px 0;outline:none}
+.tty-in input:focus{border-bottom-color:var(--accent)}
+.t-p{color:var(--final)}
+.t-d{color:var(--think);font-weight:500}
+.t-e{color:var(--bad)}
+.t-m{color:var(--muted)}
+.missions{padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:start;min-width:0}
+.missions ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.missions li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start;font-size:.92rem;border:1px solid transparent;border-radius:8px;padding:6px 8px}
+.missions li .ck{font-family:var(--font-mono);font-size:.8rem;width:20px;height:20px;border-radius:5px;border:1.5px solid var(--line);display:grid;place-items:center;margin-top:2px}
+.missions li.now{border-color:var(--accent);background:var(--accent-soft)}
+.missions li.is-ok .ck{border-color:var(--final);background:var(--final-soft);color:var(--final)}
+.missions li.is-ok span:last-child{color:var(--muted)}
+.mission-msg{font-size:.9rem}
+.mission-msg:empty{display:none}
+.cmd-table td:first-child,.cmd-table td:nth-child(3){font-family:var(--font-mono);font-size:.85rem;white-space:nowrap}
+.tb-anno{margin:0;padding-left:1.3em;display:grid;gap:4px;max-width:76ch}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E1 · Your dev setup</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#terminal" data-nav="terminal"><span class="n">1</span>Terminal</a>
+      <a href="#python" data-nav="python"><span class="n">2</span>Python and uv</a>
+      <a href="#vscode" data-nav="vscode"><span class="n">3</span>VS Code</a>
+      <a href="#git" data-nav="git"><span class="n">4</span>git and GitHub</a>
+      <a href="#errors" data-nav="errors"><span class="n">5</span>Reading errors</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E1 · AI engineer track · about 2 hours</p>
+  <h1>Your dev setup: terminal, Python, VS Code and git</h1>
+  <p class="lede">Every AI engineer works with the same four tools: a <button type="button" class="term" data-term="terminal" aria-expanded="false">terminal</button> to give commands, <strong>Python</strong> to write the code, an editor to write it in, and <button type="button" class="term" data-term="git" aria-expanded="false">git</button> to save your work. This module sets them up and teaches just enough of each. By the end you'll have a project on GitHub called <strong>research-assistant</strong> with your first program in it. That's the project you'll grow into a working agent over the next 11 modules.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="repo" aria-expanded="false">repo</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">Your own repo on GitHub, and a program that runs from your terminal:</p>
+    <pre class="out">% uv run hello.py
+Hello from the research assistant!
+Python 3.13.x on Darwin</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">Terminal practice</h2>
+    <p>A pretend terminal with a pretend home folder, so you can't break anything. Work through the six missions on the right. Type a command and press Enter. <span class="kbd">Tab</span> finishes a file or folder name, and <span class="kbd">↑</span> brings back your last command.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>Nothing runs on your computer. The folders and files are made up, and only the commands in the help list work.</span></div>
+    <div class="tty-wrap">
+      <div class="tty">
+        <div class="tty-out" id="ttyOut" role="log" aria-live="polite"></div>
+        <form class="tty-in" id="ttyForm" autocomplete="off">
+          <label for="ttyIn" id="ttyPrompt">you@laptop ~ %</label>
+          <input id="ttyIn" type="text" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Command" placeholder="type a command, e.g. pwd">
+        </form>
+      </div>
+      <div class="missions">
+        <p class="small"><b>Missions</b> · <span id="mCount">0 of 6</span></p>
+        <ol id="mList"></ol>
+        <p class="mission-msg" id="mMsg" aria-live="polite"></p>
+        <div class="btns" style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="btn btn-sm" id="ttyHint">Show a hint</button><button type="button" class="btn btn-sm" id="ttyReset">↺ Start again</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. TERMINAL ============ -->
+<section class="stage" id="terminal" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · The terminal</p>
+    <h2 id="s1">Eight commands cover most of what you'll type</h2>
+    <p>The terminal is a text window for giving your computer instructions. It looks old-fashioned, but it's faster than clicking, it works the same on every computer, and almost every AI tool is installed and run from it.</p>
+  </div>
+  <p class="prose">The terminal is always "in" one folder, the <button type="button" class="term" data-term="cwd" aria-expanded="false">current folder</button>. Commands look for files there. Most beginner errors are a command run in the wrong folder, so <code>pwd</code> and <code>ls</code> are the two you'll use most.</p>
+  <div class="tablewrap">
+    <table class="cmd-table">
+      <thead><tr><th>Command</th><th>What it does</th><th>Windows PowerShell</th></tr></thead>
+      <tbody>
+        <tr><td>pwd</td><td>Print the folder you're in</td><td>pwd</td></tr>
+        <tr><td>ls</td><td>List the files and folders here</td><td>ls</td></tr>
+        <tr><td>cd code</td><td>Go into the folder <code>code</code></td><td>cd code</td></tr>
+        <tr><td>cd ..</td><td>Go up one folder</td><td>cd ..</td></tr>
+        <tr><td>cd ~</td><td>Go to your home folder</td><td>cd ~</td></tr>
+        <tr><td>mkdir notes</td><td>Make a new folder</td><td>mkdir notes</td></tr>
+        <tr><td>cat hello.py</td><td>Show what's in a file</td><td>cat hello.py</td></tr>
+        <tr><td>touch notes.md</td><td>Make an empty file</td><td>ni notes.md</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid g3">
+    <div class="box tint"><h4>Paths</h4><p class="small">A <button type="button" class="term" data-term="path" aria-expanded="false">path</button> is a file's address. <code>~</code> means your home folder and <code>..</code> the folder above. <code>cd ../Downloads</code> means "up one, then into Downloads".</p></div>
+    <div class="box tint"><h4>Shortcuts</h4><p class="small"><span class="kbd">Tab</span> finishes a name for you. <span class="kbd">↑</span> repeats your last command. <span class="kbd">Ctrl</span> + <span class="kbd">C</span> stops a program that's still running.</p></div>
+    <div class="box tint"><h4>Spaces matter</h4><p class="small">A space separates a command from what it acts on. A folder name with a space needs quotes: <code>cd "My Projects"</code>. Use names without spaces for code.</p></div>
+  </div>
+</section>
+
+<!-- ============ 2. PYTHON AND UV ============ -->
+<section class="stage" id="python" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · Python and uv</p>
+    <h2 id="s2">Python is the language; uv runs the project</h2>
+    <p>Most AI engineering is written in Python: the model providers' SDKs, LangChain and LangGraph, evaluation tools, data work. You'll learn the parts you need in E2. First you need a clean way to install it and keep each project tidy.</p>
+  </div>
+  <div class="grid g2">
+    <div class="box"><h4>The problem</h4><p class="small">Every project uses <button type="button" class="term" data-term="package" aria-expanded="false">packages</button>: code other people wrote, such as <code>httpx</code> for web requests. Different projects need different versions, and installing everything into one shared Python breaks things sooner or later.</p></div>
+    <div class="box"><h4>The fix</h4><p class="small">Give each project its own <button type="button" class="term" data-term="venv" aria-expanded="false">virtual environment</button>, a private <code>.venv</code> folder of packages. <button type="button" class="term" data-term="uv" aria-expanded="false">uv</button> creates it and uses it for you, so you rarely think about it.</p></div>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>uv command</th><th>What it does</th><th>When you use it</th></tr></thead>
+      <tbody>
+        <tr><td><code>uv init</code></td><td>Makes the folder a Python project, with a <button type="button" class="term" data-term="pyproject" aria-expanded="false">pyproject.toml</button></td><td>Once, at the start</td></tr>
+        <tr><td><code>uv add httpx</code></td><td>Installs a package and records it in pyproject.toml</td><td>Whenever you need a new package</td></tr>
+        <tr><td><code>uv run hello.py</code></td><td>Runs your file with the project's Python and packages</td><td>Every time you run code</td></tr>
+        <tr><td><code>uv run python</code></td><td>Opens interactive Python, to try lines one at a time</td><td>When experimenting (E2)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="callout"><b>You'll see pip in tutorials.</b> <code>pip install httpx</code> is the older way to install a package. In your project, use <code>uv add httpx</code> instead, and <code>uv run</code> rather than <code>python</code>. They do the same job, with less to go wrong.</p>
+</section>
+
+<!-- ============ 3. VS CODE ============ -->
+<section class="stage" id="vscode" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · VS Code</p>
+    <h2 id="s3">One window for files, code and terminal</h2>
+    <p>VS Code is a free code editor. It colours your code, points out mistakes as you type, and has a terminal built in, so you don't switch windows.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>Open the folder, not a file</h4><p class="small"><b>File → Open Folder</b> on your project. The file list, search and terminal then all work from the project folder.</p></div>
+    <div class="box"><h4>Use its terminal</h4><p class="small"><b>Terminal → New Terminal</b>. It opens in the project folder, which avoids the most common error, and it signs you in to GitHub when you push.</p></div>
+    <div class="box"><h4>Save before you run</h4><p class="small">A dot on a file's tab means unsaved changes. <span class="kbd">Cmd</span>/<span class="kbd">Ctrl</span> + <span class="kbd">S</span> saves. Or turn on <b>File → Auto Save</b>.</p></div>
+  </div>
+  <p class="prose small muted">Other editors such as Cursor or PyCharm work too. The track uses VS Code because it's free and its built-in terminal and GitHub sign-in are simple.</p>
+</section>
+
+<!-- ============ 4. GIT AND GITHUB ============ -->
+<section class="stage" id="git" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · git and GitHub</p>
+    <h2 id="s4">Save points on your laptop, and a copy online</h2>
+    <p>git keeps a history of your project. Each <button type="button" class="term" data-term="commit" aria-expanded="false">commit</button> is a snapshot with a message, so you can see what changed and go back when an experiment goes wrong. GitHub stores a copy online, which is also your portfolio.</p>
+  </div>
+  <ol class="steps-list">
+    <li><b>Edit</b> files in VS Code and save them.</li>
+    <li><b><code>git add .</code></b> chooses what goes in the next snapshot (the dot means "everything changed here").</li>
+    <li><b><code>git commit -m "message"</code></b> saves the snapshot on your laptop. Write what changed: "Add Wikipedia notes script".</li>
+    <li><b><code>git push</code></b> sends your new commits to GitHub.</li>
+  </ol>
+  <div class="grid g2">
+    <div class="box tint"><h4>Clone once, push often</h4><p class="small">You <button type="button" class="term" data-term="clone" aria-expanded="false">clone</button> a repo once to get it onto your laptop. After that, commit whenever something works and <button type="button" class="term" data-term="push" aria-expanded="false">push</button> at least once per session. Small commits are easier to undo.</p></div>
+    <div class="box tint"><h4>Never commit secrets</h4><p class="small">From E3 on you'll have an API key in a file called <code>.env</code>. List it in <button type="button" class="term" data-term="gitignore" aria-expanded="false">.gitignore</button> before your first commit. A key pushed to a public repo is found by bots within minutes.</p></div>
+  </div>
+  <p class="small muted"><code>git status</code> shows what's changed and what's staged. Run it whenever you're unsure what a commit will include.</p>
+</section>
+
+<!-- ============ 5. ERRORS ============ -->
+<section class="stage" id="errors" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Reading errors</p>
+    <h2 id="s5">Errors are instructions, not failures</h2>
+    <p>You'll see an error every few minutes as a beginner, and every hour as an expert. The skill is reading them. When Python fails it prints a <button type="button" class="term" data-term="traceback" aria-expanded="false">traceback</button>: read it from the bottom up.</p>
+  </div>
+  <pre class="out">Traceback (most recent call last):
+  File "/Users/you/code/research-assistant/hello.py", line 5, in &lt;module&gt;
+    print(f"Hello from the {nme}!")
+                            ^^^
+NameError: name 'nme' is not defined. Did you mean: 'name'?</pre>
+  <ol class="tb-anno">
+    <li><b>Last line first:</b> the kind of error (<code>NameError</code>) and what went wrong. Python even suggests the fix.</li>
+    <li><b>Then the file and line number:</b> <code>hello.py</code>, line 5. In longer tracebacks, look for the lines in your own files, not in packages.</li>
+    <li><b>Then the code itself</b>, with <code>^^^</code> under the problem.</li>
+  </ol>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>You see</th><th>It usually means</th></tr></thead>
+      <tbody>
+        <tr><td><code>command not found</code></td><td>The program isn't installed, or the terminal was opened before you installed it</td></tr>
+        <tr><td><code>No such file or directory</code></td><td>Wrong folder, or a typo in the name. Run <code>pwd</code> and <code>ls</code></td></tr>
+        <tr><td><code>SyntaxError</code></td><td>A typo in the code: a missing bracket, quote or colon, often on the line before the one shown</td></tr>
+        <tr><td><code>ModuleNotFoundError</code></td><td>A package isn't installed in this project. <code>uv add</code> it, and run with <code>uv run</code></td></tr>
+        <tr><td><code>IndentationError</code></td><td>The spaces at the start of a line don't line up. Python uses them to group code</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="callout"><b>Asking for help, from a person or an AI assistant:</b> paste the <em>whole</em> error, the command you ran, the folder you ran it in, and the file. "It doesn't work" gets guesses. The full error usually gets the fix in one reply.</p>
+  <div class="quiz" data-quiz="qe1a">
+    <p class="quiz-label">Check your understanding · Reading errors</p>
+    <p class="quiz-q">A Python traceback is 20 lines long. Where do you look first?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The first line only says a traceback follows. The useful part is at the bottom."><span class="l">A</span><span>The first line, because that's where it starts</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The last line names the error and what went wrong; the lines above show where, and your own file is where the fix usually is."><span class="l">B</span><span>The last line, then the line number in your own file</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Do share it when you ask for help, but read the last line first. It often tells you the fix."><span class="l">C</span><span>Nowhere: paste it straight into an AI assistant</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · on your laptop</p>
+    <h2 id="s6">Set up your machine and ship your first program</h2>
+    <p>Do these steps in order. Each one shows what you should see. If you see something else, check the "If it breaks" box at the end before searching the web.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>60–90 min</b></span><span>API cost <b>none</b></span><span>You need <b>a Mac or Windows laptop, admin rights, a GitHub account</b></span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Open a terminal</h3><div class="ost"><div class="ost-tabs" role="group" aria-label="Your computer"><button type="button" data-os="mac" aria-selected="true">Mac</button><button type="button" data-os="win" aria-selected="false">Windows</button></div><div class="ost-p" data-os="mac"><p>Press <span class="kbd">Cmd</span> + <span class="kbd">Space</span>, type <b>Terminal</b> and press Enter. You'll see a line ending in <code>%</code>: that's the prompt, waiting for a command.</p></div><div class="ost-p" data-os="win" hidden><p>Press the Windows key, type <b>Terminal</b> and press Enter. It opens PowerShell. You'll see a line ending in <code>&gt;</code>: that's the prompt, waiting for a command.</p></div></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Install uv, which installs Python for you</h3><div class="ost"><div class="ost-tabs" role="group" aria-label="Your computer"><button type="button" data-os="mac" aria-selected="true">Mac</button><button type="button" data-os="win" aria-selected="false">Windows</button></div><div class="ost-p" data-os="mac"><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">curl -LsSf https://astral.sh/uv/install.sh | sh</span></pre></div></div><div class="ost-p" data-os="win" hidden><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</span></pre></div></div></div><p><b>Close the terminal and open a new one</b>, so it can find the new program. Then check it worked:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv --version</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">uv 0.11.32</pre><p class="small">Any version number is fine. Yours may be newer.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Install Python</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv python install 3.13</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Installed Python 3.13.x in 2.31s</pre><p class="small">The last number and the time will differ. You don't need to uninstall any Python you already have.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Install VS Code and its Python extension</h3><p>Download VS Code from <a href="https://code.visualstudio.com/" target="_blank" rel="noopener">code.visualstudio.com</a> and install it. Open it, click the Extensions icon in the left bar (four squares), search for <b>Python</b> and install the one published by Microsoft.</p><p>From now on, use VS Code's built-in terminal: menu <b>Terminal → New Terminal</b>. It works the same as the one you opened in step 1.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Install git and tell it who you are</h3><div class="ost"><div class="ost-tabs" role="group" aria-label="Your computer"><button type="button" data-os="mac" aria-selected="true">Mac</button><button type="button" data-os="win" aria-selected="false">Windows</button></div><div class="ost-p" data-os="mac"><p>Type this in the terminal. If git is missing, your Mac offers to install the developer tools: click <b>Install</b>, wait, then run it again.</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git --version</span></pre></div></div><div class="ost-p" data-os="win" hidden><p>Install git with the command below, or download it from <a href="https://git-scm.com/downloads/win" target="_blank" rel="noopener">git-scm.com</a>. Then close and reopen the terminal and check it.</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">winget install --id Git.Git -e --source winget</span><span class="ln">git --version</span></pre></div></div></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">git version 2.x.x</pre></div><p>Tell git your name and email. They appear on every commit you make, so use the email you'll use for GitHub.</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git config --global user.name "Your Name"</span><span class="ln">git config --global user.email "you@example.com"</span></pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Create your project on GitHub</h3><p>Sign up or log in at <a href="https://github.com/" target="_blank" rel="noopener">github.com</a>. Click <b>+ → New repository</b>. Name it <code>research-assistant</code>, choose <b>Public</b>, tick <b>Add a README file</b>, and click <b>Create repository</b>.</p><p>This is the repo you'll grow for all 12 modules, and the one you'll show people at the end.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Download it to your laptop</h3><p>In VS Code's terminal, make a folder for your code, go into it, and clone the repo. Replace <code>YOUR-USERNAME</code> with your GitHub username.</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">mkdir code</span><span class="ln">cd code</span><span class="ln">git clone https://github.com/YOUR-USERNAME/research-assistant.git</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Cloning into 'research-assistant'...
+remote: Enumerating objects: 3, done.
+...</pre></div><p>Now open it in VS Code: <b>File → Open Folder…</b>, then pick <code>code/research-assistant</code>. Open a new terminal (<b>Terminal → New Terminal</b>). It starts inside the project folder.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">8</span><div class="lab-b"><h3>Turn it into a Python project</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv init --python 3.13</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Initialized project `research-assistant`</pre></div><p>uv added <code>pyproject.toml</code> (the project's settings), <code>.python-version</code> and a sample <code>main.py</code>. Delete <code>main.py</code>; you'll write your own file.</p><p>Now create a file called <code>.gitignore</code> (with the dot) in VS Code: <b>File → New File</b>, then save it with that name. Add these lines, which keep the private environment and your future API keys out of GitHub:</p><div class="cb"><div class="cb-h"><span>.gitignore</span><button type="button" class="cb-copy" aria-label="Copy .gitignore">Copy</button></div><pre class="code"><span class="ln">.venv/</span><span class="ln">__pycache__/</span><span class="ln">.env</span></pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">9</span><div class="lab-b"><h3>Write and run your first program</h3><p>Create <code>hello.py</code> and type this in. Typing it, rather than pasting, helps you notice the details: quotes, brackets, the <code>f</code> before the string.</p><div class="cb"><div class="cb-h"><span>hello.py</span><button type="button" class="cb-copy" aria-label="Copy hello.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E1 lab: your first Python program."""</span></span><span class="ln"><span class="k">import</span> platform</span><span class="ln"> </span><span class="ln">name = <span class="s">"research assistant"</span></span><span class="ln">print(<span class="s">f"Hello from the {name}!"</span>)</span><span class="ln">print(<span class="s">f"Python {platform.python_version()} on {platform.system()}"</span>)</span></pre></div><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run hello.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Using CPython 3.13.x
+Creating virtual environment at: .venv
+Hello from the research assistant!
+Python 3.13.x on Darwin</pre><p class="small">The first two lines appear only the first time. On Windows the last word is <code>Windows</code>. Now change <code>name</code> to your own name, save, and run it again.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">10</span><div class="lab-b"><h3>Save a snapshot and send it to GitHub</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add .</span><span class="ln">git commit -m "Add hello.py and project settings"</span><span class="ln">git push</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">[main 5d6e7f8] Add hello.py and project settings
+ 4 files changed, 17 insertions(+)
+...
+To https://github.com/YOUR-USERNAME/research-assistant.git
+   1a2b3c4..5d6e7f8  main -&gt; main</pre></div><p>The first time you push, VS Code asks to sign in to GitHub: click <b>Allow</b> and finish in the browser. Refresh your repo page on GitHub: <code>hello.py</code> is there. <code>.venv</code> is not, which is what <code>.gitignore</code> is for.</p></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>uv: command not found  /  The term 'uv' is not recognized</code></dt><dd>The terminal was open before uv was installed. Close every terminal, and VS Code itself, then open a new one.</dd><dt><code>fatal: not a git repository</code></dt><dd>You're in the wrong folder. Run <code>pwd</code>. You should be inside <code>research-assistant</code>; open that folder in VS Code and use a new terminal.</dd><dt><code>error: Failed to spawn: `hello.py`</code></dt><dd>uv can't find the file. Check you saved it (a dot on the tab means unsaved), that it's named exactly <code>hello.py</code>, and that <code>ls</code> lists it.</dd><dt><code>remote: Support for password authentication was removed</code></dt><dd>GitHub doesn't take your password in the terminal. Push from VS Code's own terminal, or click <b>Sync Changes</b> in VS Code's Source Control panel, and sign in when asked.</dd></dl></div>
+  <div class="quiz" data-quiz="qe1b">
+    <p class="quiz-label">Check your understanding · Terminal</p>
+    <p class="quiz-q">You run uv run hello.py and get “No such file or directory”, but you can see hello.py in VS Code. What do you check first?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. They&#x27;re working: uv ran and reported a missing file."><span class="l">A</span><span>Reinstall Python and uv</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The terminal looks in its current folder. Usually it&#x27;s somewhere else, or the file was never saved."><span class="l">B</span><span>Which folder the terminal is in, with pwd and ls</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The name isn&#x27;t the problem; uv just can&#x27;t find the file where it&#x27;s looking."><span class="l">C</span><span>Rename the file to main.py</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+  <div class="quiz" data-quiz="qe1c">
+    <p class="quiz-label">Check your understanding · git</p>
+    <p class="quiz-q">Which of these should never be committed to a public GitHub repo?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. pyproject.toml lists your packages, and others need it to run your code. Commit it."><span class="l">A</span><span>pyproject.toml</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. List .env in .gitignore before your first commit. Bots scan public repos for keys within minutes."><span class="l">B</span><span>A .env file with your API key</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The README is the front page of your repo, and part of your portfolio."><span class="l">C</span><span>README.md</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s7">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E1 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="e1"><li><label><input type="checkbox"><span><code>uv --version</code>, <code>git --version</code> and <code>uv run python --version</code> all work in a new terminal</span></label></li><li><label><input type="checkbox"><span>Your <code>research-assistant</code> repo on GitHub has <code>hello.py</code>, <code>pyproject.toml</code> and <code>.gitignore</code>, and no <code>.venv</code> folder</span></label></li><li><label><input type="checkbox"><span>You can say what <code>pwd</code>, <code>ls</code> and <code>cd ..</code> do without looking</span></label></li><li><label><input type="checkbox"><span>You changed <code>hello.py</code>, ran it, and pushed the change as a second commit</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s8">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula">Open the <em>project folder</em> in VS Code → edit and <em>save</em> → <em>uv run</em> → <em>git add, commit, push</em>.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>Terminal</h3><ul>
+        <li><code>pwd</code>, <code>ls</code>: where am I, what's here</li>
+        <li><code>cd name</code>, <code>cd ..</code>, <code>cd ~</code></li>
+        <li><code>mkdir name</code>: new folder</li>
+        <li><span class="kbd">Tab</span> to finish names, <span class="kbd">↑</span> for history</li>
+        <li><span class="kbd">Ctrl</span> + <span class="kbd">C</span> stops a program</li>
+      </ul></div>
+      <div class="blk"><h3>uv and git</h3><ul>
+        <li><code>uv init</code>, once per project</li>
+        <li><code>uv add package</code></li>
+        <li><code>uv run file.py</code></li>
+        <li><code>git status</code>: what's changed</li>
+        <li><code>git add .</code> → <code>git commit -m "…"</code> → <code>git push</code></li>
+      </ul></div>
+      <div class="blk"><h3>When stuck</h3><ul>
+        <li>Read the last line of the error</li>
+        <li>Check the folder: <code>pwd</code>, <code>ls</code></li>
+        <li>Saved the file? Restarted the terminal?</li>
+        <li>Ask with the full error, command and file</li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s9">3 common setup mistakes</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>Running commands in the wrong folder</h3><dl>
+      <dt>What it looks like</dt><dd>"No such file or directory" for a file you can see in VS Code, or "not a git repository".</dd>
+      <dt>Fix</dt><dd>Open the project folder in VS Code and use its terminal. When in doubt, <code>pwd</code>.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>Committing secrets or the .venv folder</h3><dl>
+      <dt>What it looks like</dt><dd>Thousands of package files on GitHub, or worse, an API key in a public repo.</dd>
+      <dt>Fix</dt><dd>Write <code>.gitignore</code> before the first commit. If a key is ever pushed, revoke it in the provider's console straight away; deleting the commit isn't enough.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>Skimming the error</h3><dl>
+      <dt>What it looks like</dt><dd>Reinstalling Python, or asking for help with "it doesn't work", when the last line said exactly what was wrong.</dd>
+      <dt>Fix</dt><dd>Read the last line, then the line number in your file. Share the whole error when you ask.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="engineer.html" data-site-link>← AI engineer track</a>
+  <a href="eng-python.html" data-site-link>Module E2 · Python for AI work →</a>
+</div>
+
+<footer>
+  <p>The terminal demo is a simulation: nothing runs on your computer. The lab runs on your own laptop. Commands were checked against the tools' current documentation; if a step no longer matches what you see, the tool's own install page is the source of truth.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Astral, Microsoft or GitHub.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "terminal": {
+  "t": "Terminal",
+  "d": "A window where you type commands for your computer instead of clicking. Engineers use it to install tools, run programs and use git."
+ },
+ "cwd": {
+  "t": "Current folder (working directory)",
+  "d": "The folder the terminal is “in” right now. Commands look for files here unless you give a full path."
+ },
+ "path": {
+  "t": "Path",
+  "d": "The address of a file or folder, such as /Users/you/code/hello.py. ~ is short for your home folder, .. for the folder one level up."
+ },
+ "package": {
+  "t": "Package (library)",
+  "d": "Code someone else wrote that you install and reuse, such as httpx for web requests or anthropic for calling Claude."
+ },
+ "venv": {
+  "t": "Virtual environment",
+  "d": "A private folder of packages for one project (.venv), so projects don't clash over versions. uv creates and uses it for you."
+ },
+ "uv": {
+  "t": "uv",
+  "d": "A fast tool that installs Python, creates a project's virtual environment, adds packages and runs your code: uv init, uv add, uv run."
+ },
+ "pyproject": {
+  "t": "pyproject.toml",
+  "d": "The settings file for a Python project: its name, the Python version it needs and the packages it depends on."
+ },
+ "git": {
+  "t": "git",
+  "d": "A tool that saves snapshots (commits) of your project, so you can see what changed and go back if something breaks."
+ },
+ "repo": {
+  "t": "Repository (repo)",
+  "d": "A project folder tracked by git, with its full history of commits. On GitHub it also has a web page others can see."
+ },
+ "commit": {
+  "t": "Commit",
+  "d": "A saved snapshot of your project with a short message saying what changed."
+ },
+ "push": {
+  "t": "Push",
+  "d": "Send your new commits from your laptop to GitHub, so the online copy matches."
+ },
+ "clone": {
+  "t": "Clone",
+  "d": "Download a repository from GitHub to your laptop, with its history, ready to work on."
+ },
+ "gitignore": {
+  "t": ".gitignore",
+  "d": "A file listing what git should never save, such as the .venv folder and the .env file that holds your API keys."
+ },
+ "traceback": {
+  "t": "Traceback",
+  "d": "The error report Python prints when something fails: where it happened, line by line, ending with what went wrong."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Terminal practice (simulated) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const out = $("ttyOut"), input = $("ttyIn"), prompt = $("ttyPrompt");
+const MISSIONS = [
+  {t:"Print the folder you're in", hint:"pwd"},
+  {t:"List what's in it", hint:"ls"},
+  {t:"Go into the <code>code</code> folder", hint:"cd code"},
+  {t:"Make a folder called <code>research-assistant</code>", hint:"mkdir research-assistant"},
+  {t:"Go into it", hint:"cd research-assistant"},
+  {t:"Run <code>hello.py</code>. It's in your Downloads folder, so try it here first and read the error", hint:"cd ~/Downloads, then: python hello.py"}
+];
+let fs, cwd, hist, hpos, done;
+
+function fresh(){
+  fs = {Desktop:{}, Documents:{"ideas.txt":"Ideas for the research assistant:\n- cite every claim\n- keep reports short"},
+        Downloads:{"hello.py":'print("Hello from the research assistant!")'}, code:{}};
+  cwd = []; hist = []; hpos = 0; done = MISSIONS.map(() => false);
+  out.innerHTML = "";
+  line('<span class="t-m">Practice terminal. Type </span>help<span class="t-m"> to see the commands it knows.</span>');
+  render();
+}
+const where = p => "~" + (p.length ? "/" + p.join("/") : "");
+const full = p => "/Users/you" + (p.length ? "/" + p.join("/") : "");
+function node(p){ let n = fs; for(const s of p){ if(!n || typeof n !== "object" || !(s in n)) return undefined; n = n[s]; } return n; }
+function resolve(arg){
+  let p = cwd.slice(), a = arg;
+  if(a === "~" || a === "") return [];
+  if(a.startsWith("/Users/you")) { a = a.slice(10); p = []; }
+  else if(a.startsWith("~/")) { a = a.slice(2); p = []; }
+  else if(a.startsWith("/")) return null;
+  for(const s of a.split("/")){
+    if(!s || s === ".") continue;
+    if(s === "..") { if(!p.length) return null; p.pop(); }
+    else p.push(s);
+  }
+  return p;
+}
+function line(h){ const d = document.createElement("div"); d.innerHTML = h; out.appendChild(d); out.scrollTop = out.scrollHeight; }
+function err(t){ line('<span class="t-e">' + esc(t) + "</span>"); }
+function tick(i){ if(!done[i]){ done[i] = true; } }
+
+function runFile(cmd, arg){
+  if(!arg){ line('<span class="t-m">(The interactive Python prompt isn\'t part of this practice. Try </span>python hello.py<span class="t-m">)</span>'); return; }
+  const p = resolve(arg), f = p && node(p);
+  if(typeof f !== "string"){
+    if(cmd === "uv") { err("error: Failed to spawn: `" + arg + "`"); err("  Caused by: No such file or directory (os error 2)"); }
+    else err(cmd + ": can't open file '" + full(p || cwd.concat(arg)) + "': [Errno 2] No such file or directory");
+    if(arg === "hello.py" && cwd.join("/") !== "Downloads") line('<span class="t-m">Read the error: Python looked in ' + esc(where(cwd)) + ', and the file is somewhere else.</span>');
+    return;
+  }
+  const m = f.match(/print\("([^"]*)"\)/);
+  if(m) line(esc(m[1]));
+  if(arg.endsWith("hello.py") && m) tick(5);
+}
+
+function exec(raw){
+  const cmdline = raw.trim();
+  line('<span class="t-p">you@laptop ' + esc(where(cwd)) + ' %</span> ' + esc(cmdline));
+  if(!cmdline) return;
+  hist.push(cmdline); hpos = hist.length;
+  const parts = cmdline.match(/"[^"]*"|\S+/g).map(s => s.replace(/^"|"$/g, ""));
+  const cmd = parts[0], args = parts.slice(1).filter(a => !a.startsWith("-"));
+  const arg = args[0];
+  switch(cmd){
+    case "help":
+      line('<span class="t-m">Commands in this practice: pwd, ls, cd, mkdir, touch, cat, echo, python, uv run, clear.</span>'); break;
+    case "pwd": line(esc(full(cwd))); tick(0); break;
+    case "ls": case "dir": {
+      const p = arg ? resolve(arg) : cwd, n = p && node(p);
+      if(n === undefined || p === null){ err("ls: " + arg + ": No such file or directory"); break; }
+      if(typeof n === "string"){ line(esc(arg)); break; }
+      const names = Object.keys(n).sort();
+      if(names.length) line(names.map(k => typeof n[k] === "object" ? '<span class="t-d">' + esc(k) + "</span>" : esc(k)).join("    "));
+      if(!arg && !cwd.length) tick(1);
+      break;
+    }
+    case "cd": {
+      const p = resolve(arg === undefined ? "~" : arg);
+      if(p === null){ line('<span class="t-m">(This practice stays inside your home folder.)</span>'); break; }
+      const n = node(p);
+      if(n === undefined){ err("cd: no such file or directory: " + arg); break; }
+      if(typeof n === "string"){ err("cd: not a directory: " + arg); break; }
+      cwd = p;
+      if(cwd.join("/") === "code") tick(2);
+      if(cwd.join("/") === "code/research-assistant") tick(4);
+      break;
+    }
+    case "mkdir": {
+      if(!arg){ err("usage: mkdir directory_name"); break; }
+      const p = resolve(arg); if(!p){ err("mkdir: " + arg + ": Permission denied"); break; }
+      const parent = node(p.slice(0, -1)), name = p[p.length - 1];
+      if(!parent || typeof parent !== "object"){ err("mkdir: " + arg + ": No such file or directory"); break; }
+      if(name in parent){ err("mkdir: " + arg + ": File exists"); break; }
+      parent[name] = {};
+      if(node(["code","research-assistant"])) tick(3);
+      break;
+    }
+    case "touch": case "ni": {
+      if(!arg){ err("usage: touch file"); break; }
+      const p = resolve(arg), parent = p && node(p.slice(0, -1));
+      if(!parent || typeof parent !== "object"){ err("touch: " + arg + ": No such file or directory"); break; }
+      if(!(p[p.length - 1] in parent)) parent[p[p.length - 1]] = "";
+      break;
+    }
+    case "cat": case "type": {
+      const p = arg && resolve(arg), n = p && node(p);
+      if(n === undefined || !p){ err("cat: " + (arg || "") + ": No such file or directory"); break; }
+      if(typeof n === "object"){ err("cat: " + arg + ": Is a directory"); break; }
+      if(n) line(esc(n));
+      break;
+    }
+    case "echo": line(esc(parts.slice(1).join(" "))); break;
+    case "python": case "python3": runFile(cmd, arg); break;
+    case "uv":
+      if(parts[1] === "run") runFile("uv", parts[2]);
+      else line('<span class="t-m">(Only </span>uv run<span class="t-m"> is part of this practice.)</span>');
+      break;
+    case "clear": out.innerHTML = ""; break;
+    default: err("zsh: command not found: " + cmd);
+  }
+}
+
+function render(){
+  prompt.textContent = "you@laptop " + where(cwd) + " %";
+  const next = done.indexOf(false);
+  $("mList").innerHTML = MISSIONS.map((m, i) =>
+    '<li class="' + (done[i] ? "is-ok" : (i === next ? "now" : "")) + '"><span class="ck" aria-hidden="true">' + (done[i] ? "✓" : i + 1) + "</span><span>" + m.t +
+    (done[i] ? '<span class="visually-hidden"> (done)</span>' : "") + "</span></li>").join("");
+  const n = done.filter(Boolean).length;
+  $("mCount").textContent = n + " of " + MISSIONS.length;
+  $("mMsg").textContent = n === MISSIONS.length ? "All six done. That's most of what you'll type in a terminal on this track. Now do it for real in the lab below." : "";
+  $("ttyHint").disabled = n === MISSIONS.length;
+}
+
+$("ttyForm").addEventListener("submit", e => { e.preventDefault(); exec(input.value); input.value = ""; render(); });
+input.addEventListener("keydown", e => {
+  if(e.key === "ArrowUp" && hist.length){ e.preventDefault(); hpos = Math.max(0, hpos - 1); input.value = hist[hpos]; }
+  else if(e.key === "ArrowDown" && hist.length){ e.preventDefault(); hpos = Math.min(hist.length, hpos + 1); input.value = hist[hpos] || ""; }
+  else if(e.key === "Tab"){
+    const m = input.value.match(/^(.*\s)(\S*)$/); if(!m) return;
+    const typed = m[2], slash = typed.lastIndexOf("/"), dirPart = typed.slice(0, slash + 1), stem = typed.slice(slash + 1);
+    const dir = dirPart ? resolve(dirPart) : cwd, n = dir && node(dir);
+    if(!n || typeof n !== "object") return;
+    const hits = Object.keys(n).filter(k => k.startsWith(stem));
+    if(hits.length === 1){ e.preventDefault(); input.value = m[1] + dirPart + hits[0] + (typeof n[hits[0]] === "object" ? "/" : ""); }
+    else if(hits.length > 1){ e.preventDefault(); line('<span class="t-m">' + esc(hits.join("    ")) + "</span>"); }
+  }
+});
+$("ttyHint").addEventListener("click", () => {
+  const i = done.indexOf(false); if(i < 0) return;
+  line('<span class="t-m">Hint for mission ' + (i + 1) + ": </span>" + esc(MISSIONS[i].hint));
+  input.focus();
+});
+$("ttyReset").addEventListener("click", () => { fresh(); input.focus(); });
+fresh();
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e1";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>
