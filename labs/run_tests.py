@@ -1,6 +1,6 @@
 """Run the offline tests for every lab. No API key or network needed.
 
-    uv run --with httpx python labs/run_tests.py
+    uv run --with httpx --with anthropic --with python-dotenv --with pydantic python labs/run_tests.py
 """
 import sys
 import unittest

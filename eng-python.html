@@ -415,6 +415,17 @@ pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;b
 .done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
 .done-state.is-ok{color:var(--final)}
 .build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
 .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ---------- E2: predict-the-output stepper ---------- */
@@ -776,7 +787,7 @@ Notes in notes.json: 2</pre><p class="small">Try <code>"Mercury (planet)"</code>
 
 <div class="next-module">
   <a href="eng-setup.html" data-site-link>← Module E1 · Your dev setup</a>
-  <a href="engineer.html" data-site-link>E3 · Your first LLM call is coming next. See the track →</a>
+  <a href="eng-first-call.html" data-site-link>Module E3 · Your first LLM call →</a>
 </div>
 
 <footer>

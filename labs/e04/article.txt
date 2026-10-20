@@ -1,0 +1,11 @@
+Riverside Library pilots an AI research helper
+
+Riverside Public Library has started a six-month trial of an AI assistant that helps visitors find sources for school and work projects. The assistant answers questions using only the library's catalogue and licensed databases, and every answer links to the books or articles it used.
+
+"We wanted something that sends people to sources, not something that replaces them," said head librarian Maria Okafor.
+
+In the first month, the assistant answered 4,200 questions, and librarians reviewed a random sample of 300. They rated 81% of the reviewed answers as accurate and complete, and found that 6% cited a source that did not support the claim.
+
+The library's board approved the trial in January with a budget of $18,000, mostly for software licences and staff time for reviews. A report by the Regional Libraries Council last year found that only one in five library users could name a reliable database for their subject.
+
+The trial ends in September. The board will decide in October whether to keep the assistant, based on accuracy, cost per question and visitor feedback.

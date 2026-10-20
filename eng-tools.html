@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E5 Tool Calling</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E5 of the AI engineer track. A tool-use loop stepper up top, then what tools are, defining them, the loop, safety, cost and frameworks, a research-bot lab, a done-when checklist and the cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- E5: tool-use loop stepper ---------- */
+.ls-body{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+@media (max-width:860px){.ls-body{grid-template-columns:minmax(0,1fr)}}
+.ls-col{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:start;min-width:0}
+.ls-col+.ls-col{border-left:1px solid var(--line)}
+@media (max-width:860px){.ls-col+.ls-col{border-left:0;border-top:1px solid var(--line)}}
+.ls-msgs{display:grid;gap:8px;max-height:460px;overflow-y:auto;padding-right:4px}
+.ls-msg{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:grid;gap:6px;background:var(--surface)}
+.ls-msg.new{border-color:var(--accent)}
+.ls-role{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ls-blk{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:start;font-size:.84rem}
+.ls-blk .ty{font-family:var(--font-mono);font-size:.7rem;border-radius:999px;padding:1px 8px;white-space:nowrap;border:1px solid var(--line);color:var(--muted)}
+.ls-blk .ty.t-tool_use{border-color:var(--act);color:var(--act);background:var(--act-soft)}
+.ls-blk .ty.t-tool_result{border-color:var(--observe);color:var(--observe);background:var(--observe-soft)}
+.ls-blk .ty.t-tool_error{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
+.ls-blk .ty.t-text{border-color:var(--final);color:var(--final);background:var(--final-soft)}
+.ls-blk .tx{font-family:var(--font-mono);font-size:.78rem;overflow-wrap:anywhere;white-space:pre-wrap}
+.ls-who{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:3px 10px;justify-self:start;border:1.5px solid var(--line)}
+.ls-who.w-code{border-color:var(--think);color:var(--think)}
+.ls-who.w-model{border-color:var(--accent);color:var(--accent)}
+.ls-who.w-api{border-color:var(--bad);color:var(--bad)}
+.ls-step h3{font-size:1.05rem}
+.ls-run{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.ls-run:empty{display:none}
+.ls-run.err{color:var(--bad);border-color:var(--bad)}
+.desc-table td:first-child{color:var(--muted)}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E5 · Tool calling</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#what" data-nav="what"><span class="n">1</span>What a tool is</a>
+      <a href="#define" data-nav="define"><span class="n">2</span>Defining tools</a>
+      <a href="#loop" data-nav="loop"><span class="n">3</span>The loop</a>
+      <a href="#safety" data-nav="safety"><span class="n">4</span>Running tools safely</a>
+      <a href="#cost" data-nav="cost"><span class="n">5</span>What loops cost</a>
+      <a href="#frameworks" data-nav="frameworks"><span class="n">6</span>By hand or framework</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E5 · AI engineer track · about 4 hours</p>
+  <h1>Tool calling: let the model ask your code for help</h1>
+  <p class="lede">On its own, a model can only write text from what it learned in training. <button type="button" class="term" data-term="tool" aria-expanded="false">Tools</button> let it ask your code to do things, such as searching, reading a page or saving a note, and then use the results. This module covers how to describe tools, how to write the <button type="button" class="term" data-term="tool_loop" aria-expanded="false">tool-use loop</button> by hand, and how to keep it safe and affordable. It's the "act and observe" from module 1, in code. You'll build a <strong>research assistant</strong> that searches Wikipedia, reads pages and cites them.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="tool_result" aria-expanded="false">tool_result</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">A research bot that decides what to search and read, then answers with citations:</p>
+    <pre class="out">% uv run research_bot.py "Who coined the term artificial intelligence, and when?"
+  -> search_wikipedia({"query": "term artificial intelligence coined"})
+  -> read_page({"title": "Dartmouth workshop"})
+  [3 model calls, 4105 tokens in, 612 out, $0.00072]
+The term "artificial intelligence" comes from a 1955 proposal … [Dartmouth workshop].</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">Loop stepper</h2>
+    <p>Step through one question, "Who coined the term artificial intelligence, and when?", from the first request to the final answer. Watch the messages list grow, see who acts at each step, and count what it costs. Then break it: forget a tool result, or set a tight call limit.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>The run is scripted to follow the real API's rules. Token counts are typical for Claude Haiku 5.5 and the Wikipedia text is abridged.</span></div>
+    <div class="demo-top">
+      <div class="ctl"><span>Send results</span><div class="seg" id="lsForget" role="group" aria-label="Tool results"></div></div>
+      <div class="ctl"><span>MAX_CALLS</span><div class="seg" id="lsLimit" role="group" aria-label="Call limit"></div></div>
+      <div class="dm-metrics" aria-live="polite">
+        <div class="metric" id="mCalls"><span class="v">0</span><span class="k">model calls</span></div>
+        <div class="metric" id="mIn"><span class="v">0</span><span class="k">input tokens, all calls</span></div>
+        <div class="metric" id="mOut"><span class="v">0</span><span class="k">output tokens, all calls</span></div>
+        <div class="metric" id="mCost"><span class="v">$0.000</span><span class="k">per 1,000 questions like this</span></div>
+      </div>
+    </div>
+    <div class="ls-body">
+      <div class="ls-col"><p class="dm-h" id="lsCount">messages (0)</p><div class="ls-msgs" id="lsMsgs" aria-live="polite"></div></div>
+      <div class="ls-col ls-step">
+        <p class="dm-h" id="lsStepN">Step 0</p>
+        <span class="ls-who" id="lsWho">ready</span>
+        <h3 id="lsT">Press "Next step" to start</h3>
+        <p class="small" id="lsWhy">Your code is about to put the question in the messages list.</p>
+        <div class="ls-run" id="lsRun"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="btn btn-primary" id="lsNext">Next step ▶</button><button type="button" class="btn btn-sm" id="lsAll">Run to the end</button><button type="button" class="btn btn-sm" id="lsReset">↺ Restart</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. WHAT A TOOL IS ============ -->
+<section class="stage" id="what" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · What a tool is</p>
+    <h2 id="s1">The model asks; your code acts</h2>
+    <p>A model can't browse the web, read your files or run code. It can only write. Tool calling gives it a way to write a request ("run search_wikipedia with these words") that your code carries out.</p>
+  </div>
+  <ol class="steps-list">
+    <li><b>You describe the tools</b> in the request: a name, what it does, and what arguments it takes.</li>
+    <li><b>The model replies with a <button type="button" class="term" data-term="tool_use" aria-expanded="false">tool_use</button> block</b> instead of an answer, and <code>stop_reason</code> is <code>"tool_use"</code>.</li>
+    <li><b>Your code runs the function</b> with those arguments, or refuses to.</li>
+    <li><b>Your code sends back a tool_result</b>, and the model carries on, perhaps asking for another tool, until it answers.</li>
+  </ol>
+  <p class="callout"><b>Nothing runs unless your code runs it.</b> The model only ever produces text. That makes your code the place for every safety rule: which tools exist, which arguments are allowed, and what needs a person's approval.</p>
+  <div class="quiz" data-quiz="qe5a">
+    <p class="quiz-label">Check your understanding · What a tool is</p>
+    <p class="quiz-q">The model replies with a tool_use block for search_wikipedia. Who runs the search?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. For tools you define, the model only writes the request. Nothing runs until your code runs it."><span class="l">A</span><span>The model, on Anthropic's servers</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. That&#x27;s why your code is where every safety rule lives: it decides what runs."><span class="l">B</span><span>Your code, which then sends back the result</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Wikipedia only answers when your function sends it a request."><span class="l">C</span><span>Wikipedia, automatically</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 2. DEFINING TOOLS ============ -->
+<section class="stage" id="define" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · Defining tools</p>
+    <h2 id="s2">The description is a prompt</h2>
+    <p>Each tool is a dict with a name, a description and an input schema, the same JSON schema idea as E4. The model decides when and how to use a tool from its description alone, so write it as carefully as a prompt.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>One tool definition</span><button type="button" class="cb-copy" aria-label="Copy One tool definition">Copy</button></div><pre class="code"><span class="ln">{</span><span class="ln">    <span class="s">"name"</span>: <span class="s">"read_page"</span>,</span><span class="ln">    <span class="s">"description"</span>: <span class="s">"Read the summary of one Wikipedia page. "</span></span><span class="ln">                   <span class="s">"Use an exact title from search_wikipedia."</span>,</span><span class="ln">    <span class="s">"input_schema"</span>: {</span><span class="ln">        <span class="s">"type"</span>: <span class="s">"object"</span>,</span><span class="ln">        <span class="s">"properties"</span>: {<span class="s">"title"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"The exact page title"</span>}},</span><span class="ln">        <span class="s">"required"</span>: [<span class="s">"title"</span>],</span><span class="ln">        <span class="s">"additionalProperties"</span>: <span class="k">False</span>,</span><span class="ln">    },</span><span class="ln">    <span class="s">"strict"</span>: <span class="k">True</span>,</span><span class="ln">}</span></pre></div>
+  <div class="tablewrap">
+    <table class="desc-table">
+      <thead><tr><th>Weak description</th><th>Strong description</th></tr></thead>
+      <tbody>
+        <tr><td>Reads a page.</td><td>Read the summary of one Wikipedia page. Use an exact title from search_wikipedia.</td></tr>
+        <tr><td>Search tool.</td><td>Search English Wikipedia. Returns up to 5 page titles, each with a one-line description. Use it to decide which pages to read.</td></tr>
+        <tr><td>query: string</td><td>query: a few search words, such as "retrieval augmented generation"</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="prose"><code>"strict": True</code> turns on <button type="button" class="term" data-term="strict" aria-expanded="false">strict tool use</button>: the API guarantees the arguments match the schema, so <code>args["title"]</code> is always there. Fewer, clearer tools work better than many overlapping ones; module 8 explains why each definition also costs tokens on every call.</p>
+</section>
+
+<!-- ============ 3. THE LOOP ============ -->
+<section class="stage" id="loop" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · The loop</p>
+    <h2 id="s3">Call, run, send back, repeat</h2>
+    <p>One question can take several model calls: search, read, read again, answer. The loop keeps going while <code>stop_reason</code> is <code>"tool_use"</code> and stops when the model answers.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>The loop, simplified (the lab adds a call limit)</span><button type="button" class="cb-copy" aria-label="Copy The loop, simplified (the lab adds a call limit)">Copy</button></div><pre class="code"><span class="ln">messages = [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}]</span><span class="ln"><span class="k">while</span> <span class="k">True</span>:</span><span class="ln">    response = client.messages.create(model=MODEL, max_tokens=4000, tools=TOOLS, messages=messages)</span><span class="ln">    messages.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: response.content})</span><span class="ln">    <span class="k">if</span> response.stop_reason != <span class="s">"tool_use"</span>:</span><span class="ln">        <span class="k">break</span>                                   <span class="c"># the model answered</span></span><span class="ln">    results = []</span><span class="ln">    <span class="k">for</span> block <span class="k">in</span> response.content:</span><span class="ln">        <span class="k">if</span> block.type == <span class="s">"tool_use"</span>:</span><span class="ln">            text, failed = run_tool(block.name, block.input)</span><span class="ln">            results.append({<span class="s">"type"</span>: <span class="s">"tool_result"</span>, <span class="s">"tool_use_id"</span>: block.id,</span><span class="ln">                            <span class="s">"content"</span>: text, <span class="s">"is_error"</span>: failed})</span><span class="ln">    messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: results})   <span class="c"># all results, one message</span></span></pre></div>
+  <div class="grid g3">
+    <div class="box tint"><h4>Keep the whole reply</h4><p class="small">Append <code>response.content</code> as the assistant message, tool_use blocks and all. The model needs to see what it asked for.</p></div>
+    <div class="box tint"><h4>One result per request</h4><p class="small">Every <code>tool_use</code> gets a <code>tool_result</code> with the same <code>tool_use_id</code>. Miss one and the next call fails with a 400.</p></div>
+    <div class="box tint"><h4>All results together</h4><p class="small">With <button type="button" class="term" data-term="parallel" aria-expanded="false">parallel tool calls</button>, run them all and send every result in one user message, not one message each.</p></div>
+  </div>
+  <div class="quiz" data-quiz="qe5b">
+    <p class="quiz-label">Check your understanding · The loop</p>
+    <p class="quiz-q">One reply contains two tool_use blocks. How do you send the results back?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="1" data-why="Correct. One message with every result, ids matching. Splitting them up, or missing one, breaks the conversation."><span class="l">A</span><span>Both tool_result blocks together in one user message, each with its tool_use_id</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The next message must answer every tool_use at once."><span class="l">B</span><span>One user message per result, in separate requests</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A tool_use without a tool_result makes the next request fail with a 400."><span class="l">C</span><span>Only the result of the first one; the model will ask again for the other</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 4. SAFETY ============ -->
+<section class="stage" id="safety" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Running tools safely</p>
+    <h2 id="s4">Your code is the guard</h2>
+    <p>Tools turn a model's words into actions. Module 9 covers how attackers exploit that. These habits start in the very first tool you write.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Habit</th><th>In the lab code</th></tr></thead>
+      <tbody>
+        <tr><td>Report failures, don't crash</td><td><code>run_tool</code> returns the error text with <button type="button" class="term" data-term="is_error" aria-expanded="false">is_error</button>, and the model tries a different title</td></tr>
+        <tr><td>Only run tools you defined</td><td>An unknown tool name gets an error, never a guess</td></tr>
+        <tr><td>Time limits on everything</td><td><code>timeout=10</code> on every web request</td></tr>
+        <tr><td>Cap the loop</td><td>A <button type="button" class="term" data-term="call_limit" aria-expanded="false">call limit</button>, <code>MAX_CALLS = 8</code>, stops a confused run</td></tr>
+        <tr><td>Read-only first</td><td>Both tools only read. Tools that write, send or delete need a person's approval (E10)</td></tr>
+        <tr><td>Treat tool output as data</td><td>Page text could contain instructions. The system prompt and tags keep them in their place (module 9)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="prose">Never pass a model's arguments to <code>eval</code>, a shell command or an open-ended URL fetch. Give it narrow tools that can only do what you intend.</p>
+  <div class="quiz" data-quiz="qe5c">
+    <p class="quiz-label">Check your understanding · Running tools safely</p>
+    <p class="quiz-q">read_page gets a 404 from Wikipedia. What should your code do?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. The model can often recover, for example by searching for the exact title."><span class="l">A</span><span>Stop the program with the error</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The model reads the error and tries something else, and the call limit stops it if it can&#x27;t recover."><span class="l">B</span><span>Send the error back as a tool_result with is_error: true</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Hiding the failure invites the model to answer as if it had read the page."><span class="l">C</span><span>Return an empty result so nothing looks wrong</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 5. COST ============ -->
+<section class="stage" id="cost" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · What loops cost</p>
+    <h2 id="s5">Every call re-sends everything so far</h2>
+    <p>The loop is a conversation that grows with each tool result. Call 4 carries the question, every tool request and every page the model has read. That's why one tool-using question costs several times a simple chat turn.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>Short tool results</h4><p class="small">Return summaries and the fields the model needs, not whole pages. <code>read_page</code> returns a summary, not the full article.</p></div>
+    <div class="box"><h4>Fewer, better calls</h4><p class="small">Good descriptions mean fewer wrong guesses. A search tool that returns descriptions saves reading the wrong pages.</p></div>
+    <div class="box"><h4>Measure it</h4><p class="small">The lab prints the calls and tokens for every question. Module 8 adds caching, which cuts the cost of everything re-sent.</p></div>
+  </div>
+</section>
+
+<!-- ============ 6. FRAMEWORKS ============ -->
+<section class="stage" id="frameworks" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · By hand or with a framework</p>
+    <h2 id="s6">Write the loop once, then choose</h2>
+    <p>The loop you write in this lab is about 25 lines. Frameworks run it for you: the Anthropic SDK has a tool runner, and LangChain and LangGraph (modules 3 and 4, and E7) add state, retries and approval steps.</p>
+  </div>
+  <p class="prose">Writing it by hand once means you know what any framework is doing underneath: which messages go back and forth, where errors go, and why costs grow. When a framework-built agent misbehaves, that's what you'll need to debug it. In E7 you'll rebuild this bot in LangGraph and compare.</p>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · on your laptop</p>
+    <h2 id="s7">A research bot that searches, reads and cites</h2>
+    <p>The tools reuse what you built in E2: the same Wikipedia API, now called by the model instead of by you.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>3–4 hours</b></span><span>API cost <b>under $0.020</b></span><span>You need <b>E2 and E3 done</b></span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Check your packages</h3><p>Everything this lab needs is installed already: httpx from E2, anthropic and python-dotenv from E3.</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run python -c "import anthropic, httpx, dotenv; print('ready')"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">ready</pre></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Write the research bot</h3><p>Create <code>research_bot.py</code>. Read it in three parts: the tool definitions the model sees, the Python functions that do the work, and the loop that connects them.</p><div class="cb"><div class="cb-h"><span>research_bot.py</span><button type="button" class="cb-copy" aria-label="Copy research_bot.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E5 lab: a research bot that searches Wikipedia with tools and cites what it read.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run research_bot.py "Who coined the term artificial intelligence, and when?"</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> json</span><span class="ln"><span class="k">import</span> sys</span><span class="ln"><span class="k">from</span> urllib.parse <span class="k">import</span> quote</span><span class="ln"> </span><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"><span class="k">import</span> httpx</span><span class="ln"><span class="k">from</span> dotenv <span class="k">import</span> load_dotenv</span><span class="ln"> </span><span class="ln">load_dotenv()</span><span class="ln"> </span><span class="ln">MODEL = <span class="s">"claude-haiku-5-5"</span></span><span class="ln">PRICE_IN, PRICE_OUT = 0.10, 0.50  <span class="c"># dollars per million tokens, for this model</span></span><span class="ln">HEADERS = {<span class="s">"User-Agent"</span>: <span class="s">"research-assistant/0.1 (you@example.com)"</span>}  <span class="c"># your email, as in E2</span></span><span class="ln">MAX_CALLS = 8  <span class="c"># a safety limit: at most this many model calls per question</span></span><span class="ln">SYSTEM = (</span><span class="ln">    <span class="s">"You are a research assistant. Use the tools to find facts on Wikipedia before you answer. "</span></span><span class="ln">    <span class="s">"Answer in at most 150 words. After each fact, cite the page it came from as [Page title]. "</span></span><span class="ln">    <span class="s">"If the pages you read don't answer the question, say so."</span></span><span class="ln">)</span><span class="ln"> </span><span class="ln">TOOLS = [</span><span class="ln">    {</span><span class="ln">        <span class="s">"name"</span>: <span class="s">"search_wikipedia"</span>,</span><span class="ln">        <span class="s">"description"</span>: <span class="s">"Search English Wikipedia. Returns up to 5 page titles, each with a one-line "</span></span><span class="ln">                       <span class="s">"description. Use it to decide which pages to read."</span>,</span><span class="ln">        <span class="s">"input_schema"</span>: {</span><span class="ln">            <span class="s">"type"</span>: <span class="s">"object"</span>,</span><span class="ln">            <span class="s">"properties"</span>: {<span class="s">"query"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"A few search words"</span>}},</span><span class="ln">            <span class="s">"required"</span>: [<span class="s">"query"</span>],</span><span class="ln">            <span class="s">"additionalProperties"</span>: <span class="k">False</span>,</span><span class="ln">        },</span><span class="ln">        <span class="s">"strict"</span>: <span class="k">True</span>,  <span class="c"># the model's arguments always match this schema</span></span><span class="ln">    },</span><span class="ln">    {</span><span class="ln">        <span class="s">"name"</span>: <span class="s">"read_page"</span>,</span><span class="ln">        <span class="s">"description"</span>: <span class="s">"Read the summary of one Wikipedia page. Use an exact title from search_wikipedia."</span>,</span><span class="ln">        <span class="s">"input_schema"</span>: {</span><span class="ln">            <span class="s">"type"</span>: <span class="s">"object"</span>,</span><span class="ln">            <span class="s">"properties"</span>: {<span class="s">"title"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"description"</span>: <span class="s">"The exact page title"</span>}},</span><span class="ln">            <span class="s">"required"</span>: [<span class="s">"title"</span>],</span><span class="ln">            <span class="s">"additionalProperties"</span>: <span class="k">False</span>,</span><span class="ln">        },</span><span class="ln">        <span class="s">"strict"</span>: <span class="k">True</span>,</span><span class="ln">    },</span><span class="ln">]</span><span class="ln"> </span><span class="ln">client = anthropic.Anthropic()</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> search_wikipedia(query):</span><span class="ln">    response = httpx.get(<span class="s">"https://en.wikipedia.org/w/rest.php/v1/search/page"</span>,</span><span class="ln">                         params={<span class="s">"q"</span>: query, <span class="s">"limit"</span>: 5}, headers=HEADERS, timeout=10)</span><span class="ln">    response.raise_for_status()</span><span class="ln">    <span class="k">return</span> [{<span class="s">"title"</span>: page[<span class="s">"title"</span>], <span class="s">"description"</span>: page.get(<span class="s">"description"</span>) <span class="k">or</span> <span class="s">""</span>}</span><span class="ln">            <span class="k">for</span> page <span class="k">in</span> response.json()[<span class="s">"pages"</span>]]</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> read_page(title):</span><span class="ln">    url = <span class="s">"https://en.wikipedia.org/api/rest_v1/page/summary/"</span> + quote(title.replace(<span class="s">" "</span>, <span class="s">"_"</span>))</span><span class="ln">    response = httpx.get(url, headers=HEADERS, timeout=10, follow_redirects=<span class="k">True</span>)</span><span class="ln">    response.raise_for_status()</span><span class="ln">    data = response.json()</span><span class="ln">    <span class="k">return</span> {<span class="s">"title"</span>: data[<span class="s">"title"</span>], <span class="s">"summary"</span>: data[<span class="s">"extract"</span>], <span class="s">"url"</span>: data[<span class="s">"content_urls"</span>][<span class="s">"desktop"</span>][<span class="s">"page"</span>]}</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> run_tool(name, args):</span><span class="ln">    <span class="s">"""Run one tool call. Returns the text to send back, and whether it failed."""</span></span><span class="ln">    <span class="k">try</span>:</span><span class="ln">        <span class="k">if</span> name == <span class="s">"search_wikipedia"</span>:</span><span class="ln">            result = search_wikipedia(args[<span class="s">"query"</span>])</span><span class="ln">        <span class="k">elif</span> name == <span class="s">"read_page"</span>:</span><span class="ln">            result = read_page(args[<span class="s">"title"</span>])</span><span class="ln">        <span class="k">else</span>:</span><span class="ln">            <span class="k">return</span> <span class="s">f"There is no tool called {name}."</span>, <span class="k">True</span></span><span class="ln">    <span class="k">except</span> httpx.HTTPStatusError <span class="k">as</span> error:</span><span class="ln">        <span class="k">return</span> <span class="s">f"Wikipedia answered {error.response.status_code}. Check the title and try again."</span>, <span class="k">True</span></span><span class="ln">    <span class="k">except</span> httpx.RequestError:</span><span class="ln">        <span class="k">return</span> <span class="s">"Could not reach Wikipedia."</span>, <span class="k">True</span></span><span class="ln">    <span class="k">return</span> json.dumps(result), <span class="k">False</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> research(question):</span><span class="ln">    <span class="s">"""The tool-use loop: call the model, run the tools it asks for, send back the results, repeat."""</span></span><span class="ln">    messages = [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question}]</span><span class="ln">    tokens_in = tokens_out = 0</span><span class="ln">    <span class="k">for</span> call <span class="k">in</span> range(1, MAX_CALLS + 1):</span><span class="ln">        response = client.messages.create(</span><span class="ln">            model=MODEL, max_tokens=4000, system=SYSTEM, tools=TOOLS, messages=messages,</span><span class="ln">        )</span><span class="ln">        tokens_in += response.usage.input_tokens</span><span class="ln">        tokens_out += response.usage.output_tokens</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: response.content})</span><span class="ln"> </span><span class="ln">        <span class="k">if</span> response.stop_reason != <span class="s">"tool_use"</span>:  <span class="c"># no more tools wanted: this is the answer</span></span><span class="ln">            cost = (tokens_in * PRICE_IN + tokens_out * PRICE_OUT) / 1_000_000</span><span class="ln">            print(<span class="s">f"  [{call} model calls, {tokens_in} tokens in, {tokens_out} out, ${cost:.5f}]\n"</span>)</span><span class="ln">            answer = <span class="s">""</span>.join(block.text <span class="k">for</span> block <span class="k">in</span> response.content <span class="k">if</span> block.type == <span class="s">"text"</span>)</span><span class="ln">            <span class="k">if</span> response.stop_reason != <span class="s">"end_turn"</span>:</span><span class="ln">                answer += <span class="s">f"\n(Stopped early: {response.stop_reason})"</span></span><span class="ln">            <span class="k">return</span> answer</span><span class="ln"> </span><span class="ln">        results = []  <span class="c"># one tool_result for every tool_use, all sent back in one message</span></span><span class="ln">        <span class="k">for</span> block <span class="k">in</span> response.content:</span><span class="ln">            <span class="k">if</span> block.type == <span class="s">"tool_use"</span>:</span><span class="ln">                print(<span class="s">f"  -&gt; {block.name}({json.dumps(block.input)})"</span>)</span><span class="ln">                text, failed = run_tool(block.name, block.input)</span><span class="ln">                results.append({<span class="s">"type"</span>: <span class="s">"tool_result"</span>, <span class="s">"tool_use_id"</span>: block.id, <span class="s">"content"</span>: text, <span class="s">"is_error"</span>: failed})</span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: results})</span><span class="ln">    <span class="k">return</span> <span class="s">f"Stopped after {MAX_CALLS} model calls without a final answer."</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    question = <span class="s">" "</span>.join(sys.argv[1:]) <span class="k">or</span> input(<span class="s">"Question: "</span>)</span><span class="ln">    print(research(question))</span></pre></div><ul><li><b><code>TOOLS</code></b> is what the model sees: names, descriptions and input schemas. It never sees your Python.</li><li><b><code>search_wikipedia</code></b> and <b><code>read_page</code></b> are ordinary functions, like E2's.</li><li><b><code>run_tool</code></b> picks the function by name and turns failures into error text the model can read.</li><li><b><code>research</code></b> is the loop: call the model, run what it asks for, send back one <code>tool_result</code> per <code>tool_use</code>, and stop at <code>end_turn</code> or <code>MAX_CALLS</code>.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Try the tools yourself first</h3><p>Tools are just functions. Run them by hand in <code>uv run python</code> before the model does:</p><div class="cb"><div class="cb-h"><span>At the &gt;&gt;&gt; prompt</span><button type="button" class="cb-copy" aria-label="Copy At the &gt;&gt;&gt; prompt">Copy</button></div><pre class="code"><span class="ln"><span class="k">from</span> research_bot <span class="k">import</span> search_wikipedia, read_page</span><span class="ln">search_wikipedia(<span class="s">"Dartmouth workshop"</span>)[:2]</span><span class="ln">read_page(<span class="s">"Dartmouth workshop"</span>)[<span class="s">"url"</span>]</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">[{'title': 'Dartmouth workshop', 'description': '1956 summer research project on artificial intelligence'}, ...]
+'https://en.wikipedia.org/wiki/Dartmouth_workshop'</pre><p class="small">Descriptions may differ.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Ask it a question</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run research_bot.py "Who coined the term artificial intelligence, and when?"</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">  -&gt; search_wikipedia({"query": "term artificial intelligence coined"})
+  -&gt; read_page({"title": "Dartmouth workshop"})
+  -&gt; read_page({"title": "John McCarthy (computer scientist)"})
+  [3 model calls, 4105 tokens in, 612 out, $0.00072]
+
+The term "artificial intelligence" comes from a 1955 proposal by John McCarthy and colleagues for the 1956 Dartmouth workshop [Dartmouth workshop]. McCarthy, an American computer scientist, co-authored that proposal [John McCarthy (computer scientist)].</pre><p class="small">Your searches, numbers and wording will differ. Each <code>-&gt;</code> line is a tool call the model asked for and your code ran.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Watch the loop at work</h3><p>Try questions that make the loop behave differently, and read the <code>-&gt;</code> lines each time:</p><ul><li><code>"Which is older, the University of Bologna or Oxford?"</code> often brings two <code>read_page</code> calls in one reply: parallel calls.</li><li><code>"What did I have for breakfast?"</code> needs no tools. The model should answer straight away, in one call.</li><li>Set <code>MAX_CALLS = 1</code> and ask the first question again. The loop stops before an answer. Put it back afterwards.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Make it yours</h3><p>Pick at least one:</p><ul><li>Add a third tool, <code>save_note</code>, that saves a page summary using <code>load_notes</code> and <code>save_notes</code> from E2's <code>wiki_notes.py</code>. Print a line whenever it runs: it's the first tool that changes something.</li><li>Print the <code>stop_reason</code> of every model call, to see <code>tool_use</code>, <code>tool_use</code>, <code>end_turn</code>.</li><li>Make <code>read_page</code> fail on purpose for one title and watch the model recover.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Commit and push</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add research_bot.py</span><span class="ln">git commit -m "Add Wikipedia research bot with tool calling"</span><span class="ln">git push</span></pre></div></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>anthropic.BadRequestError: … tool_use ids were found without tool_result blocks immediately after</code></dt><dd>Every <code>tool_use</code> needs a <code>tool_result</code> with the same id, all together in the very next user message. Check the loop sends one result for each block.</dd><dt><code>Wikipedia answered 404. Check the title and try again. (over and over)</code></dt><dd>The model is guessing titles. Make the <code>read_page</code> description insist on an exact title from <code>search_wikipedia</code>.</dd><dt><code>Stopped after 8 model calls without a final answer.</code></dt><dd>Read the <code>-&gt;</code> lines: the question may be too broad, or a tool keeps failing. Narrow the question or fix the tool.</dd><dt><code>KeyError: 'pages'</code></dt><dd>Wikipedia's search answered with something unexpected, often a block for a missing User-Agent. Check <code>HEADERS</code>, and print <code>response.json()</code> to see what came back.</dd></dl></div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s8">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E5 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="e5"><li><label><input type="checkbox"><span><code>research_bot.py</code> answers a question with citations, and you can point to each tool call in the output</span></label></li><li><label><input type="checkbox"><span>You saw parallel tool calls, an answer with no tool calls, and the call limit stop the loop</span></label></li><li><label><input type="checkbox"><span>You can explain why every tool_use needs a tool_result with the same id</span></label></li><li><label><input type="checkbox"><span>You finished one “Make it yours” change and pushed it to GitHub</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s9">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula"><em>Describe tools</em> → model asks with <em>tool_use</em> → <em>your code runs it</em> → send <em>tool_result</em> → repeat until <em>end_turn</em> or the <em>call limit</em>.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>A tool</h3><ul>
+        <li><code>name</code>, <code>description</code>, <code>input_schema</code></li>
+        <li><code>"strict": True</code> for guaranteed arguments</li>
+        <li>Description says what, when and how</li>
+        <li>Few, narrow, read-only first</li>
+      </ul></div>
+      <div class="blk"><h3>The loop</h3><ul>
+        <li>Append <code>response.content</code></li>
+        <li>For each <code>tool_use</code>: run, then <code>tool_result</code> with its <code>tool_use_id</code></li>
+        <li>All results in one user message</li>
+        <li>Stop at <code>end_turn</code> or <code>MAX_CALLS</code></li>
+      </ul></div>
+      <div class="blk"><h3>Safety and cost</h3><ul>
+        <li>Errors go back with <code>is_error</code></li>
+        <li>Timeouts on every tool</li>
+        <li>Approval before tools that change things</li>
+        <li>Short results; log calls and tokens</li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s10">3 common tool-calling mistakes</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>Vague tool descriptions</h3><dl>
+      <dt>What it looks like</dt><dd>The model calls the wrong tool, guesses page titles, or never uses the tool that would have answered the question.</dd>
+      <dt>Fix</dt><dd>Say what the tool does, when to use it, and what good arguments look like, with an example.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>A loop with no limit</h3><dl>
+      <dt>What it looks like</dt><dd>A tool keeps failing, the model keeps retrying, and one question makes 40 calls.</dd>
+      <dt>Fix</dt><dd>Cap calls per question, send errors back clearly, and log every call so you can see what happened.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>Tools with too much power</h3><dl>
+      <dt>What it looks like</dt><dd>A "run any command" or "fetch any URL" tool, which an instruction hidden in a web page can turn against you.</dd>
+      <dt>Fix</dt><dd>Narrow tools that can only do what you intend, read-only by default, with approval for anything that changes or sends data.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="eng-structured.html" data-site-link>← Module E4 · Prompts and structured output</a>
+  <a href="engineer.html" data-site-link>E6 · Embeddings and RAG is coming next. See the track →</a>
+</div>
+
+<footer>
+  <p>The loop stepper is a simulation of a real run, with abridged Wikipedia text and typical token counts. The lab calls the real Claude API and Wikipedia from your laptop.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic or the Wikimedia Foundation.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "tool": {
+  "t": "Tool",
+  "d": "A function your code offers the model, described by a name, a description and an input schema. The model can ask for it to be run; it can't run it itself."
+ },
+ "tool_use": {
+  "t": "tool_use block",
+  "d": "Part of a model reply asking your code to run a tool, with the tool's name, the arguments and an id."
+ },
+ "tool_result": {
+  "t": "tool_result block",
+  "d": "What your code sends back after running a tool: the output (or error), tagged with the tool_use_id it answers."
+ },
+ "tool_loop": {
+  "t": "Tool-use loop",
+  "d": "Call the model, run the tools it asks for, send the results back, and repeat until it answers without asking for a tool. The core of every agent."
+ },
+ "parallel": {
+  "t": "Parallel tool calls",
+  "d": "Several tool_use blocks in one reply. Run them all, then send every result back together in one message."
+ },
+ "is_error": {
+  "t": "is_error",
+  "d": "A flag on a tool_result saying the tool failed. The model reads the error text and can try something else."
+ },
+ "strict": {
+  "t": "Strict tool use",
+  "d": "strict: true on a tool definition makes the API guarantee the model's arguments match the input schema."
+ },
+ "call_limit": {
+  "t": "Call limit",
+  "d": "A cap on how many model calls one question may use, so a confused loop stops instead of running up cost."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Tool-use loop stepper (scripted) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const Q = "Who coined the term artificial intelligence, and when?";
+const PIN = 0.10, POUT = 0.50;
+let forget = false, limit = 8, ev = [], i = 0, msgs = [], calls = 0, tin = 0, tout = 0, lastNew = -1;
+function script(){
+  const e = [];
+  e.push({who:"code", t:"Start the conversation", why:"The messages list starts with the question. System prompt and tools travel separately, with every request.", msg:{role:"user", blocks:[["text", Q]]}});
+  e.push({who:"code", t:"Request 1 goes to the API", why:"Your code sends the system prompt, both tool definitions and the one message.", call:{in:610}});
+  e.push({who:"model", t:"Reply 1 asks for a tool", why:"stop_reason is \"tool_use\". Claude can't search, so it asks your code to. Nothing has run yet.", msg:{role:"assistant", blocks:[["thinking", "(hidden reasoning)"], ["tool_use", 'search_wikipedia {"query": "term artificial intelligence coined"}  · id toolu_01']]}, call:{out:70}});
+  e.push({who:"code", t:"Your code runs search_wikipedia", why:"An ordinary function call to Wikipedia's search API, with the model's arguments.", run:'search_wikipedia("term artificial intelligence coined")\n→ Dartmouth workshop · History of artificial intelligence · John McCarthy (computer scientist) · …'});
+  e.push({who:"code", t:"The result goes back as a tool_result", why:"A user message holding a tool_result block. Its tool_use_id matches the request it answers.", msg:{role:"user", blocks:[["tool_result", 'toolu_01 · [{"title": "Dartmouth workshop", "description": "1956 summer research project on AI"}, …]']]}});
+  e.push({who:"code", t:"Request 2 goes to the API", why:"The whole list goes again, now three messages, so input tokens grow.", call:{in:1050}});
+  e.push({who:"model", t:"Reply 2 asks for two pages at once", why:"Parallel tool calls: two tool_use blocks in one reply. The second title is a guess, not one from the search results.", msg:{role:"assistant", blocks:[["thinking", "(hidden reasoning)"], ["tool_use", 'read_page {"title": "Dartmouth workshop"}  · id toolu_02'], ["tool_use", 'read_page {"title": "John McCarthy"}  · id toolu_03']]}, call:{out:95}});
+  e.push({who:"code", t:"Your code runs both", why:"The first works. The second fails: the page is called \"John McCarthy (computer scientist)\", so Wikipedia answers 404.", run:'read_page("Dartmouth workshop")  → summary ✓\nread_page("John McCarthy")  → 404 ✗'});
+  if(forget){
+    e.push({who:"code", t:"Only one result goes back", why:"The failed call's result was dropped instead of being sent as an error. The API will notice.", msg:{role:"user", blocks:[["tool_result", 'toolu_02 · {"title": "Dartmouth workshop", "summary": "The Dartmouth Summer Research Project on Artificial Intelligence was a 1956 summer workshop …"}']]}});
+  } else {
+    e.push({who:"code", t:"Both results go back, in one message", why:"Two tool_result blocks in one user message. The failure goes back with is_error: true, so Claude can try something else.", msg:{role:"user", blocks:[["tool_result", 'toolu_02 · {"title": "Dartmouth workshop", "summary": "The Dartmouth Summer Research Project on Artificial Intelligence was a 1956 summer workshop …"}'], ["tool_error", "toolu_03 · is_error: true · Wikipedia answered 404. Check the title and try again."]]}});
+  }
+  if(limit === 2){ e.push({who:"code", t:"The call limit stops the loop", why:"MAX_CALLS is 2 and both calls are used. Your code returns a clear message instead of an answer, and no more is spent.", end:"Stopped after 2 model calls without a final answer."}); return e; }
+  e.push({who:"code", t:"Request 3 goes to the API", why:"Five messages now, including a whole page summary.", call:{in:1720}});
+  if(forget){ e.push({who:"api", t:"The API rejects the request (400)", why:"Every tool_use needs a tool_result with the same id in the next message. toolu_03 has none, so the whole request fails, and the run stops with an exception.", err:"anthropic.BadRequestError: messages.2: `tool_use` ids were found without `tool_result` blocks immediately after: toolu_03. Each `tool_use` block must have a corresponding `tool_result` block in the next message."}); return e; }
+  e.push({who:"model", t:"Reply 3 recovers from the error", why:"Claude read the 404 and asks again, this time with an exact title from the search results.", msg:{role:"assistant", blocks:[["thinking", "(hidden reasoning)"], ["tool_use", 'read_page {"title": "John McCarthy (computer scientist)"}  · id toolu_04']]}, call:{out:60}});
+  e.push({who:"code", t:"Your code runs it and sends the result", why:"Same as before: run the function, send a tool_result with the matching id.", run:'read_page("John McCarthy (computer scientist)")  → summary ✓', msg:{role:"user", blocks:[["tool_result", 'toolu_04 · {"title": "John McCarthy (computer scientist)", "summary": "John McCarthy was an American computer scientist … He co-authored the document that coined the term \\"artificial intelligence\\" …"}']]}});
+  e.push({who:"code", t:"Request 4 goes to the API", why:"Seven messages. This is the most expensive call of the run.", call:{in:2240}});
+  e.push({who:"model", t:"Reply 4 is the answer", why:"stop_reason is \"end_turn\": no more tools wanted. The loop returns the text, with citations from the pages the model read.", msg:{role:"assistant", blocks:[["thinking", "(hidden reasoning)"], ["text", "The term \"artificial intelligence\" comes from a 1955 proposal by John McCarthy and colleagues for the 1956 Dartmouth workshop [Dartmouth workshop] [John McCarthy (computer scientist)]."]]}, call:{out:140}, end:"Answer returned after 4 model calls."});
+  return e;
+}
+function renderMsgs(){
+  $("lsCount").textContent = "messages (" + msgs.length + ")";
+  $("lsMsgs").innerHTML = msgs.map((m, k) => '<div class="ls-msg' + (k === lastNew ? " new" : "") + '"><span class="ls-role">' + m.role + "</span>" +
+    m.blocks.map(([t, x]) => '<div class="ls-blk"><span class="ty t-' + t + '">' + (t === "tool_error" ? "tool_result" : t) + '</span><span class="tx">' + esc(x) + "</span></div>").join("") + "</div>").join("");
+  const box = $("lsMsgs"); box.scrollTop = box.scrollHeight;
+}
+function metrics(){
+  $("mCalls").querySelector(".v").textContent = calls;
+  $("mIn").querySelector(".v").textContent = tin.toLocaleString("en");
+  $("mOut").querySelector(".v").textContent = tout.toLocaleString("en");
+  $("mCost").querySelector(".v").textContent = "$" + ((tin * PIN + tout * POUT) / 1e6 * 1000).toFixed(3);
+}
+function show(e){
+  $("lsStepN").textContent = "Step " + i + " of " + ev.length;
+  const who = $("lsWho");
+  who.className = "ls-who w-" + e.who;
+  who.textContent = e.who === "code" ? "Your code" : e.who === "model" ? "Claude" : "The API";
+  $("lsT").textContent = e.t;
+  $("lsWhy").textContent = e.why + (e.end ? " " + e.end : "");
+  const run = $("lsRun");
+  run.className = "ls-run" + (e.err ? " err" : "");
+  run.textContent = e.err || e.run || (e.call && e.call.in ? "→ " + e.call.in.toLocaleString("en") + " input tokens" : "");
+}
+function next(){
+  if(i >= ev.length) return;
+  const e = ev[i++];
+  if(e.call && e.call.in){ calls++; tin += e.call.in; }
+  if(e.call && e.call.out) tout += e.call.out;
+  lastNew = -1;
+  if(e.msg){ msgs.push(e.msg); lastNew = msgs.length - 1; }
+  renderMsgs(); metrics(); show(e);
+  const done = i >= ev.length;
+  $("lsNext").disabled = done; $("lsAll").disabled = done;
+  $("lsNext").textContent = done ? "Finished ✓" : "Next step ▶";
+}
+function reset(){
+  ev = script(); i = 0; msgs = []; calls = 0; tin = 0; tout = 0; lastNew = -1;
+  renderMsgs(); metrics();
+  $("lsStepN").textContent = "Step 0 of " + ev.length;
+  $("lsWho").className = "ls-who"; $("lsWho").textContent = "ready";
+  $("lsT").textContent = "Press \"Next step\" to start";
+  $("lsWhy").textContent = "Your code is about to put the question in the messages list.";
+  $("lsRun").textContent = ""; $("lsRun").className = "ls-run";
+  $("lsNext").disabled = false; $("lsAll").disabled = false; $("lsNext").textContent = "Next step ▶";
+  $("lsForget").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.v === "one") === forget)));
+  $("lsLimit").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === limit)));
+}
+$("lsForget").innerHTML = '<button type="button" data-v="all">All of them</button><button type="button" data-v="one">Forget the failed one</button>';
+$("lsLimit").innerHTML = '<button type="button" data-v="8">8</button><button type="button" data-v="2">2</button>';
+$("lsForget").addEventListener("click", e => { const b = e.target.closest("button"); if(b){ forget = b.dataset.v === "one"; reset(); } });
+$("lsLimit").addEventListener("click", e => { const b = e.target.closest("button"); if(b){ limit = +b.dataset.v; reset(); } });
+$("lsNext").addEventListener("click", next);
+$("lsAll").addEventListener("click", () => { while(i < ev.length) next(); });
+$("lsReset").addEventListener("click", reset);
+reset();
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e5";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>

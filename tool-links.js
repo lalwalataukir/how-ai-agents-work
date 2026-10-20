@@ -36,6 +36,8 @@ const TOOLS = [
   {names:["GitHub"], url:"https://docs.github.com/en/get-started", what:"Hosts git repositories online"},
   {names:["Claude Code"], url:"https://docs.claude.com/en/docs/claude-code/overview", what:"Anthropic's AI coding assistant for the terminal and editor"},
   {names:["Cursor"], url:"https://cursor.com/docs", what:"Code editor built around an AI assistant"},
+  {names:["Pydantic"], url:"https://docs.pydantic.dev/latest/", what:"Python package for describing and checking data with typed classes"},
+  {names:["Claude Console"], url:"https://platform.claude.com/", what:"Where you manage API keys, billing and usage for the Claude API"},
   {names:["httpx"], url:"https://www.python-httpx.org/", what:"Python package for making web requests"},
   {names:["promptfoo"], url:"https://www.promptfoo.dev/docs/intro/", what:"Open-source CLI for testing prompts and running evals"},
   {names:["PostgreSQL", "Postgres"], url:"https://www.postgresql.org/docs/", what:"Open-source relational database"}

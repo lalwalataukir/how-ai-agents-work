@@ -23,6 +23,9 @@ PAGES = [
     ("engineer.html", "AI engineer track"),
     ("eng-setup.html", "E1 · Your dev setup"),
     ("eng-python.html", "E2 · Python for AI work"),
+    ("eng-first-call.html", "E3 · Your first LLM call"),
+    ("eng-structured.html", "E4 · Prompts and structured output"),
+    ("eng-tools.html", "E5 · Tool calling"),
     ("reference.html", "Glossary"),
 ]
 

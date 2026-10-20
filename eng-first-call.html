@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>E3 First LLM Call</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: module E3 of the AI engineer track. A request builder up top, then keys, the Messages API, system prompt and effort, tokens and cost, streaming and errors, a chatbot lab, a done-when checklist and the cheat sheet. */
+:root{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+    --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+    --think:#C4A5FF; --think-soft:#2E2150;
+    --act:#F5B95C; --act-soft:#382810;
+    --observe:#5EEAD4; --observe-soft:#0F2E2A;
+    --final:#6EE7A0; --final-soft:#12301F;
+    --bad:#FF8A8A; --bad-soft:#3A1719;
+    --code-bg:#110E18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0910; --surface:#15111D; --surface-2:#1F1A2B; --ink:#EEEAF6; --muted:#A89FBA; --line:#2E263D;
+  --accent:#A78BFA; --accent-ink:#0B0910; --accent-soft:#2A1F47;
+  --think:#C4A5FF; --think-soft:#2E2150;
+  --act:#F5B95C; --act-soft:#382810;
+  --observe:#5EEAD4; --observe-soft:#0F2E2A;
+  --final:#6EE7A0; --final-soft:#12301F;
+  --bad:#FF8A8A; --bad-soft:#3A1719;
+  --code-bg:#110E18;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F7F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#EEEAF6;
+  --ink:#110B1C;
+  --muted:#5B5370;
+  --line:#DDD6EA;
+  --accent:#6D28D9;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#EDE5FD;
+  --think:#6D28D9;
+  --think-soft:#EDE5FD;
+  --act:#9C5800;
+  --act-soft:#FBEEDA;
+  --observe:#0F766E;
+  --observe-soft:#D7F2EE;
+  --final:#15803D;
+  --final-soft:#DCF3E4;
+  --bad:#B42318;
+  --bad-soft:#FCE7E4;
+  --code-bg:#F1EDF8;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:750}
+h3{font-size:1.25rem;font-weight:700}
+h4{font-size:1rem;font-weight:700}
+p{margin:0}
+.prose{max-width:68ch}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.02rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.home-link{flex:none;font-size:.85rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.home-link:hover{color:var(--accent);border-color:var(--accent)}
+.next-module{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-top:40px}
+.next-module a{font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-decoration:none}
+.stages{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;padding-block:8px}
+.stages::-webkit-scrollbar{display:none}
+.stages a{flex:none;text-decoration:none;color:var(--muted);font-size:.88rem;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.stages a .n{font-family:var(--font-mono);font-size:.75rem;margin-right:4px;opacity:.8}
+.stages a:hover{color:var(--ink);background:var(--surface-2)}
+.stages a.is-active{color:var(--accent-ink);background:var(--accent)}
+.theme-btn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.progress{height:3px;background:transparent;position:relative}
+.progress span{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+@media (max-width:640px){.brand{display:none}}
+
+/* Hero */
+.hero{padding-block:44px 28px;display:grid;gap:14px}
+.hero .lede{font-size:1.15rem;max-width:62ch;color:var(--muted)}
+.hero .lede strong{color:var(--ink)}
+.hint-line{font-size:.92rem;color:var(--muted)}
+
+/* Glossary terms */
+.term{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:help;border-bottom:1.5px dotted var(--accent);line-height:inherit;text-align:inherit}
+.term:hover,.term[aria-expanded="true"]{color:var(--accent)}
+#termPop{position:absolute;z-index:50;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;box-shadow:0 10px 30px rgba(10,20,40,.18);font-size:.92rem;line-height:1.45;display:grid;gap:4px}
+#termPop strong{font-family:var(--font-display)}
+#termPop[hidden]{display:none}
+
+/* Sections */
+section.stage{padding-block:56px 8px;border-top:1px solid var(--line);display:grid;gap:28px}
+.stage-head{display:grid;gap:8px}
+.stage-head .eyebrow b{color:var(--accent);font-weight:500}
+.stage-head p{max-width:64ch;color:var(--muted);font-size:1.05rem}
+.concept{display:grid;gap:14px}
+.concept > p{max-width:68ch}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:8px;align-content:start;min-width:0}
+.box.tint{background:var(--surface-2);border-color:transparent}
+.box h4{font-size:1.05rem}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);justify-self:start}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.callout{border:1px solid var(--line);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;max-width:76ch}
+.callout b{color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--font-display);font-weight:700;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.yes{color:var(--final);font-weight:700}
+.check-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.check-list li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
+.check-list .q{font-family:var(--font-mono);font-size:.8rem;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;margin-top:2px}
+pre.code{margin:0;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px 0;overflow-x:auto;font-family:var(--font-mono);font-size:.84rem;line-height:1.7}
+pre.code .ln{display:block;padding:0 16px;border-left:3px solid transparent;white-space:pre}
+pre.code .ln.is-on{background:var(--accent-soft);border-left-color:var(--accent)}
+pre.code .c{color:var(--muted)}
+pre.code .k{color:var(--think)}
+pre.code .s{color:var(--observe)}
+pre.wrap-code{white-space:pre-wrap;padding:14px 16px;word-break:break-word}
+
+/* Diagrams */
+figure{margin:0;display:grid;gap:8px}
+figure .diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;color:var(--ink)}
+figure svg{display:block;width:100%;height:auto;min-width:560px;max-width:760px;margin:0 auto}
+figcaption{font-size:.92rem;color:var(--muted);max-width:70ch}
+svg .node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s, stroke .2s}
+svg .node text{fill:var(--ink)}
+svg .node .sub{fill:var(--muted);font-size:11.5px}
+svg .lbl{fill:var(--muted);font-size:12px;font-family:var(--font-body)}
+svg text{font-family:var(--font-body)}
+svg .ttl{font-family:var(--font-display);font-weight:700;font-size:15px}
+svg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg .edge-dash{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:5 5}
+svg .lbl-bad{fill:var(--bad);font-size:12px}
+svg .node.plan.is-on rect{fill:var(--think-soft);stroke:var(--think);stroke-width:2.5}
+svg .node.act.is-on rect{fill:var(--act-soft);stroke:var(--act);stroke-width:2.5}
+svg .node.observe.is-on rect{fill:var(--observe-soft);stroke:var(--observe);stroke-width:2.5}
+svg .node.finish.is-on rect{fill:var(--final-soft);stroke:var(--final);stroke-width:2.5}
+svg .arrowhead{fill:var(--muted)}
+
+/* ===== Demo ===== */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 0 var(--line)}
+.sim-banner{display:flex;gap:10px;align-items:flex-start;background:var(--act-soft);color:var(--ink);padding:10px 16px;font-size:.92rem;border-bottom:1px solid var(--line)}
+.sim-banner b{color:var(--act)}
+.demo-top{padding:16px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask label{flex-basis:100%;font-weight:700;font-size:.95rem}
+.ask input{flex:1 1 240px;min-width:0;font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.ask input:focus{border-color:var(--accent);outline:none}
+.btn{font:inherit;font-size:.92rem;font-weight:700;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn-sm{padding:5px 10px;font-size:.85rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:.85rem;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:.9rem}
+.opts select{font:inherit;font-size:.9rem;padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts label{display:flex;gap:6px;align-items:center}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls .spacer{flex:1}
+.kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-family:var(--font-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.statusbar b{color:var(--ink);font-weight:500}
+.phases{display:flex;gap:4px;flex-wrap:wrap}
+.phase{font-family:var(--font-mono);font-size:.75rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.phase.plan.is-on{background:var(--think-soft);color:var(--think);border-color:var(--think)}
+.phase.act.is-on{background:var(--act-soft);color:var(--act);border-color:var(--act)}
+.phase.observe.is-on{background:var(--observe-soft);color:var(--observe);border-color:var(--observe)}
+.phase.finish.is-on{background:var(--final-soft);color:var(--final);border-color:var(--final)}
+.codenow{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:4px 10px;color:var(--ink);overflow-x:auto;white-space:nowrap;min-width:0;max-width:100%}
+.codenow .c{color:var(--muted)}
+
+.tabs{display:none;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;background:none;border:0;border-bottom:2.5px solid transparent;padding:10px 6px;color:var(--muted);cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button.has-new::after{content:"";position:absolute;top:9px;margin-left:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"tl mem" "tl log"}
+.panel{min-width:0;display:flex;flex-direction:column}
+.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:.95rem}
+.panel-h span{font-family:var(--font-body);font-weight:400;font-size:.8rem;color:var(--muted)}
+.p-tl{grid-area:tl;border-right:1px solid var(--line)}
+.p-mem{grid-area:mem;border-bottom:1px solid var(--line)}
+.p-log{grid-area:log}
+.tl{padding:14px 16px;display:grid;gap:10px;align-content:start;overflow-y:auto;height:640px;scroll-behavior:smooth}
+.mem{padding:12px 16px;display:grid;gap:12px;align-content:start;overflow-y:auto;height:360px;font-size:.9rem}
+.log{padding:10px 16px;overflow:auto;height:280px;font-family:var(--font-mono);font-size:.74rem;line-height:1.55;background:var(--code-bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--muted)}
+.log .ev{font-weight:500}
+.log .e-model{color:var(--think)} .log .e-tool{color:var(--act)} .log .e-res{color:var(--observe)} .log .e-run{color:var(--final)} .log .e-bad{color:var(--bad)} .log .e-human{color:var(--accent)}
+@media (max-width:859px){
+  .tabs{display:flex}
+  .demo-body{grid-template-columns:minmax(0,1fr);grid-template-areas:"tl" "mem" "log"}
+  .p-tl{border-right:0}
+  .p-mem{border-bottom:0}
+  .demo-body[data-tab="tl"] .p-mem,.demo-body[data-tab="tl"] .p-log,
+  .demo-body[data-tab="mem"] .p-tl,.demo-body[data-tab="mem"] .p-log,
+  .demo-body[data-tab="log"] .p-tl,.demo-body[data-tab="log"] .p-mem{display:none}
+  .tl,.mem,.log{height:520px}
+  .panel-h{display:none}
+}
+.empty{color:var(--muted);font-size:.95rem;border:1.5px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center}
+.step{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:grid;gap:8px;background:var(--surface);min-width:0;animation:pop .28s ease-out}
+@keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+.step-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step-n{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kind{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500}
+.k-think{background:var(--think-soft);color:var(--think)}
+.k-call{background:var(--act-soft);color:var(--act)}
+.k-res{background:var(--observe-soft);color:var(--observe)}
+.k-final{background:var(--final-soft);color:var(--final)}
+.k-bad{background:var(--bad-soft);color:var(--bad)}
+.k-human{background:var(--accent-soft);color:var(--accent)}
+.step-t{font-weight:700;font-size:.95rem}
+.step .thought{font-style:italic;color:var(--ink);font-size:.95rem}
+.step.s-think{background:var(--think-soft);border-color:transparent}
+.step.s-final{border-color:var(--final);border-width:1.5px}
+.step.s-halt{border-color:var(--bad);border-width:1.5px}
+.step.s-bad{border-color:var(--bad)}
+.call{font-family:var(--font-mono);font-size:.8rem;background:var(--code-bg);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word;margin:0}
+.call .fn{color:var(--act);font-weight:500}
+.call.bad .fn{color:var(--bad)}
+details.res{font-size:.9rem}
+details.res summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.res .res-body{margin-top:8px;display:grid;gap:8px}
+.results{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.results .rt{font-weight:700}
+.url{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);word-break:break-all}
+.extract{border-left:3px solid var(--observe);padding-left:10px}
+.err{color:var(--bad);font-weight:700}
+.ok{color:var(--final);font-weight:700}
+.report{display:grid;gap:8px;font-size:.95rem}
+.report h4{font-size:1.1rem}
+.cite{color:var(--accent);font-family:var(--font-mono);font-size:.72em}
+.srcs{margin:4px 0 0;padding-left:1.4em;font-size:.85rem;display:grid;gap:4px}
+.approve-row{display:flex;gap:8px;flex-wrap:wrap}
+.lesson{border-radius:var(--radius);padding:14px;background:var(--surface-2);display:grid;gap:8px;font-size:.93rem}
+.lesson h4{font-size:1rem}
+.lesson .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mem-sec{display:grid;gap:4px;border-radius:8px;padding:6px 8px;margin:-6px -8px;transition:background .6s}
+.mem-sec h4{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.mem-sec.flash{background:var(--accent-soft);transition:none}
+.mem-sec ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.mem-sec li{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.mem-sec li .mk{font-family:var(--font-mono);font-size:.8rem}
+.mem-sec .done{color:var(--muted);text-decoration:line-through}
+.st{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.st-read{background:var(--observe-soft);color:var(--observe)}
+.st-skipped{background:var(--surface-2);color:var(--muted)}
+.st-found{background:var(--surface-2);color:var(--ink)}
+.flag{color:var(--bad);font-weight:700}
+.bignum{font-family:var(--font-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:18px;display:grid;gap:12px;max-width:820px}
+.quiz-label{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.quiz-q{font-weight:700;font-size:1.05rem}
+.quiz-opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:26px 1fr;gap:8px}
+.opt .l{font-family:var(--font-mono);font-weight:500;color:var(--muted)}
+.opt:hover{border-color:var(--accent)}
+.opt.right{border-color:var(--final);background:var(--final-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.quiz-fb{font-size:.95rem}
+.quiz-fb:empty{display:none}
+
+/* Calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.calc-in{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.calc-in label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.calc-in input{font:inherit;font-family:var(--font-mono);font-size:.95rem;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.calc-out{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.metric{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:2px}
+.metric .v{font-family:var(--font-mono);font-size:1.25rem;font-variant-numeric:tabular-nums;font-weight:500}
+.metric .k{font-size:.82rem;color:var(--muted)}
+.metric.warn .v{color:var(--bad)}
+
+/* Cheat sheet */
+#cheatsheet{padding-bottom:20px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:20px}
+.sheet-grid{display:grid;gap:18px 26px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.sheet h3{font-size:1.05rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sheet .blk{display:grid;gap:8px;align-content:start;min-width:0}
+.sheet ol,.sheet ul{margin:0;padding-left:1.2em;display:grid;gap:5px;font-size:.93rem}
+.formula{font-family:var(--font-display);font-size:1.25rem;font-weight:700;line-height:1.3}
+.formula em{font-style:normal;color:var(--accent)}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));font-size:.88rem}
+.gloss div{min-width:0}
+.gloss b{font-family:var(--font-display)}
+.score{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.mistakes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.mistake{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:10px;align-content:start}
+.mistake .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--bad);line-height:1}
+.mistake dl{margin:0;display:grid;gap:8px;font-size:.93rem}
+.mistake dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mistake dd{margin:0}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);margin-top:40px}
+
+@media print{
+  .topbar,#demo,.quiz,.theme-btn,.lesson .btns,[data-demo-mode],[data-demo-approval]{display:none!important}
+  body{background:#fff;color:#000}
+}
+
+/* ---------- Shared additions for modules 7+ ---------- */
+.metric.good .v{color:var(--final)}
+.steps-list{margin:0;padding-left:1.3em;display:grid;gap:6px;max-width:76ch}
+.steps-list b{font-family:var(--font-display)}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.timeline li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.timeline .wk{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);padding-top:3px}
+.timeline li div{display:grid;gap:4px}
+@media (max-width:600px){.timeline li{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- AI engineer track: lab components ---------- */
+.lab-meta{display:flex;flex-wrap:wrap;gap:6px 8px}
+.lab-meta span{font-family:var(--font-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);background:var(--surface)}
+.lab-meta b{color:var(--ink);font-weight:500}
+.lab-steps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.lab-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lab-n{font-family:var(--font-mono);font-size:.85rem;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center}
+.lab-b{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0;align-content:start}
+.lab-b h3{font-size:1.08rem;padding-top:2px}
+.lab-b p,.lab-b li{max-width:72ch}
+.lab-b ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+@media (max-width:520px){.lab-step{grid-template-columns:minmax(0,1fr);padding:14px}.lab-n{width:26px;height:26px}}
+.cb{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--code-bg);min-width:0}
+.cb-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:.74rem;color:var(--muted);background:var(--surface-2)}
+.cb pre.code{border:0;border-radius:0;padding:12px 0}
+.cb pre.code .ln{padding:0 14px}
+.cb-copy{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer}
+.cb-copy:hover{border-color:var(--accent)}
+.cb-copy.is-ok{border-color:var(--final);color:var(--final)}
+.expect{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.expect-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--final)}
+pre.out{margin:0;font-family:var(--font-mono);font-size:.82rem;line-height:1.6;background:var(--surface-2);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.expect .small{color:var(--muted)}
+.fix{border:1px solid var(--act);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.fix h3{background:var(--act-soft);padding:10px 16px;font-size:1rem}
+.fix dl{margin:0;padding:12px 16px 14px;display:grid}
+.fix dt{font-family:var(--font-mono);font-size:.82rem;color:var(--bad);overflow-wrap:anywhere;margin-top:12px}
+.fix dt:first-child{margin-top:0}
+.fix dt code{font-size:inherit}
+.fix dd{margin:2px 0 0;max-width:76ch}
+.ost{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-tabs{display:inline-flex;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px;justify-self:start;background:var(--surface)}
+.ost-tabs button{font:inherit;font-size:.8rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:999px;padding:3px 12px;cursor:pointer}
+.ost-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.ost-p{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.ost-p[hidden]{display:none}
+.done-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:76ch}
+.done-list label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.done-list input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.done-state{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+.done-state.is-ok{color:var(--final)}
+.build-box{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:.82rem;font-weight:700;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.ctl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;align-items:center}
+.ctl>span{font-size:.85rem;font-weight:700}
+@media (max-width:520px){.ctl{grid-template-columns:minmax(0,1fr)}}
+.dm-metrics{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.dm-h{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dm-note{font-size:.92rem;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.dm-note:empty{display:none}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- E3: request builder demo ---------- */
+.rb-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:860px){.rb-body{grid-template-columns:minmax(0,1fr)}}
+.rb-col{padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:start;min-width:0}
+.rb-col+.rb-col{border-left:1px solid var(--line)}
+@media (max-width:860px){.rb-col+.rb-col{border-left:0;border-top:1px solid var(--line)}}
+.rb-col pre.out{max-height:340px;overflow:auto}
+.rb-reply{font-size:.95rem;background:var(--surface-2);border-radius:8px;padding:12px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.rb-reply .cut{color:var(--bad);font-family:var(--font-mono);font-size:.8rem}
+.rb-meta{font-family:var(--font-mono);font-size:.8rem;color:var(--muted);overflow-wrap:anywhere}
+.price-table td:nth-child(n+2){font-family:var(--font-mono);font-size:.88rem;white-space:nowrap}
+</style>
+
+<div id="termPop" role="tooltip" hidden></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="home-link" href="engineer.html" data-site-link>← AI engineer track</a>
+    <a class="brand" href="#top">E3 · Your first LLM call</a>
+    <nav class="stages" aria-label="Sections">
+      <a href="#demo" data-nav="demo">Demo</a>
+      <a href="#keys" data-nav="keys"><span class="n">1</span>API keys</a>
+      <a href="#messages" data-nav="messages"><span class="n">2</span>Messages API</a>
+      <a href="#system" data-nav="system"><span class="n">3</span>System prompt and effort</a>
+      <a href="#tokens" data-nav="tokens"><span class="n">4</span>Tokens and cost</a>
+      <a href="#streaming" data-nav="streaming"><span class="n">5</span>Streaming</a>
+      <a href="#failures" data-nav="failures"><span class="n">6</span>Errors and retries</a>
+      <a href="#lab" data-nav="lab">Lab</a>
+      <a href="#cheatsheet" data-nav="cheatsheet">Cheat sheet</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">Dark</button>
+  </div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+</header>
+
+<main class="wrap" id="top">
+
+<div class="hero">
+  <p class="eyebrow">Module E3 · AI engineer track · about 3 hours</p>
+  <h1>Your first LLM call: keys, messages, tokens and cost</h1>
+  <p class="lede">A large language model is a web API like Wikipedia's in E2: you send a request and get JSON back. This module covers what goes in the request, what comes back, and what each call costs. You'll keep your <button type="button" class="term" data-term="api_key" aria-expanded="false">API key</button> safe, send a conversation through the <button type="button" class="term" data-term="messages_api" aria-expanded="false">Messages API</button>, stream the reply, and handle the errors real apps meet. You'll build a chatbot for the <strong>research assistant</strong> that remembers the conversation and shows the cost of every turn.</p>
+  <p class="hint-line">Words with a dotted underline, like <button type="button" class="term" data-term="token" aria-expanded="false">token</button>, are technical terms. Tap one for a plain-English definition.</p>
+  <div class="box build-box">
+    <h4>What you'll build</h4>
+    <p class="small">A chatbot in your terminal that streams its answers and keeps a running total of what you've spent:</p>
+    <pre class="out">% uv run chat.py
+You: What is retrieval-augmented generation, in two sentences?
+Claude: Retrieval-augmented generation (RAG) has a model look up …
+  [52 tokens in, 96 out, $0.00005 this turn, $0.00005 so far]</pre>
+  </div>
+</div>
+
+<section id="demo" aria-labelledby="demo-h" style="display:grid;gap:14px;padding-bottom:48px">
+  <div class="stage-head">
+    <p class="eyebrow">Interactive demo</p>
+    <h2 id="demo-h">Request builder</h2>
+    <p>Change the settings and see the request your code would send, the reply, and what it costs. Move to turns 2 and 3 to watch the conversation history, and the input tokens, grow. Try a max_tokens of 50 with high effort.</p>
+  </div>
+  <div class="demo">
+    <div class="sim-banner" role="note"><b>Simulation.</b><span>Replies, token counts and timings are scripted to behave like the real API. Prices are the published per-token prices.</span></div>
+    <div class="demo-top">
+      <div class="ctl"><span>Model</span><div class="seg" id="rbModel" role="group" aria-label="Model"></div></div>
+      <div class="ctl"><span>System prompt</span><div class="seg" id="rbSys" role="group" aria-label="System prompt"></div></div>
+      <div class="ctl"><span>Effort</span><div class="seg" id="rbEffort" role="group" aria-label="Effort"></div></div>
+      <div class="ctl"><span>max_tokens</span><div class="seg" id="rbMax" role="group" aria-label="max_tokens"></div></div>
+      <div class="ctl"><span>Streaming</span><div class="seg" id="rbStream" role="group" aria-label="Streaming"></div></div>
+      <div class="ctl"><span>Turn</span><div class="seg" id="rbTurn" role="group" aria-label="Conversation turn"></div></div>
+      <div class="dm-metrics" aria-live="polite">
+        <div class="metric" id="mIn"><span class="v">–</span><span class="k">input tokens</span></div>
+        <div class="metric" id="mOut"><span class="v">–</span><span class="k">output tokens (thinking + text)</span></div>
+        <div class="metric" id="mCost"><span class="v">–</span><span class="k">per 1,000 requests like this</span></div>
+        <div class="metric" id="mFirst"><span class="v">–</span><span class="k">until the first words appear</span></div>
+      </div>
+      <p class="dm-note" id="rbNote"></p>
+    </div>
+    <div class="rb-body">
+      <div class="rb-col"><p class="dm-h">The request (JSON your code sends)</p><pre class="out" id="rbReq"></pre></div>
+      <div class="rb-col"><p class="dm-h">The reply</p><div class="rb-reply" id="rbReply"></div><p class="rb-meta" id="rbMeta"></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. API KEYS ============ -->
+<section class="stage" id="keys" aria-labelledby="s1">
+  <div class="stage-head">
+    <p class="eyebrow"><b>1</b> · API keys</p>
+    <h2 id="s1">The key is your account's password, and its credit card</h2>
+    <p>Every request carries your API key. Whoever has it can spend your money, so it lives in one place only: a <button type="button" class="term" data-term="dotenv" aria-expanded="false">.env file</button> on your laptop that git ignores.</p>
+  </div>
+  <div class="grid g3">
+    <div class="box"><h4>Store it in .env</h4><p class="small"><code>ANTHROPIC_API_KEY=sk-ant-…</code> in a file called <code>.env</code>. <code>load_dotenv()</code> copies it into the environment, and the SDK finds it there by name.</p></div>
+    <div class="box"><h4>Never in code or chats</h4><p class="small">Not in a <code>.py</code> file, not in a screenshot, not pasted into an AI assistant. Code gets committed and shared; .env doesn't.</p></div>
+    <div class="box"><h4>Limit the damage</h4><p class="small">Set a monthly spending limit in the Console, use one key per project, and if a key leaks, delete it straight away and make a new one.</p></div>
+  </div>
+</section>
+
+<!-- ============ 2. MESSAGES API ============ -->
+<section class="stage" id="messages" aria-labelledby="s2">
+  <div class="stage-head">
+    <p class="eyebrow"><b>2</b> · The Messages API</p>
+    <h2 id="s2">Send a list of messages, get content blocks back</h2>
+    <p>The <button type="button" class="term" data-term="sdk" aria-expanded="false">SDK</button> turns one function call into a web request. You choose a model, a limit on the reply's length, and the conversation so far: a list of dicts that take turns between <code>"user"</code> and <code>"assistant"</code>, exactly the shape you met in E2.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>The shape of every call</span><button type="button" class="cb-copy" aria-label="Copy The shape of every call">Copy</button></div><pre class="code"><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"> </span><span class="ln">client = anthropic.Anthropic()          <span class="c"># reads ANTHROPIC_API_KEY</span></span><span class="ln">reply = client.messages.create(</span><span class="ln">    model=<span class="s">"claude-haiku-5-5"</span>,           <span class="c"># which model</span></span><span class="ln">    max_tokens=1000,                     <span class="c"># the longest reply allowed, thinking included</span></span><span class="ln">    system=<span class="s">"You are a research assistant. Answer in at most 120 words."</span>,</span><span class="ln">    messages=[</span><span class="ln">        {<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"What is RAG?"</span>},</span><span class="ln">    ],</span><span class="ln">)</span><span class="ln">print(reply.content[-1].text)           <span class="c"># the answer</span></span><span class="ln">print(reply.stop_reason, reply.usage)   <span class="c"># why it stopped, and the token counts</span></span></pre></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>In the reply</th><th>What it holds</th></tr></thead>
+      <tbody>
+        <tr><td><code>content</code></td><td>A list of blocks. <code>text</code> blocks hold the answer; <code>thinking</code> blocks hold the model's reasoning (hidden by default); <code>tool_use</code> blocks come in E5.</td></tr>
+        <tr><td><code>stop_reason</code></td><td>Why it stopped: <code>end_turn</code>, <code>max_tokens</code>, <code>tool_use</code> or <code>refusal</code>. See <button type="button" class="term" data-term="stop_reason" aria-expanded="false">stop_reason</button>.</td></tr>
+        <tr><td><code>usage</code></td><td><code>input_tokens</code> and <code>output_tokens</code>: what you're billed for.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="callout"><b>The API remembers nothing.</b> It's <button type="button" class="term" data-term="stateless" aria-expanded="false">stateless</button>: each request stands alone. A chatbot "remembers" because your code keeps the conversation in a list and sends all of it every time. Append the model's whole reply (<code>response.content</code>), not just its text, so the thinking blocks travel with it.</p>
+  <div class="quiz" data-quiz="qe3a">
+    <p class="quiz-label">Check your understanding · Messages API</p>
+    <p class="quiz-q">You ask a follow-up question and the model has no idea what you were just talking about. Why?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. A short conversation would be well within what the model can read. It never received it."><span class="l">A</span><span>The model forgot because the conversation was too long</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Each request stands alone. Your code must keep the conversation and send all of it every time."><span class="l">B</span><span>The API is stateless, and the code didn't send the earlier messages</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Any model can handle follow-ups, as long as the history is in the request."><span class="l">C</span><span>Follow-up questions need a different model</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 3. SYSTEM PROMPT AND EFFORT ============ -->
+<section class="stage" id="system" aria-labelledby="s3">
+  <div class="stage-head">
+    <p class="eyebrow"><b>3</b> · System prompt and effort</p>
+    <h2 id="s3">Standing instructions, and how hard to think</h2>
+    <p>Two settings shape every reply. The <button type="button" class="term" data-term="system_prompt" aria-expanded="false">system prompt</button> says who the assistant is and what rules it follows. <button type="button" class="term" data-term="effort" aria-expanded="false">Effort</button> says how much it should think first.</p>
+  </div>
+  <div class="grid g2">
+    <div class="box"><h4>A good system prompt</h4><p class="small">States the role, the limits and what to do when unsure: "You are a research assistant. Answer in at most 120 words. If you are not sure about a fact, say so instead of guessing." Short and specific beats long and vague. Module 8 covers this in depth.</p></div>
+    <div class="box"><h4>Effort, not temperature</h4><p class="small">Older tutorials set <code>temperature</code>. Current Claude models reject it. Use <code>output_config={"effort": "low"}</code> for chat and simple tasks, <code>"medium"</code> (Haiku's default) or <code>"high"</code> for harder reasoning.</p></div>
+  </div>
+  <p class="prose">Current models do some <button type="button" class="term" data-term="thinking" aria-expanded="false">thinking</button> before they answer, and decide for themselves how much. The thinking text is hidden by default, but its tokens are billed as output. That's why higher effort costs more even when the visible answer is the same length.</p>
+</section>
+
+<!-- ============ 4. TOKENS AND COST ============ -->
+<section class="stage" id="tokens" aria-labelledby="s4">
+  <div class="stage-head">
+    <p class="eyebrow"><b>4</b> · Tokens and cost</p>
+    <h2 id="s4">You pay per token, in and out</h2>
+    <p>Models read and write tokens, pieces of words. A rough guide is three tokens for every two English words. Each request is billed for the tokens it sends (input) and the tokens it gets back (output), and output costs five times as much.</p>
+  </div>
+  <div class="tablewrap">
+    <table class="price-table">
+      <thead><tr><th>Model</th><th>Input, per million tokens</th><th>Output, per million tokens</th><th>1,000 chat turns*</th></tr></thead>
+      <tbody>
+        <tr><td><b>Claude Haiku 5.5</b> (<code>claude-haiku-5-5</code>): fast and cheap, used in these labs</td><td>$0.10</td><td>$0.50</td><td>$0.100</td></tr>
+        <tr><td><b>Claude Sonnet 5.5</b> (<code>claude-sonnet-5-5</code>): the everyday workhorse</td><td>$2.00</td><td>$10.00</td><td>$2.000</td></tr>
+        <tr><td><b>Claude Opus 5.5</b> (<code>claude-opus-5-5</code>): the strongest reasoning</td><td>$4.00</td><td>$20.00</td><td>$4.000</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small muted">* Each turn 500 tokens in and 100 out. Prices as published in October 2026; check the <a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">pricing page</a> before you plan a budget.</p>
+  <div class="grid g2">
+    <div class="box tint"><h4>The formula</h4><p class="small"><code>cost = (input_tokens × input price + output_tokens × output price) ÷ 1,000,000</code>. The API reports both counts in <code>usage</code> on every reply, so your code can add up the cost as it goes.</p></div>
+    <div class="box tint"><h4>Why conversations get expensive</h4><p class="small">Turn 10 re-sends turns 1 to 9 as input. Input tokens grow with every turn, even when the questions are short. Long chats, big documents and tool loops (E5) are where costs come from. Module 8 covers trimming and caching.</p></div>
+  </div>
+  <div class="quiz" data-quiz="qe3b">
+    <p class="quiz-label">Check your understanding · Tokens and cost</p>
+    <p class="quiz-q">Turn 10 of a chat costs several times more than turn 1, though the questions are similar in length. Why?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Per-token prices are fixed."><span class="l">A</span><span>Prices rise during busy hours</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. Turn 10 carries turns 1 to 9 with it. Trimming or summarising history (module 8) keeps this in check."><span class="l">B</span><span>Each request re-sends the whole conversation as input tokens</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Answer length doesn&#x27;t drift like that; the input is what grows."><span class="l">C</span><span>The model writes longer answers as it gets tired</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ 5. STREAMING ============ -->
+<section class="stage" id="streaming" aria-labelledby="s5">
+  <div class="stage-head">
+    <p class="eyebrow"><b>5</b> · Streaming</p>
+    <h2 id="s5">Show the first words in under a second</h2>
+    <p>Without <button type="button" class="term" data-term="streaming" aria-expanded="false">streaming</button>, your code waits until the whole reply is written, which can be many seconds. With it, words arrive as they're written. The total time is the same; the wait feels far shorter.</p>
+  </div>
+  <div class="cb"><div class="cb-h"><span>Streaming</span><button type="button" class="cb-copy" aria-label="Copy Streaming">Copy</button></div><pre class="code"><span class="ln"><span class="k">with</span> client.messages.stream(model=<span class="s">"claude-haiku-5-5"</span>, max_tokens=1000, messages=messages) <span class="k">as</span> stream:</span><span class="ln">    <span class="k">for</span> text <span class="k">in</span> stream.text_stream:          <span class="c"># a few words at a time</span></span><span class="ln">        print(text, end=<span class="s">""</span>, flush=<span class="k">True</span>)</span><span class="ln">    reply = stream.get_final_message()       <span class="c"># the complete reply, with usage</span></span></pre></div>
+  <p class="prose">Stream anything a person waits for. For background jobs where nobody watches, such as extracting data from 500 articles, a plain <code>messages.create</code> is simpler.</p>
+</section>
+
+<!-- ============ 6. ERRORS AND RETRIES ============ -->
+<section class="stage" id="failures" aria-labelledby="s6">
+  <div class="stage-head">
+    <p class="eyebrow"><b>6</b> · Errors and retries</p>
+    <h2 id="s6">Some errors are worth retrying, most aren't</h2>
+    <p>The status codes from E2 apply here too. The SDK raises a named exception for each, and it already <button type="button" class="term" data-term="retry" aria-expanded="false">retries</button> the temporary ones (429, 500, 529 and dropped connections) twice, with growing waits, before your code sees them.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Status</th><th>SDK exception</th><th>Usually means</th><th>Retry?</th></tr></thead>
+      <tbody>
+        <tr><td>400</td><td><code>BadRequestError</code></td><td>Something in the request is wrong: a bad parameter or message order</td><td>No: fix the code</td></tr>
+        <tr><td>401</td><td><code>AuthenticationError</code></td><td>Missing or wrong API key</td><td>No</td></tr>
+        <tr><td>402</td><td><code>APIStatusError</code></td><td>Billing: no credit, or the spending limit reached</td><td>No</td></tr>
+        <tr><td>404</td><td><code>NotFoundError</code></td><td>Model name typo, or a model your account can't use</td><td>No</td></tr>
+        <tr><td>429</td><td><code>RateLimitError</code></td><td>Too many requests or tokens per minute</td><td>Yes, after a wait</td></tr>
+        <tr><td>500, 529</td><td><code>InternalServerError</code>, <code>OverloadedError</code></td><td>A problem or heavy load on the API's side</td><td>Yes, after a wait</td></tr>
+        <tr><td>none</td><td><code>APIConnectionError</code></td><td>Your internet, VPN or a timeout</td><td>Yes</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="prose">Catch the specific exceptions first and the general <code>APIStatusError</code> last, as the lab does. Also check <code>stop_reason</code> on every reply: a <code>max_tokens</code> reply is incomplete even though no error was raised.</p>
+  <div class="quiz" data-quiz="qe3c">
+    <p class="quiz-label">Check your understanding · Errors and retries</p>
+    <p class="quiz-q">Your app occasionally gets a 429 from the API. What's the right response?</p>
+    <div class="quiz-opts">
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. Hammering the API makes rate limiting worse. Retries need growing waits."><span class="l">A</span><span>Retry immediately in a loop until it works</span></button>
+      <button type="button" class="opt" data-ok="1" data-why="Correct. The SDK waits and retries 429s twice. If it still fails, tell the user, or slow down."><span class="l">B</span><span>Let the SDK's automatic retries handle most of them, and catch RateLimitError for the rest</span></button>
+      <button type="button" class="opt" data-ok="0" data-why="Not quite. 429 is about how many requests or tokens you send per minute, not model size."><span class="l">C</span><span>Switch to a bigger model</span></button>
+    </div>
+    <p class="quiz-fb" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ============ LAB ============ -->
+<section class="stage" id="lab" aria-labelledby="s7">
+  <div class="stage-head">
+    <p class="eyebrow">Lab · on your laptop</p>
+    <h2 id="s7">Build a chatbot that knows what it costs</h2>
+    <p>The labs use Claude Haiku 5.5, the cheapest current model. Everything in this module costs a few cents at most; the spending limit you set in step 1 is your safety net.</p>
+  </div>
+  <div class="lab-meta"><span>Time <b>2–3 hours</b></span><span>API cost <b>under $0.050</b></span><span>You need <b>E2 done, a card for API credit</b></span></div><ol class="lab-steps"><li class="lab-step"><span class="lab-n" aria-hidden="true">1</span><div class="lab-b"><h3>Create an API key, with a spending limit</h3><p>Sign in to the <a href="https://platform.claude.com/" target="_blank" rel="noopener">Claude Console</a>, add a small amount of credit (the minimum is plenty for the whole track), and set a <b>monthly spending limit</b> in the billing settings. Then open <b>API keys</b>, create a key called <code>research-assistant</code>, and copy it. You only see it once.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">2</span><div class="lab-b"><h3>Put the key in a .env file</h3><p>In your project folder, create a file called <code>.env</code> with one line, pasting your key after the <code>=</code> with no spaces or quotes:</p><div class="cb"><div class="cb-h"><span>.env</span><button type="button" class="cb-copy" aria-label="Copy .env">Copy</button></div><pre class="code"><span class="ln">ANTHROPIC_API_KEY=sk-ant-...your key...</span></pre></div><p>Check that git ignores it. <code>.env</code> was in the <code>.gitignore</code> you wrote in E1, so it must <em>not</em> appear here:</p><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git status</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean</pre><p class="small">If you see <code>.env</code> listed, stop and add it to <code>.gitignore</code> before going on.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">3</span><div class="lab-b"><h3>Install the SDK</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv add anthropic python-dotenv</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out"> + anthropic==1.15.0
+ ...
+ + python-dotenv==1.2.4</pre><p class="small">Versions will differ.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">4</span><div class="lab-b"><h3>Make one call by hand</h3><p>Open <code>uv run python</code> and type these lines one at a time. The last two show the reply and what it cost in tokens.</p><div class="cb"><div class="cb-h"><span>At the &gt;&gt;&gt; prompt</span><button type="button" class="cb-copy" aria-label="Copy At the &gt;&gt;&gt; prompt">Copy</button></div><pre class="code"><span class="ln"><span class="k">import</span> anthropic, dotenv</span><span class="ln">dotenv.load_dotenv()</span><span class="ln">client = anthropic.Anthropic()</span><span class="ln">reply = client.messages.create(model=<span class="s">"claude-haiku-5-5"</span>, max_tokens=1000,</span><span class="ln">    messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Say hello in five words."</span>}])</span><span class="ln">reply.content[-1].text</span><span class="ln">reply.usage.input_tokens, reply.usage.output_tokens</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">'Hello there, nice to meet you!'
+(14, 12)</pre><p class="small">Your words and numbers will differ. <code>content</code> is a list of blocks; the last one holds the text.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">5</span><div class="lab-b"><h3>Write the chatbot</h3><p>Create <code>chat.py</code>. It keeps the whole conversation in <code>messages</code>, streams each reply, and works out the cost from the token counts the API returns.</p><div class="cb"><div class="cb-h"><span>chat.py</span><button type="button" class="cb-copy" aria-label="Copy chat.py">Copy</button></div><pre class="code"><span class="ln"><span class="s">"""E3 lab: a terminal chatbot that remembers the conversation and shows what each turn costs.</span></span><span class="ln"> </span><span class="ln"><span class="s">Run it with:</span></span><span class="ln"><span class="s">    uv run chat.py</span></span><span class="ln"><span class="s">"""</span></span><span class="ln"><span class="k">import</span> anthropic</span><span class="ln"><span class="k">from</span> dotenv <span class="k">import</span> load_dotenv</span><span class="ln"> </span><span class="ln">load_dotenv()  <span class="c"># copies ANTHROPIC_API_KEY from the .env file into the environment</span></span><span class="ln"> </span><span class="ln">MODEL = <span class="s">"claude-haiku-5-5"</span>  <span class="c"># the cheapest model; try "claude-sonnet-5-5" for harder questions</span></span><span class="ln">PRICE_IN = 0.10  <span class="c"># dollars per million input tokens, for this model</span></span><span class="ln">PRICE_OUT = 0.50  <span class="c"># dollars per million output tokens</span></span><span class="ln">SYSTEM = (</span><span class="ln">    <span class="s">"You are a research assistant. Answer in at most 120 words. "</span></span><span class="ln">    <span class="s">"If you are not sure about a fact, say so instead of guessing."</span></span><span class="ln">)</span><span class="ln"> </span><span class="ln">client = anthropic.Anthropic()  <span class="c"># finds ANTHROPIC_API_KEY by itself</span></span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> turn_cost(usage):</span><span class="ln">    <span class="s">"""Dollars for one request, from the token counts the API reports."""</span></span><span class="ln">    <span class="k">return</span> (usage.input_tokens * PRICE_IN + usage.output_tokens * PRICE_OUT) / 1_000_000</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> ask(messages):</span><span class="ln">    <span class="s">"""Send the whole conversation, print the reply as it arrives, and return the full response."""</span></span><span class="ln">    <span class="k">with</span> client.messages.stream(</span><span class="ln">        model=MODEL,</span><span class="ln">        max_tokens=2000,</span><span class="ln">        system=SYSTEM,</span><span class="ln">        messages=messages,</span><span class="ln">        output_config={<span class="s">"effort"</span>: <span class="s">"low"</span>},  <span class="c"># less thinking: faster and cheaper for chat</span></span><span class="ln">    ) <span class="k">as</span> stream:</span><span class="ln">        <span class="k">for</span> text <span class="k">in</span> stream.text_stream:</span><span class="ln">            print(text, end=<span class="s">""</span>, flush=<span class="k">True</span>)</span><span class="ln">        <span class="k">return</span> stream.get_final_message()</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">def</span> main():</span><span class="ln">    messages = []  <span class="c"># the conversation so far: the API remembers nothing between requests</span></span><span class="ln">    total = 0.0</span><span class="ln">    print(<span class="s">f"Chatting with {MODEL}. Type quit to stop.\n"</span>)</span><span class="ln">    <span class="k">while</span> <span class="k">True</span>:</span><span class="ln">        question = input(<span class="s">"You: "</span>).strip()</span><span class="ln">        <span class="k">if</span> question.lower() <span class="k">in</span> (<span class="s">"quit"</span>, <span class="s">"exit"</span>):</span><span class="ln">            <span class="k">break</span></span><span class="ln">        <span class="k">if</span> <span class="k">not</span> question:</span><span class="ln">            <span class="k">continue</span></span><span class="ln"> </span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: question})</span><span class="ln">        print(<span class="s">"Claude: "</span>, end=<span class="s">""</span>)</span><span class="ln">        <span class="k">try</span>:</span><span class="ln">            response = ask(messages)</span><span class="ln">        <span class="k">except</span> anthropic.AuthenticationError:</span><span class="ln">            print(<span class="s">"\nThe API key was rejected. Check ANTHROPIC_API_KEY in your .env file."</span>)</span><span class="ln">            <span class="k">break</span></span><span class="ln">        <span class="k">except</span> anthropic.APIConnectionError:</span><span class="ln">            print(<span class="s">"\nCould not reach the API. Check your internet connection and try again."</span>)</span><span class="ln">            messages.pop()  <span class="c"># forget the question that got no answer</span></span><span class="ln">            <span class="k">continue</span></span><span class="ln">        <span class="k">except</span> anthropic.APIStatusError <span class="k">as</span> error:  <span class="c"># 402, 429, 500 and others, after the SDK's own retries</span></span><span class="ln">            print(<span class="s">f"\nThe API answered {error.status_code}: {error.message}"</span>)</span><span class="ln">            messages.pop()</span><span class="ln">            <span class="k">continue</span></span><span class="ln"> </span><span class="ln">        <span class="c"># Keep the whole reply, not just its text, so the next request has the full conversation</span></span><span class="ln">        messages.append({<span class="s">"role"</span>: <span class="s">"assistant"</span>, <span class="s">"content"</span>: response.content})</span><span class="ln">        cost = turn_cost(response.usage)</span><span class="ln">        total += cost</span><span class="ln">        print(<span class="s">f"\n  [{response.usage.input_tokens} tokens in, {response.usage.output_tokens} out, "</span></span><span class="ln">              <span class="s">f"${cost:.5f} this turn, ${total:.5f} so far]\n"</span>)</span><span class="ln">        <span class="k">if</span> response.stop_reason == <span class="s">"max_tokens"</span>:</span><span class="ln">            print(<span class="s">"  (The reply was cut off. Raise max_tokens for longer answers.)\n"</span>)</span><span class="ln">        <span class="k">elif</span> response.stop_reason == <span class="s">"refusal"</span>:</span><span class="ln">            print(<span class="s">"  (Claude declined to answer that one.)\n"</span>)</span><span class="ln"> </span><span class="ln">    print(<span class="s">f"Session cost: ${total:.5f}"</span>)</span><span class="ln"> </span><span class="ln"> </span><span class="ln"><span class="k">if</span> __name__ == <span class="s">"__main__"</span>:</span><span class="ln">    main()</span></pre></div><ul><li><b><code>ask</code></b> sends the whole conversation and prints the reply as it arrives.</li><li><b><code>main</code></b> adds your question, then the full reply, to <code>messages</code>, so the next request carries the history.</li><li>The <b><code>except</code></b> blocks turn API errors into plain messages, most specific first. The SDK has already retried 429s and server errors twice by then.</li></ul></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">6</span><div class="lab-b"><h3>Chat with it</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">uv run chat.py</span></pre></div><div class="expect"><p class="expect-h">Expected output</p><pre class="out">Chatting with claude-haiku-5-5. Type quit to stop.
+
+You: What is retrieval-augmented generation, in two sentences?
+Claude: Retrieval-augmented generation (RAG) has a model look up relevant documents first ...
+  [52 tokens in, 96 out, $0.00005 this turn, $0.00005 so far]
+
+You: Give me one real example.
+Claude: A customer support assistant that searches the help centre ...
+  [160 tokens in, 80 out, $0.00006 this turn, $0.00011 so far]
+
+You: quit
+Session cost: $0.00011</pre><p class="small">Your words and numbers will differ. Notice the input tokens grow each turn: every request re-sends the whole conversation.</p></div></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">7</span><div class="lab-b"><h3>Run four experiments</h3><p>Change one thing at a time, run a few turns, and compare the token counts and cost:</p><ul><li>Set <code>"effort": "high"</code>. Output tokens rise, because the model thinks more, even though the visible answer barely changes.</li><li>Set <code>max_tokens=50</code> and ask for a long answer. The reply is cut off and the script says so.</li><li>Change <code>MODEL</code> to <code>"claude-sonnet-5-5"</code> and the prices to <code>2.00</code> and <code>10.00</code>. Same questions, about 20 times the cost.</li><li>Delete the line that appends the reply to <code>messages</code>, and ask a follow-up. The model has no idea what you were talking about.</li></ul><p>Put everything back afterwards.</p></div></li><li class="lab-step"><span class="lab-n" aria-hidden="true">8</span><div class="lab-b"><h3>Commit, without the key</h3><div class="cb"><div class="cb-h"><span>Terminal</span><button type="button" class="cb-copy" aria-label="Copy Terminal">Copy</button></div><pre class="code"><span class="ln">git add chat.py pyproject.toml uv.lock</span><span class="ln">git status</span><span class="ln">git commit -m "Add terminal chatbot"</span><span class="ln">git push</span></pre></div><p>Read the <code>git status</code> output before committing: <code>.env</code> must not be in the list of files to commit.</p></div></li></ol><div class="fix"><h3>If it breaks</h3><dl><dt><code>TypeError: "Could not resolve authentication method. Expected one of api_key, ..."</code></dt><dd>The key wasn't found. Check the file is called exactly <code>.env</code>, is in the folder you run from, and the line starts <code>ANTHROPIC_API_KEY=</code>.</dd><dt><code>The API key was rejected. Check ANTHROPIC_API_KEY in your .env file.</code></dt><dd>A 401: the key has a typo, extra spaces or quotes, or was deleted. Create a new one and paste it again.</dd><dt><code>The API answered 402: …</code></dt><dd>A billing problem, such as no credit left or the spending limit reached. Check Billing in the Console.</dd><dt><code>The API answered 404: … model …</code></dt><dd>The model name is wrong. Copy it exactly: <code>claude-haiku-5-5</code>.</dd><dt><code>ModuleNotFoundError: No module named 'anthropic'</code></dt><dd>Run <code>uv add anthropic python-dotenv</code>, and run the script with <code>uv run</code>.</dd></dl></div>
+</section>
+
+<!-- ============ DONE WHEN ============ -->
+<section class="stage" id="done" aria-labelledby="s8">
+  <div class="stage-head">
+    <p class="eyebrow">Check yourself</p>
+    <h2 id="s8">Done when</h2>
+    <p>Tick each one when it's true. When all are ticked, E3 is marked done on the track page.</p>
+  </div>
+  <ul class="done-list" data-mod="e3"><li><label><input type="checkbox"><span>Your key is in <code>.env</code>, a spending limit is set, and <code>git status</code> doesn't list <code>.env</code></span></label></li><li><label><input type="checkbox"><span><code>chat.py</code> holds a conversation of three or more turns and prints the cost of each</span></label></li><li><label><input type="checkbox"><span>You ran the four experiments and can explain why input tokens grow each turn</span></label></li><li><label><input type="checkbox"><span><code>chat.py</code>, <code>pyproject.toml</code> and <code>uv.lock</code> are pushed to GitHub, and the key is not</span></label></li></ul><p class="done-state" id="doneState" aria-live="polite"></p>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section class="stage" id="cheatsheet" aria-labelledby="s9">
+  <div class="stage-head">
+    <p class="eyebrow">Keep this</p>
+    <h2 id="s9">One-page cheat sheet</h2>
+    <p class="score" id="quizScore"></p>
+  </div>
+  <div class="sheet">
+    <p class="formula"><em>Key in .env</em> → send <em>model, max_tokens, system, messages</em> → read <em>content, stop_reason, usage</em> → append the reply → repeat.</p>
+    <div class="sheet-grid">
+      <div class="blk"><h3>The call</h3><ul>
+        <li><code>client = anthropic.Anthropic()</code></li>
+        <li><code>client.messages.create(model=…, max_tokens=…, messages=[…])</code></li>
+        <li><code>client.messages.stream(…)</code> → <code>text_stream</code>, <code>get_final_message()</code></li>
+        <li><code>system="…"</code>, <code>output_config={"effort": "low"}</code></li>
+      </ul></div>
+      <div class="blk"><h3>Check every reply</h3><ul>
+        <li><code>stop_reason</code>: end_turn, max_tokens, tool_use, refusal</li>
+        <li><code>usage.input_tokens</code>, <code>usage.output_tokens</code></li>
+        <li>Append <code>response.content</code> to keep history</li>
+        <li>Cost = tokens × price ÷ 1,000,000</li>
+      </ul></div>
+      <div class="blk"><h3>Errors</h3><ul>
+        <li>401 key, 402 billing, 404 model name</li>
+        <li>429, 5xx, connection: SDK retries twice</li>
+        <li>Catch specific exceptions first</li>
+        <li>Never put the key in code or git</li>
+      </ul></div>
+    </div>
+    <div class="blk" style="display:grid;gap:10px">
+      <h3>Glossary</h3>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="stage" id="mistakes" aria-labelledby="s10">
+  <div class="stage-head">
+    <p class="eyebrow">Learn from others</p>
+    <h2 id="s10">3 common first-call mistakes</h2>
+  </div>
+  <div class="mistakes">
+    <article class="mistake"><span class="num">1</span><h3>The key in the code</h3><dl>
+      <dt>What it looks like</dt><dd><code>api_key="sk-ant-…"</code> in a file that gets pushed to GitHub. Within hours, someone else is spending your credit.</dd>
+      <dt>Fix</dt><dd>Keep it in .env, check <code>git status</code> before every commit, and delete any key that has leaked.</dd></dl></article>
+    <article class="mistake"><span class="num">2</span><h3>Not watching the cost</h3><dl>
+      <dt>What it looks like</dt><dd>A loop or long conversation re-sends thousands of tokens per call, and nobody notices until the bill arrives.</dd>
+      <dt>Fix</dt><dd>Log <code>usage</code> on every call, set a spending limit, and use the cheapest model that does the job.</dd></dl></article>
+    <article class="mistake"><span class="num">3</span><h3>Ignoring stop_reason</h3><dl>
+      <dt>What it looks like</dt><dd>Answers that end mid-sentence get shown or saved as if complete, because <code>max_tokens</code> was too low for the thinking plus the answer.</dd>
+      <dt>Fix</dt><dd>Check <code>stop_reason</code> on every reply, and leave room in <code>max_tokens</code> for thinking.</dd></dl></article>
+  </div>
+</section>
+
+<div class="next-module">
+  <a href="eng-python.html" data-site-link>← Module E2 · Python for AI work</a>
+  <a href="eng-structured.html" data-site-link>Module E4 · Prompts and structured output →</a>
+</div>
+
+<footer>
+  <p>The request builder is a simulation: replies, token counts and timings are scripted. The lab calls the real Claude API from your laptop, billed to your account. Model names and prices are as published in October 2026.</p>
+  <p>Part of the Agent Field Guides, independent explainers for product managers becoming AI engineers. Not affiliated with Anthropic.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+
+/* Links between modules: relative on the hosted site and the local server,
+   absolute (to the GitHub Pages site) anywhere else, e.g. inside a claude.ai artifact. */
+const SITE = "https://lalwalataukir.github.io/how-ai-agents-work/";
+if(!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith("github.io")){
+  document.querySelectorAll("[data-site-link]").forEach(a => {
+    a.href = SITE + a.getAttribute("href").replace(/^\.\//, "");
+    a.target = "_blank"; a.rel = "noopener";
+  });
+}
+
+/* ---------- Glossary ---------- */
+const GLOSS = {
+ "api_key": {
+  "t": "API key",
+  "d": "A secret string that identifies you to an API and is billed to your account. Keep it in .env, never in code, chats or GitHub."
+ },
+ "dotenv": {
+  "t": ".env file",
+  "d": "A file of NAME=value lines for secrets and settings. python-dotenv loads it into the environment; .gitignore keeps it off GitHub."
+ },
+ "sdk": {
+  "t": "SDK",
+  "d": "A package that wraps an API in ordinary functions. The anthropic SDK builds the web request, retries failures and turns the JSON reply into Python objects."
+ },
+ "messages_api": {
+  "t": "Messages API",
+  "d": "The Claude API's main endpoint: send a model name, settings and a list of messages, get back the model's reply as content blocks."
+ },
+ "system_prompt": {
+  "t": "System prompt",
+  "d": "Standing instructions sent with every request, separate from the conversation: the assistant's role, rules and limits."
+ },
+ "token": {
+  "t": "Token",
+  "d": "The unit models read and write, roughly three-quarters of an English word. Input and output tokens are priced separately."
+ },
+ "max_tokens": {
+  "t": "max_tokens",
+  "d": "The most output tokens one reply may use, thinking included. If the model hits it, the reply is cut off and stop_reason is max_tokens."
+ },
+ "stop_reason": {
+  "t": "stop_reason",
+  "d": "Why the model stopped: end_turn (finished), max_tokens (cut off), tool_use (wants a tool, E5) or refusal (declined)."
+ },
+ "streaming": {
+  "t": "Streaming",
+  "d": "Receiving the reply a few words at a time as it's written, so people see the first words in under a second instead of waiting for all of it."
+ },
+ "effort": {
+  "t": "Effort",
+  "d": "A setting (low, medium, high and above) for how much the model thinks before answering. Lower is faster and cheaper; higher helps hard problems."
+ },
+ "thinking": {
+  "t": "Thinking (adaptive)",
+  "d": "Reasoning the model does before its visible answer. Current models decide how much to think; it's billed as output tokens even when its text is hidden."
+ },
+ "stateless": {
+  "t": "Stateless",
+  "d": "The API keeps no memory between requests. To continue a conversation, your code sends the whole history every time."
+ },
+ "retry": {
+  "t": "Retry with backoff",
+  "d": "Trying a failed request again after a growing wait (1 s, 2 s, 4 s…). The SDK does this automatically for 429s, server errors and dropped connections."
+ }
+};
+const pop = $("termPop"); let popFor = null;
+function showTerm(btn){
+  const g = GLOSS[btn.dataset.term]; if(!g) return;
+  pop.innerHTML = "<strong>"+esc(g.t)+"</strong><span>"+esc(g.d)+"</span>"; pop.hidden = false;
+  const vw = document.documentElement.clientWidth, pw = Math.min(320, vw - 32);
+  pop.style.width = pw + "px";
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(scrollX + 16, Math.min(r.left + scrollX, scrollX + vw - pw - 16)) + "px";
+  pop.style.top = (r.bottom + scrollY + 8) + "px";
+  if(popFor && popFor !== btn) popFor.setAttribute("aria-expanded","false");
+  popFor = btn; btn.setAttribute("aria-expanded","true");
+}
+function hideTerm(){ pop.hidden = true; if(popFor) popFor.setAttribute("aria-expanded","false"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".term");
+  if(b){ e.preventDefault(); if(popFor === b) hideTerm(); else showTerm(b); return; }
+  if(!e.target.closest("#termPop")) hideTerm();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") hideTerm(); });
+window.addEventListener("resize", hideTerm);
+$("glossary").innerHTML = Object.values(GLOSS).sort((a,b)=>a.t.localeCompare(b.t)).map(g => "<div><b>"+esc(g.t)+".</b> "+esc(g.d)+"</div>").join("");
+
+/* ---------- Theme ---------- */
+const root = document.documentElement, themeBtn = $("themeBtn");
+function eff(){ const t = root.getAttribute("data-theme"); if(t==="dark"||t==="light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function sync(){ const t = eff(); themeBtn.textContent = t==="dark" ? "Light" : "Dark"; themeBtn.setAttribute("aria-label","Switch to "+(t==="dark"?"light":"dark")+" theme"); }
+const savedTheme = load("guides.theme"); if(savedTheme==="dark"||savedTheme==="light") root.setAttribute("data-theme", savedTheme); else root.setAttribute("data-theme", "dark");
+sync();
+themeBtn.addEventListener("click", () => { const n = eff()==="dark" ? "light" : "dark"; root.setAttribute("data-theme", n); store("guides.theme", n); sync(); });
+
+/* ---------- Nav: active section + progress ---------- */
+const navLinks = [...document.querySelectorAll("[data-nav]")];
+const bar = $("progressBar");
+let lastActive = null;
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + "%";
+  let current = null;
+  for(const a of navLinks){ const s = $(a.dataset.nav); if(s && s.getBoundingClientRect().top < 140) current = a; }
+  navLinks.forEach(a => a.classList.toggle("is-active", a === current));
+  if(current && current !== lastActive){
+    lastActive = current;
+    const strip = current.parentElement;
+    const l = current.offsetLeft - strip.offsetLeft, r = l + current.offsetWidth;
+    if(l < strip.scrollLeft) strip.scrollLeft = l - 8;
+    else if(r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = r - strip.clientWidth + 8;
+  }
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+onScroll();
+})();
+</script>
+<script>
+/* ---------- Request builder (scripted) ---------- */
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const MODELS = {
+  haiku: {id:"claude-haiku-5-5", label:"Haiku 5.5", pin:0.10, pout:0.50, tps:240},
+  sonnet:{id:"claude-sonnet-5-5", label:"Sonnet 5.5", pin:2, pout:10, tps:130},
+  opus:  {id:"claude-opus-5-5", label:"Opus 5.5", pin:4, pout:20, tps:75}
+};
+const SYS = {
+  none: {label:"None", text:null, tok:0},
+  short:{label:"Research assistant", text:"You are a research assistant. Answer in at most 120 words.", tok:17},
+  careful:{label:"+ say when unsure", text:"You are a research assistant. Answer in at most 120 words. If you are not sure about a fact, say so instead of guessing.", tok:31}
+};
+const THINK = {low:18, medium:120, high:420};
+const QS = ["What is retrieval-augmented generation?", "Give me one real example.", "What can go wrong with it?"];
+const REPLIES = {
+  none: [
+    "Retrieval-augmented generation (RAG) is a technique that improves a language model's answers by giving it relevant information at the moment it answers. First, a retrieval step searches a collection of documents, such as a company wiki, product manuals or a search index, for passages related to the question. Those passages are added to the prompt, and the model writes its answer using them as context. This helps in three ways: the model can use information it was never trained on, its answers can point to their sources, and it is less likely to make things up. RAG is widely used for customer support bots, internal knowledge assistants and research tools, because updating the documents is far cheaper than retraining a model.",
+    "A common example is a customer support assistant for a software company. When a customer asks how to reset two-factor authentication, the system searches the help centre and past support tickets, finds the most relevant articles, and passes them to the model with the question. The model writes a step-by-step answer based on those articles and links to them, so the customer can check the details. When the help centre is updated, the assistant's answers change the same day, without retraining anything.",
+    "Several things can go wrong. The search step can miss the right document, so the model answers from weaker passages or from its own memory. It can find the right document but the wrong part of it, such as an outdated section. Long or conflicting passages can confuse the model, and it may still add details that aren't in any source. And if the documents themselves are wrong or out of date, the answers will be too. Teams catch these problems with evals that test the search and the answers separately."
+  ],
+  short: [
+    "Retrieval-augmented generation (RAG) means looking things up before answering. The system searches a set of documents for passages related to the question, adds them to the prompt, and the model writes its answer from them. That lets it use up-to-date or private information and point to its sources.",
+    "A support assistant for a software company: when a customer asks how to reset two-factor authentication, it finds the matching help-centre articles and answers from them, with links.",
+    "The search can miss the right passage, pick an outdated one, or return passages that conflict. The model may then answer from memory or add details no source supports. And if the documents are wrong, so are the answers."
+  ],
+  careful: [
+    "Retrieval-augmented generation (RAG) means looking things up before answering: the system searches a set of documents for relevant passages, adds them to the prompt, and the model answers from them. I can't look anything up in this chat, so I can't cite a source here, but the idea was set out in a 2020 paper by Lewis and colleagues.",
+    "A support assistant for a software company: when a customer asks how to reset two-factor authentication, it finds the matching help-centre articles and answers from them, with links. That's a typical pattern rather than a specific company I can verify.",
+    "The search can miss the right passage, pick an outdated one, or return passages that conflict. The model may then answer from memory or add details no source supports. If you need certainty about a particular system, check its evaluation results rather than my general description."
+  ]
+};
+const S = {model:"haiku", sys:"short", effort:"low", max:2000, stream:true, turn:0};
+const tok = t => Math.round(t.split(/\s+/).length * 1.4);
+function seg(id, opts, key, cast){
+  const el = $(id);
+  el.innerHTML = opts.map(([v, l]) => '<button type="button" data-v="' + v + '" aria-pressed="false">' + l + "</button>").join("");
+  el.addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; S[key] = cast ? cast(b.dataset.v) : b.dataset.v; render(); });
+}
+function reply(turn){
+  const full = REPLIES[S.sys][turn], think = THINK[S.effort], rt = tok(full);
+  if(think >= S.max) return {text:"", think:S.max, rt:0, out:S.max, stop:"max_tokens", empty:true};
+  if(think + rt > S.max){ const keep = Math.floor((S.max - think) / 1.4); return {text:full.split(/\s+/).slice(0, keep).join(" "), think, rt:S.max - think, out:S.max, stop:"max_tokens"}; }
+  return {text:full, think, rt, out:think + rt, stop:"end_turn"};
+}
+function render(){
+  const m = MODELS[S.model], sys = SYS[S.sys];
+  [["rbModel","model"],["rbSys","sys"],["rbEffort","effort"],["rbMax","max"],["rbStream","stream"],["rbTurn","turn"]].forEach(([id, k]) =>
+    $(id).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v) === String(S[k]))));
+  let input = 8 + sys.tok, hist = [];
+  for(let t = 0; t < S.turn; t++){ const r = reply(t); input += tok(QS[t]) + 4 + r.rt + 4; hist.push(t); }
+  input += tok(QS[S.turn]) + 4;
+  const r = reply(S.turn);
+  const cost = (input * m.pin + r.out * m.pout) / 1e6 * 1000;
+  const total = 0.4 + r.out / m.tps, first = S.stream ? 0.4 + r.think / m.tps : total;
+  $("mIn").querySelector(".v").textContent = input.toLocaleString("en");
+  $("mOut").querySelector(".v").textContent = r.out.toLocaleString("en") + " (" + r.think + " + " + r.rt + ")";
+  $("mCost").querySelector(".v").textContent = "$" + cost.toFixed(3);
+  $("mFirst").querySelector(".v").textContent = first.toFixed(1) + " s";
+  $("mOut").classList.toggle("warn", r.stop === "max_tokens");
+  const lines = ["{", '  "model": "' + m.id + '",', '  "max_tokens": ' + S.max + ","];
+  if(sys.text) lines.push('  "system": "' + sys.text + '",');
+  lines.push('  "output_config": {"effort": "' + S.effort + '"},');
+  if(S.stream) lines.push('  "stream": true,');
+  lines.push('  "messages": [');
+  const msgs = [];
+  hist.forEach(t => { msgs.push('    {"role": "user", "content": "' + QS[t] + '"}'); msgs.push('    {"role": "assistant", "content": [ …the full reply from turn ' + (t + 1) + "… ]}"); });
+  msgs.push('    {"role": "user", "content": "' + QS[S.turn] + '"}');
+  lines.push(msgs.join(",\n"), "  ]", "}");
+  $("rbReq").textContent = lines.join("\n");
+  const rep = $("rbReply");
+  rep.textContent = r.empty ? "" : r.text;
+  if(r.stop === "max_tokens"){ const c = document.createElement("span"); c.className = "cut"; c.textContent = r.empty ? "(no text: thinking used the whole max_tokens)" : " … (cut off)"; rep.appendChild(c); }
+  $("rbMeta").textContent = 'stop_reason: "' + r.stop + '"   usage: {"input_tokens": ' + input + ', "output_tokens": ' + r.out + "}";
+  let note = "";
+  if(r.empty) note = "The model spent all " + S.max + " tokens thinking and never got to the answer. Raise max_tokens or lower the effort.";
+  else if(r.stop === "max_tokens") note = "The reply was cut off: thinking plus text needed more than " + S.max + " tokens. Your code must check stop_reason, or it will show a half answer as if it were complete.";
+  else if(S.turn > 0) note = "Turn " + (S.turn + 1) + " re-sends the earlier questions and answers, so input tokens are higher than on turn 1, even though the question is short.";
+  else if(S.effort === "high") note = "High effort adds about " + THINK.high + " thinking tokens, billed as output, for an answer that barely changes. Save it for hard problems.";
+  else if(S.model !== "haiku") note = m.label + " costs " + Math.round(m.pin / MODELS.haiku.pin) + " times as much as Haiku per token. Worth it for hard reasoning, not for short factual answers.";
+  else if(!S.stream) note = "Without streaming, nothing appears until the whole reply is written.";
+  $("rbNote").textContent = note;
+}
+seg("rbModel", Object.entries(MODELS).map(([k, v]) => [k, v.label]), "model");
+seg("rbSys", Object.entries(SYS).map(([k, v]) => [k, v.label]), "sys");
+seg("rbEffort", [["low","low"],["medium","medium"],["high","high"]], "effort");
+seg("rbMax", [["50","50"],["300","300"],["2000","2000"]], "max", Number);
+seg("rbStream", [["true","On"],["false","Off"]], "stream", v => v === "true");
+seg("rbTurn", [["0","1"],["1","2"],["2","3"]], "turn", Number);
+render();
+})();
+/* ---------- Lab components: copy buttons, OS tabs, done checklist ---------- */
+(function(){
+"use strict";
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function json(k){ try{ return JSON.parse(load(k) || "{}") || {}; }catch(e){ return {}; } }
+
+/* Copy: the lines of the block, joined with newlines */
+function copyText(t){
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+  return new Promise((ok, fail) => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy") ? ok() : fail(); }catch(e){ fail(e); } finally{ ta.remove(); }
+  });
+}
+document.querySelectorAll(".cb").forEach(cb => {
+  const btn = cb.querySelector(".cb-copy");
+  btn.addEventListener("click", () => {
+    const text = [...cb.querySelectorAll(".ln")].map(l => l.textContent.replace(/\s+$/, "")).join("\n");
+    copyText(text).then(() => { btn.textContent = "Copied"; btn.classList.add("is-ok"); },
+                        () => { btn.textContent = "Select and copy"; })
+      .finally(() => setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("is-ok"); }, 1600));
+  });
+});
+
+/* Mac / Windows tabs: one choice for the whole page, remembered */
+const tabs = document.querySelectorAll(".ost");
+let os = load("guides.eng.os");
+if(os !== "mac" && os !== "win") os = /Win/i.test(navigator.userAgent) ? "win" : "mac";
+function setOS(v, save){
+  os = v; if(save) store("guides.eng.os", v);
+  tabs.forEach(t => {
+    t.querySelectorAll(".ost-tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.os === v ? "true" : "false"));
+    t.querySelectorAll(".ost-p").forEach(p => p.hidden = p.dataset.os !== v);
+  });
+}
+tabs.forEach(t => t.querySelectorAll(".ost-tabs button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os, true))));
+setOS(os, false);
+
+/* Done when: ticks saved per module; all ticked marks the module done on the track page */
+const list = document.querySelector(".done-list");
+if(list){
+  const mod = list.dataset.mod, boxes = [...list.querySelectorAll("input")], state = document.getElementById("doneState");
+  const done = json("guides.eng.done"), prog = json("guides.eng.progress");
+  boxes.forEach((b, i) => { b.checked = !!done[mod + "-" + i]; });
+  function sync(save){
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach((b, i) => { done[mod + "-" + i] = b.checked; });
+    if(save){
+      prog[mod] = n === boxes.length;
+      store("guides.eng.done", JSON.stringify(done)); store("guides.eng.progress", JSON.stringify(prog));
+    }
+    state.textContent = n === boxes.length ? "Module marked done on the track page." : n + " of " + boxes.length + " ticked";
+    state.classList.toggle("is-ok", n === boxes.length);
+  }
+  boxes.forEach(b => b.addEventListener("change", () => sync(true)));
+  sync(false);
+}
+})();
+</script>
+
+<script>
+/* ---------- Quizzes ---------- */
+(function(){
+  const KEY = "guides.quiz.e3";
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }catch(e){ saved = {}; }
+  const quizzes = [...document.querySelectorAll(".quiz")];
+  const score = document.getElementById("quizScore");
+  function update(){
+    if(!score) return;
+    const n = quizzes.filter(q => saved[q.dataset.quiz]).length;
+    score.textContent = "Quiz score: "+n+" of "+quizzes.length+(n===quizzes.length?" · all correct":"");
+  }
+  quizzes.forEach(qz => {
+    const id = qz.dataset.quiz, fb = qz.querySelector(".quiz-fb");
+    const opts = [...qz.querySelectorAll(".opt")];
+    function mark(o){
+      opts.forEach(x => x.classList.remove("right","wrong"));
+      const ok = o.dataset.ok === "1";
+      o.classList.add(ok ? "right" : "wrong");
+      fb.textContent = o.dataset.why + (ok ? "" : " Try another answer.");
+      return ok;
+    }
+    opts.forEach(o => o.addEventListener("click", () => {
+      if(mark(o)){ saved[id] = true; try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){} update(); }
+    }));
+    if(saved[id]){ const right = opts.find(x => x.dataset.ok === "1"); if(right) mark(right); }
+  });
+  update();
+})();
+</script>
+<script src="search.js" defer></script>
+<script src="tool-links.js" defer></script>
+</body>
+</html>
